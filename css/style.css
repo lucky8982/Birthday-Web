@@ -1,0 +1,2828 @@
+/* ============================================================
+   Happy Birthday My Love 💙 - Main Stylesheet
+   ------------------------------------------------------------
+   File:    css/style.css
+   Purpose: Core visual design system for the cinematic
+            birthday experience.
+   Colors:  Primary  - Light Blue shades
+            Secondary- Green shades
+            Base     - Dark midnight blue
+   ============================================================ */
+
+
+/* ============================================================
+   1. CSS CUSTOM PROPERTIES (Design Tokens)
+   ------------------------------------------------------------
+   All colors, fonts and spacing live here so the whole design
+   can be tuned from a single place.
+   ============================================================ */
+:root {
+    /* ---- Primary Palette: Light Blue ---- */
+    --blue-050: #f2f9ff;              /* near-white blue tint   */
+    --blue-100: #e3f2fa;              /* ice blue               */
+    --blue-200: #c9e6f7;              /* pale sky blue          */
+    --blue-300: #a8d0e6;              /* signature light blue   */
+    --blue-400: #7ec8e3;              /* bright aqua blue       */
+    --blue-500: #56b4dd;              /* vivid sky blue         */
+    --blue-600: #3a96c4;              /* deep sky blue          */
+
+    /* ---- Secondary Palette: Green ---- */
+    --green-100: #e6f8ee;             /* mint mist              */
+    --green-200: #b9eccd;             /* soft mint              */
+    --green-300: #8fddb1;             /* gentle green           */
+    --green-400: #5ec98e;             /* fresh leaf green       */
+    --green-500: #3aa873;             /* emerald green          */
+
+    /* ---- Dark Midnight Base ---- */
+    --night-900: #050a18;             /* deepest midnight       */
+    --night-800: #081026;             /* dark midnight blue     */
+    --night-700: #0d1830;             /* midnight blue          */
+    --night-600: #142142;             /* lighter midnight       */
+
+    /* ---- Text Colors ---- */
+    --text-primary:   #eef6fc;        /* main text on dark      */
+    --text-secondary: rgba(214, 236, 247, 0.72);
+    --text-faint:     rgba(214, 236, 247, 0.45);
+
+    /* ---- Glassmorphism Tokens ---- */
+    --glass-bg:        rgba(168, 208, 230, 0.08);
+    --glass-bg-strong: rgba(168, 208, 230, 0.14);
+    --glass-border:    rgba(168, 208, 230, 0.22);
+    --glass-highlight: rgba(255, 255, 255, 0.18);
+    --glass-blur:      24px;
+
+    /* ---- Glow Colors ---- */
+    --glow-blue:  rgba(126, 200, 227, 0.55);
+    --glow-green: rgba(94, 201, 142, 0.40);
+    --glow-white: rgba(238, 246, 252, 0.35);
+
+    /* ---- Typography ---- */
+    --font-display: 'Playfair Display', 'Georgia', serif;
+    --font-body:    'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+
+    /* ---- Spacing Scale ---- */
+    --space-xs: 0.5rem;
+    --space-sm: 1rem;
+    --space-md: 1.75rem;
+    --space-lg: 2.75rem;
+    --space-xl: 4.5rem;
+
+    /* ---- Radii ---- */
+    --radius-sm: 10px;
+    --radius-md: 18px;
+    --radius-lg: 28px;
+    --radius-full: 999px;
+
+    /* ---- Transitions ---- */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-fast: 0.25s;
+    --duration-med: 0.5s;
+    --duration-slow: 0.9s;
+}
+
+
+/* ============================================================
+   2. RESET & BASE STYLES
+   ============================================================ */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: var(--font-body);
+    font-weight: 300;
+    color: var(--text-primary);
+    background-color: var(--night-900);
+    background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(20, 33, 66, 0.9), transparent 70%),
+        linear-gradient(180deg, var(--night-800) 0%, var(--night-900) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure the hidden attribute always wins over other display rules */
+[hidden] {
+    display: none !important;
+}
+
+/* Selection color matches the theme */
+::selection {
+    background: var(--blue-400);
+    color: var(--night-900);
+}
+
+/* Scrollbar styling (subtle premium feel) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--night-900);
+}
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--blue-500), var(--green-400));
+    border-radius: var(--radius-full);
+}
+
+/* Focus ring for keyboard navigation */
+:focus-visible {
+    outline: 2px solid var(--blue-300);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* Shared heading typography */
+h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+}
+
+
+/* ============================================================
+   3. LOADING SCREEN
+   ------------------------------------------------------------
+   Full-screen cinematic intro shown while assets load.
+   ============================================================ */
+.loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 70% 55% at 50% 40%, rgba(20, 33, 66, 0.85), transparent 70%),
+        linear-gradient(180deg, var(--night-800) 0%, var(--night-900) 100%);
+}
+
+/* The animated sky holds aurora + stars + particles */
+.loading-sky {
+    position: absolute;
+    inset: 0;
+}
+
+/* ---- Aurora layers (subtle green + blue light waves) ---- */
+.aurora-container {
+    position: absolute;
+    inset: -20%;
+    overflow: hidden;
+}
+
+.aurora {
+    position: absolute;
+    width: 60vmax;
+    height: 45vmax;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.45;
+    mix-blend-mode: screen;
+}
+
+/* Each aurora gets its own color and placement */
+.aurora-1 {
+    top: 8%;
+    left: -12%;
+    background: radial-gradient(circle, var(--glow-blue), transparent 70%);
+}
+
+.aurora-2 {
+    top: 30%;
+    right: -15%;
+    background: radial-gradient(circle, var(--glow-green), transparent 70%);
+    opacity: 0.32;
+}
+
+.aurora-3 {
+    bottom: -10%;
+    left: 25%;
+    background: radial-gradient(circle, var(--glow-white), transparent 70%);
+    opacity: 0.22;
+}
+
+/* ---- Canvas layers for stars & floating particles ---- */
+.stars-container,
+.particles-container {
+    position: absolute;
+    inset: 0;
+}
+
+#stars-canvas,
+#particles-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+
+/* ============================================================
+   4. LOADING CONTENT (Centered Stack)
+   ============================================================ */
+.loading-content {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-lg) var(--space-md);
+    text-align: center;
+    max-width: 640px;
+    width: 100%;
+}
+
+/* The secret love letter owns the intro now: the old loading
+   content (title, progress, tap-to-begin) is hidden so it can
+   never show through behind the cinematic layer - its title
+   would duplicate the letter's "Happy Birthday / My Love"
+   reveal message. */
+.loading-screen.is-lettering .loading-content {
+    visibility: hidden;
+}
+
+/* ---- Logo mark (heart in a glowing ring) ---- */
+.loading-logo {
+    width: 76px;
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--blue-300);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 30px var(--glow-blue),
+        inset 0 1px 0 var(--glass-highlight);
+}
+
+.logo-heart {
+    width: 36px;
+    height: 36px;
+}
+
+/* ---- Main title ---- */
+.loading-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.6rem, 7vw, 4.5rem);
+    font-weight: 500;
+    color: var(--blue-050);
+    text-shadow:
+        0 0 24px var(--glow-blue),
+        0 2px 8px rgba(5, 10, 24, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15em;
+}
+
+.title-line {
+    display: block;
+}
+
+/* "My Love" gets a gradient green-blue treatment */
+.title-name {
+    background: linear-gradient(100deg, var(--blue-300) 20%, var(--blue-400) 45%, var(--green-300) 80%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    filter: drop-shadow(0 0 22px var(--glow-blue));
+}
+
+.title-heart {
+    font-size: 0.45em;
+    line-height: 1;
+    filter: drop-shadow(0 0 18px var(--glow-blue));
+}
+
+/* ---- Subtitle ---- */
+.loading-subtitle {
+    font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    font-weight: 300;
+}
+
+/* ---- Progress bar (glass pill) ---- */
+.loading-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: min(320px, 80vw);
+}
+
+.progress-bar {
+    flex: 1;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: rgba(168, 208, 230, 0.12);
+    border: 1px solid var(--glass-border);
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--blue-400), var(--green-400));
+    box-shadow: 0 0 14px var(--glow-blue);
+    transition: width 0.3s var(--ease-soft);
+}
+
+.progress-text {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    min-width: 3.2ch;
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* ============================================================
+   5. "TAP TO BEGIN" BUTTON
+   ------------------------------------------------------------
+   Premium glass button that appears once loading completes.
+   ============================================================ */
+.tap-to-begin {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: var(--space-xs);
+    padding: 1rem 2.4rem;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--blue-050);
+    background: var(--glass-bg-strong);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 26px var(--glow-blue),
+        inset 0 1px 0 var(--glass-highlight);
+    cursor: pointer;
+    transition:
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        background var(--duration-fast) var(--ease-out);
+}
+
+.tap-to-begin:hover {
+    background: rgba(126, 200, 227, 0.22);
+    box-shadow:
+        0 0 40px var(--glow-blue),
+        0 8px 30px rgba(5, 10, 24, 0.5),
+        inset 0 1px 0 var(--glass-highlight);
+    transform: translateY(-2px);
+}
+
+.tap-to-begin:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.tap-arrow {
+    width: 18px;
+    height: 18px;
+    color: var(--green-300);
+}
+
+
+/* ============================================================
+   6. MUSIC TOGGLE BUTTON
+   ------------------------------------------------------------
+   Fixed glass control in the top-right corner.
+   ============================================================ */
+.music-toggle {
+    position: fixed;
+    top: 1.4rem;
+    right: 1.4rem;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    color: var(--blue-200);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow: 0 0 18px rgba(5, 10, 24, 0.5);
+    cursor: pointer;
+    transition:
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.music-toggle:hover {
+    color: var(--blue-300);
+    box-shadow: 0 0 26px var(--glow-blue);
+    transform: scale(1.06);
+}
+
+.music-toggle svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* The "off" icon (with slash) is hidden by default */
+.icon-music-off {
+    display: none;
+}
+
+/* When music is muted, swap the icons */
+.music-toggle.is-muted .icon-music-on {
+    display: none;
+}
+.music-toggle.is-muted .icon-music-off {
+    display: block;
+    color: var(--text-faint);
+}
+
+
+/* ============================================================
+   6b. GLOBAL BACK BUTTON
+   ------------------------------------------------------------
+   Fixed glass control in the top-left corner, mounted OUTSIDE
+   #app (see index.html) so no scene can clip or cover it.
+   Shown by js/main.js on the Love Letter, the reveal final and
+   Memory Lane; hidden everywhere else. Never uses
+   history.back() - main.js decides what "back" means for the
+   current scene. The entrance animation lives in
+   animation.css.
+   ============================================================ */
+.experience-back-btn {
+    position: fixed;
+    top: calc(1.4rem + env(safe-area-inset-top));
+    left: calc(1.4rem + env(safe-area-inset-left));
+    z-index: 30;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 48px;
+    padding: 0.65rem 1.15rem 0.65rem 0.9rem;
+    border-radius: 999px;
+    color: var(--blue-200);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 18px rgba(5, 10, 24, 0.5),
+        inset 0 1px 0 var(--glass-highlight);
+    cursor: pointer;
+    /* Hiding is driven ONLY by the `hidden` attribute
+       ([hidden] { display: none !important }), never by
+       opacity/visibility here - otherwise the base state can win
+       the cascade once the entrance animation ends and strand the
+       button invisible. Block stray clicks while hidden. */
+    pointer-events: none;
+    transition:
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.experience-back-btn svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+}
+
+.experience-back-label {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* Visible state: main.js removes `hidden`, adds .is-visible and the
+   entrance animation plays. Reduced-motion users simply see it
+   appear (animation disabled, these styles still apply). */
+.experience-back-btn.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.experience-back-btn:hover {
+    color: var(--blue-300);
+    border-color: var(--glass-highlight);
+    box-shadow:
+        0 0 26px var(--glow-blue),
+        inset 0 1px 0 var(--glass-highlight);
+    transform: translateX(-2px);
+}
+
+.experience-back-btn:active {
+    transform: scale(0.96);
+}
+
+.experience-back-btn:focus-visible {
+    outline: 2px solid var(--blue-200);
+    outline-offset: 3px;
+}
+
+
+/* ============================================================
+   7. MAIN APP CONTAINER & SCENES
+   ------------------------------------------------------------
+   Every scene is a full-viewport cinematic frame.
+   ============================================================ */
+.app {
+    position: relative;
+}
+
+.scene {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* Scene background layer (aurora + canvases sit here) */
+.scene-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(ellipse 70% 55% at 50% 40%, rgba(20, 33, 66, 0.85), transparent 70%),
+        linear-gradient(180deg, var(--night-800) 0%, var(--night-900) 100%);
+}
+
+/* Foreground content floats above the background */
+.scene-content {
+    position: relative;
+    z-index: 5;
+    width: 100%;
+    max-width: 1000px;
+    padding: var(--space-lg) var(--space-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+
+/* ============================================================
+   9. FUTURE SCENES (Placeholders for later phases)
+   ------------------------------------------------------------
+   Shared glass panel style so upcoming scenes look consistent.
+   ============================================================ */
+.scene-title {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    color: var(--blue-050);
+    text-shadow: 0 0 26px var(--glow-blue);
+    margin-bottom: var(--space-sm);
+}
+
+.scene-placeholder {
+    padding: var(--space-md) var(--space-lg);
+    color: var(--text-secondary);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 24px rgba(5, 10, 24, 0.6),
+        inset 0 1px 0 var(--glass-highlight);
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+}
+
+
+/* ============================================================
+   10. ACCESSIBILITY & REDUCED MOTION
+   ------------------------------------------------------------
+   Respect users who prefer less motion.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+
+/* ============================================================
+   11. MEMORY LANE (Scene 2) - THE MEMORY BOOK
+   ------------------------------------------------------------
+   An interactive romantic memory book. Each chapter is a
+   cinematic composition of a large title, a hero photo and a
+   love message - all revealed in sequence and then kept fully
+   visible until the user decides to continue.
+   ============================================================ */
+
+/* The scene becomes a full-screen cinematic stage when active */
+.scene-memory-lane.is-active {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* The chapter spans the whole stage (intro keeps its own layout).
+   scene-content must NOT be a positioned box here, or the absolute
+   chapter/actions/final would anchor to its collapsed height. */
+.scene-memory-lane .scene-content {
+    max-width: 100%;
+    padding: 0;
+    position: static;
+}
+
+/* ---- Shared bits ---- */
+.memory-eyebrow {
+    font-size: 0.85rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--green-300);
+    font-weight: 500;
+}
+
+.memory-subtitle {
+    font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+    font-weight: 300;
+    max-width: 420px;
+}
+
+/* ---- Hidden surprise state (intro) ---- */
+.memory-intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    text-align: center;
+    max-width: 520px;
+    padding: var(--space-lg) var(--space-md);
+    min-height: 100svh;
+    justify-content: center;
+}
+
+.memory-intro-title {
+    font-size: clamp(1.7rem, 5vw, 2.6rem);
+    color: var(--blue-050);
+    text-shadow: 0 0 26px var(--glow-blue);
+    line-height: 1.2;
+}
+
+/* Primary glass pill for the surprise CTA */
+.memory-reveal-btn,
+.memory-continue-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: var(--space-sm);
+    min-height: 56px;
+    padding: 0 2rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue-050);
+    background: var(--glass-bg-strong);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 26px var(--glow-blue),
+        inset 0 1px 0 var(--glass-highlight);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        background var(--duration-fast) var(--ease-out);
+}
+
+.memory-reveal-btn svg,
+.memory-continue-btn svg {
+    width: 18px;
+    height: 18px;
+    color: var(--green-300);
+}
+
+.memory-reveal-btn:hover,
+.memory-continue-btn:hover {
+    background: rgba(126, 200, 227, 0.22);
+    box-shadow:
+        0 0 40px var(--glow-blue),
+        0 8px 30px rgba(5, 10, 24, 0.5),
+        inset 0 1px 0 var(--glass-highlight);
+    transform: translateY(-2px);
+}
+
+.memory-reveal-btn:active,
+.memory-continue-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+
+/* ============================================================
+   11b. MEMORY CHAPTER STAGE
+   ------------------------------------------------------------
+   One full-screen composition per memory. Phases (title,
+   photo, message) start invisible (opacity 0) and light up in
+   sequence - see animation.css for the 90 unique reveals.
+   ============================================================ */
+.memory-chapter {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    gap: clamp(1rem, 3vh, 2.5rem);
+    padding: clamp(3rem, 8vh, 5rem) clamp(1.4rem, 5vw, 4.5rem);
+    align-content: center;
+    min-height: 100svh;
+    overflow: hidden;
+}
+
+/* Phases stay hidden until their stage begins (JS adds .is-in) */
+.memory-chapter .phase {
+    opacity: 0;
+}
+
+.memory-chapter .phase.is-in {
+    opacity: 1;
+}
+
+/* The settled title keeps its visibility after its entrance ends */
+.memory-chapter .phase.is-settled {
+    opacity: 1;
+}
+
+/* ---- Chapter title: large, dominant, cinematic ---- */
+.memory-title-block {
+    align-self: end;
+    justify-self: start;
+    max-width: 62%;
+    text-align: left;
+}
+
+.memory-title-text {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(2.6rem, 6vw, 6.6rem);
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: 0.01em;
+    color: var(--blue-050);
+    text-shadow:
+        0 0 34px var(--glow-blue),
+        0 2px 10px rgba(5, 10, 24, 0.8);
+}
+
+/* Words and letters are individually animatable */
+.memory-title-text .tw,
+.memory-message .tw {
+    display: inline-block;
+    white-space: pre;
+}
+
+.memory-title-text .tl,
+.memory-message .tl {
+    display: inline-block;
+}
+
+/* After its entrance, the title glides into its final pose */
+.memory-title-block.is-settled {
+    transform: translate(var(--settle-x, 0), var(--settle-y, 0));
+    transition: transform 0.62s var(--ease-out);
+}
+
+/* ---- Chapter photo: the hero element ---- */
+.memory-photo-block {
+    align-self: center;
+    justify-self: center;
+    min-width: 0;
+    /*
+     * Cap the grid cell at the chapter's width so a wide
+     * photo can never grow past the viewport (the frame
+     * below then shrinks the image instead of clipping it).
+     */
+    max-width: 100%;
+}
+
+.memory-frame {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    padding: 14px;
+    border-radius: var(--radius-lg);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 40px var(--glow-blue),
+        0 18px 50px rgba(5, 10, 24, 0.65),
+        inset 0 1px 0 var(--glass-highlight);
+    transform-origin: center;
+    /*
+     * Never let the frame (and therefore the photo) exceed
+     * the available chapter width. Combined with the image
+     * sizing below, any aspect ratio stays fully visible.
+     */
+    width: auto;
+    max-width: 100%;
+}
+
+.memory-photo {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: min(56vh, 58svh);
+    border-radius: calc(var(--radius-lg) - 10px);
+    box-shadow: 0 10px 34px rgba(5, 10, 24, 0.6);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+     transition: opacity 0.3s ease;
+}
+
+/* Soft light wash across the top of the frame */
+.memory-shine {
+    position: absolute;
+    inset: 14px;
+    border-radius: calc(var(--radius-lg) - 10px);
+    background: linear-gradient(180deg, rgba(242, 249, 255, 0.10), transparent 45%);
+    pointer-events: none;
+}
+
+/* Photo settle styles - applied after the entrance (transitions) */
+.memory-frame.photo-settle-glow {
+    box-shadow:
+        0 0 60px var(--glow-blue),
+        0 18px 50px rgba(5, 10, 24, 0.65),
+        inset 0 1px 0 var(--glass-highlight);
+}
+
+.memory-frame.photo-settle-tilt {
+    transform: rotate(-1.6deg);
+}
+
+.memory-frame.photo-settle-float {
+    transform: translateY(-10px);
+}
+
+.memory-frame.photo-settle-shine {
+    box-shadow:
+        0 0 46px var(--glow-blue),
+        0 0 34px rgba(94, 201, 142, 0.28),
+        0 18px 50px rgba(5, 10, 24, 0.65),
+        inset 0 1px 0 var(--glass-highlight);
+}
+
+.memory-frame.photo-settle-breathe {
+    transform: scale(1.02);
+}
+
+.memory-frame.photo-settle-lift {
+    transform: translateY(-14px) scale(1.015);
+}
+
+.memory-frame.photo-settle-vignette {
+    filter: drop-shadow(0 0 30px rgba(5, 10, 24, 0.8));
+}
+
+.memory-frame.photo-settle-rest {
+    transform: none;
+}
+
+.memory-frame.is-in,
+.memory-frame.photo-settle-glow,
+.memory-frame.photo-settle-tilt,
+.memory-frame.photo-settle-float,
+.memory-frame.photo-settle-shine,
+.memory-frame.photo-settle-breathe,
+.memory-frame.photo-settle-lift,
+.memory-frame.photo-settle-vignette,
+.memory-frame.photo-settle-rest {
+    transition:
+        transform 1.1s var(--ease-out),
+        filter 1.1s var(--ease-out),
+        box-shadow 1.1s var(--ease-out);
+}
+
+/* ---- Chapter love message: bigger, softer, emotional ---- */
+.memory-message-block {
+    align-self: end;
+    justify-self: start;
+    max-width: min(560px, 100%);
+    text-align: left;
+}
+
+.memory-message {
+    font-size: clamp(1.05rem, 2vw, 1.5rem);
+    line-height: 1.55;
+    font-weight: 300;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 18px rgba(5, 10, 24, 0.6);
+}
+
+/* ---- Next Memory pill (appears once the chapter settles) ---- */
+.memory-actions {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(1.2rem, 4vh, 2.6rem);
+    transform: translateX(-50%);
+    z-index: 6;
+}
+
+.memory-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    color: var(--blue-200);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.memory-next,
+.memory-prev {
+    min-height: 56px;
+    padding: 0 2rem;
+    border-radius: var(--radius-full);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--glass-bg-strong);
+    box-shadow:
+        0 0 22px var(--glow-blue),
+        inset 0 1px 0 var(--glass-highlight);
+}
+
+.memory-nav:hover {
+    color: var(--blue-300);
+    box-shadow: 0 0 30px var(--glow-blue);
+    transform: translateY(-2px);
+}
+
+.memory-nav:active {
+    transform: translateY(0) scale(0.96);
+}
+
+.memory-nav svg {
+    width: 18px;
+    height: 18px;
+    color: var(--green-300);
+}
+
+/* ---- Final CTA overlay: floats over the settled Memory 30 ---- */
+.memory-final {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(1.2rem, 5vh, 3rem);
+    transform: translateX(-50%);
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    text-align: center;
+    max-width: 520px;
+    padding: var(--space-md) var(--space-lg);
+    background: var(--glass-bg-strong);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 40px var(--glow-blue),
+        0 18px 50px rgba(5, 10, 24, 0.6),
+        inset 0 1px 0 var(--glass-highlight);
+}
+
+/* Soft cinematic halo behind the final message */
+.memory-final-glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 46vmin;
+    height: 46vmin;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle,
+            rgba(126, 200, 227, 0.22) 0%,
+            rgba(94, 201, 142, 0.10) 45%,
+            transparent 72%);
+    filter: blur(6px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Tiny hearts drifting up above the final message */
+.memory-final-hearts {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.memory-final-heart {
+    position: absolute;
+    bottom: 0;
+    font-size: 0.85rem;
+    opacity: 0;
+    color: var(--green-300);
+    text-shadow: 0 0 10px var(--glow-blue);
+}
+
+.memory-final-heart.heart-1 {
+    left: 12%;
+}
+
+.memory-final-heart.heart-2 {
+    left: 46%;
+    font-size: 0.7rem;
+}
+
+.memory-final-heart.heart-3 {
+    right: 10%;
+}
+
+/* Staged emotional lines (entrances live in animation.css) */
+.memory-final-eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 400;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--blue-300);
+    text-shadow: 0 0 14px var(--glow-blue);
+    z-index: 1;
+}
+
+.memory-final-title {
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    color: var(--blue-050);
+    text-shadow: 0 0 26px var(--glow-blue);
+    line-height: 1.2;
+    z-index: 1;
+}
+
+.memory-final-love {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(1.35rem, 3.4vw, 1.9rem);
+    font-weight: 500;
+    color: #fff;
+    text-shadow:
+        0 0 22px var(--glow-blue),
+        0 0 44px rgba(94, 201, 142, 0.35);
+    line-height: 1.3;
+    z-index: 1;
+}
+
+.memory-final-subtitle {
+    font-size: 0.92rem;
+    font-weight: 300;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    z-index: 1;
+}
+
+.memory-final-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: var(--space-xs);
+    min-height: 56px;
+    padding: 0 2rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue-050);
+    background: var(--glass-bg-strong);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 26px var(--glow-blue),
+        inset 0 1px 0 var(--glass-highlight);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 1;
+    transition:
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        background var(--duration-fast) var(--ease-out);
+}
+
+.memory-final-btn svg {
+    width: 18px;
+    height: 18px;
+    color: var(--green-300);
+}
+
+.memory-final-btn:hover {
+    background: rgba(126, 200, 227, 0.22);
+    box-shadow:
+        0 0 40px var(--glow-blue),
+        0 8px 30px rgba(5, 10, 24, 0.5),
+        inset 0 1px 0 var(--glass-highlight);
+    transform: translateY(-2px);
+}
+
+.memory-final-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+
+/* ============================================================
+   11c. CHAPTER COMPOSITIONS
+   ------------------------------------------------------------
+   Each composition arranges title / photo / message into a
+   different cinematic frame. The animation suites are unique
+   per memory; these grids make each chapter a fresh layout.
+   ============================================================ */
+.memory-chapter.compose-a {
+    grid-template-areas:
+        'title  title'
+        'photo  message';
+    grid-template-columns: 1.05fr 1fr;
+    grid-template-rows: auto 1fr;
+}
+
+.memory-chapter.compose-a .memory-title-block {
+    grid-area: title;
+    max-width: 76%;
+    --settle-x: -18px;
+    --settle-y: 6px;
+}
+
+.memory-chapter.compose-a .memory-photo-block {
+    grid-area: photo;
+}
+
+.memory-chapter.compose-a .memory-message-block {
+    grid-area: message;
+    align-self: end;
+    justify-self: end;
+}
+
+.memory-chapter.compose-b {
+    grid-template-areas:
+        'title   photo'
+        'message photo';
+    grid-template-columns: 1fr 1.1fr;
+    grid-template-rows: auto 1fr;
+}
+
+.memory-chapter.compose-b .memory-title-block {
+    grid-area: title;
+    justify-self: end;
+    text-align: right;
+    --settle-x: 16px;
+    --settle-y: -8px;
+}
+
+.memory-chapter.compose-b .memory-photo-block {
+    grid-area: photo;
+}
+
+.memory-chapter.compose-b .memory-message-block {
+    grid-area: message;
+    align-self: end;
+    justify-self: end;
+    text-align: right;
+}
+
+.memory-chapter.compose-c {
+    grid-template-areas:
+        'title  title'
+        'photo  message';
+    grid-template-columns: 1.1fr 1fr;
+    grid-template-rows: auto 1fr;
+}
+
+.memory-chapter.compose-c .memory-title-block {
+    grid-area: title;
+    justify-self: center;
+    text-align: center;
+    max-width: 84%;
+    --settle-x: 0;
+    --settle-y: -10px;
+}
+
+.memory-chapter.compose-c .memory-photo-block {
+    grid-area: photo;
+}
+
+.memory-chapter.compose-c .memory-message-block {
+    grid-area: message;
+    align-self: end;
+    justify-self: end;
+    text-align: right;
+}
+
+.memory-chapter.compose-d {
+    grid-template-areas:
+        'title   photo'
+        'message photo';
+    grid-template-columns: 1fr 1.15fr;
+    grid-template-rows: auto 1fr;
+}
+
+.memory-chapter.compose-d .memory-title-block {
+    grid-area: title;
+    align-self: end;
+    max-width: 74%;
+    --settle-x: -22px;
+    --settle-y: -6px;
+}
+
+.memory-chapter.compose-d .memory-photo-block {
+    grid-area: photo;
+}
+
+.memory-chapter.compose-d .memory-message-block {
+    grid-area: message;
+    align-self: start;
+    justify-self: start;
+}
+
+.memory-chapter.compose-e {
+    grid-template-areas:
+        'title  title'
+        'photo  message';
+    grid-template-columns: 1.05fr 1fr;
+    grid-template-rows: auto 1fr;
+}
+
+.memory-chapter.compose-e .memory-title-block {
+    grid-area: title;
+    justify-self: end;
+    text-align: right;
+    --settle-x: 20px;
+    --settle-y: -4px;
+}
+
+.memory-chapter.compose-e .memory-photo-block {
+    grid-area: photo;
+}
+
+.memory-chapter.compose-e .memory-message-block {
+    grid-area: message;
+    align-self: end;
+    justify-self: start;
+}
+
+.memory-chapter.compose-f {
+    grid-template-areas:
+        'title   photo'
+        'message photo';
+    grid-template-columns: 1.1fr 1fr;
+    grid-template-rows: auto 1fr;
+}
+
+.memory-chapter.compose-f .memory-title-block {
+    grid-area: title;
+    align-self: center;
+    --settle-x: -12px;
+    --settle-y: -16px;
+}
+
+.memory-chapter.compose-f .memory-photo-block {
+    grid-area: photo;
+}
+
+.memory-chapter.compose-f .memory-message-block {
+    grid-area: message;
+    align-self: end;
+    justify-self: start;
+}
+
+.memory-chapter.compose-g {
+    grid-template-areas:
+        'title   photo'
+        'message photo';
+    grid-template-columns: 1fr 1.15fr;
+    grid-template-rows: auto 1fr;
+}
+
+.memory-chapter.compose-g .memory-title-block {
+    grid-area: title;
+    max-width: 72%;
+    --settle-x: -16px;
+    --settle-y: 8px;
+}
+
+.memory-chapter.compose-g .memory-photo-block {
+    grid-area: photo;
+}
+
+.memory-chapter.compose-g .memory-message-block {
+    grid-area: message;
+    align-self: end;
+    justify-self: start;
+}
+
+.memory-chapter.compose-h {
+    grid-template-areas:
+        'title  title'
+        'photo  message';
+    grid-template-columns: 1.15fr 1fr;
+    grid-template-rows: auto 1fr;
+}
+
+.memory-chapter.compose-h .memory-title-block {
+    grid-area: title;
+    justify-self: end;
+    text-align: right;
+    max-width: 80%;
+    --settle-x: 18px;
+    --settle-y: 4px;
+}
+
+.memory-chapter.compose-h .memory-photo-block {
+    grid-area: photo;
+    justify-self: end;
+}
+
+.memory-chapter.compose-h .memory-message-block {
+    grid-area: message;
+    align-self: end;
+    justify-self: start;
+}
+
+/* ============================================================
+   CINEMATIC OPENING - the first moments
+   ------------------------------------------------------------
+   A dark cinematic layer over the finished loading screen:
+   a blank midnight sky with twinkling stars, soft breathing
+   light and gently falling coral + jasmine petals. The first
+   tap starts the music; each tap reveals one line of the
+   story until it hands over to the birthday reveal.
+   ============================================================ */
+.opening-cinematic {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    overflow: hidden;
+    cursor: pointer;
+    background:
+        radial-gradient(ellipse 130% 110% at 50% 50%,
+            transparent 60%,
+            rgba(2, 4, 12, 0.6) 100%),
+        radial-gradient(ellipse 95% 75% at 50% 22%,
+            rgba(23, 52, 62, 0.5), transparent 72%),
+        radial-gradient(ellipse 80% 60% at 50% 42%,
+            rgba(24, 40, 82, 0.85), transparent 70%),
+        linear-gradient(180deg,
+            var(--night-800) 0%,
+            #0a1724 55%,
+            var(--night-900) 100%);
+    opacity: 0;
+    pointer-events: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.opening-cinematic.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.opening-cinematic.is-leaving {
+    pointer-events: none;
+}
+
+/* Slow breathing tint behind everything */
+.opening-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 50% 38%,
+            rgba(126, 200, 227, 0.07), transparent 52%),
+        radial-gradient(circle at 16% 76%,
+            rgba(94, 201, 142, 0.045), transparent 48%),
+        radial-gradient(circle at 84% 70%,
+            rgba(126, 200, 227, 0.045), transparent 50%);
+    pointer-events: none;
+}
+
+/* ---- Twinkling starfield (created by opening.js) ---- */
+.opening-stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.opening-star {
+    position: absolute;
+    border-radius: 50%;
+    background: #e8f6ff;
+    box-shadow: 0 0 6px 1px rgba(174, 220, 255, 0.5);
+    animation: star-twinkle var(--dur, 3.2s) ease-in-out var(--delay, 0s) infinite;
+}
+
+@keyframes star-twinkle {
+    0%, 100% {
+        opacity: var(--o, 0.16);
+        transform: scale(1);
+    }
+    50% {
+        opacity: calc(var(--o, 0.16) + 0.55);
+        transform: scale(1.45);
+    }
+}
+
+/* ---- Falling petals: coral + jasmine (created by opening.js) ---- */
+.opening-petals {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.opening-petal {
+    position: absolute;
+    top: -8vh;
+    border-radius: 72% 28% 68% 32% / 58% 44% 56% 42%;
+    opacity: 0;
+    will-change: transform;
+    animation: petal-fall var(--dur, 11s) linear var(--delay, 0s) infinite;
+}
+
+.opening-petal-coral {
+    background: linear-gradient(165deg, #ffb4a2 0%, #ff7a66 55%, #e85a45 100%);
+    box-shadow: 0 0 10px rgba(255, 122, 102, 0.35);
+}
+
+.opening-petal-jasmine {
+    background: linear-gradient(165deg, #ffffff 0%, #fdf1dc 55%, #f2e3c4 100%);
+    box-shadow: 0 0 10px rgba(255, 251, 240, 0.3);
+}
+
+@keyframes petal-fall {
+    0% {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+        opacity: 0;
+    }
+    8% {
+        opacity: var(--o, 0.75);
+    }
+    50% {
+        transform: translate3d(var(--sway, 40px), 52vh, 0)
+            rotate(var(--rot, 130deg));
+    }
+    92% {
+        opacity: var(--o, 0.75);
+    }
+    100% {
+        transform: translate3d(calc(var(--sway, 40px) * -0.8), 112vh, 0)
+            rotate(calc(var(--rot, 130deg) * 1.8));
+        opacity: 0;
+    }
+}
+
+/* ---- Story messages (one at a time, written by opening.js) ---- */
+.opening-message {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    padding: 0 max(1.4rem, env(safe-area-inset-left)) 0
+        max(1.4rem, env(safe-area-inset-right));
+    text-align: center;
+    pointer-events: none;
+}
+
+.opening-message-text {
+    margin: 0;
+    max-width: min(88vw, 560px);
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(16px) scale(0.97);
+    transition:
+        opacity 1.1s var(--ease-soft),
+        filter 1.1s var(--ease-soft),
+        transform 1.1s var(--ease-out);
+}
+
+.opening-message-text.is-in {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+}
+
+/* The previous message exits completely before the next enters */
+.opening-message-text.is-out {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(-12px) scale(0.98);
+}
+
+.opening-line {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.15rem, 4.4vw, 1.65rem);
+    line-height: 1.55;
+    color: var(--text-secondary);
+    text-wrap: balance;
+    text-shadow: 0 0 22px rgba(5, 10, 24, 0.55);
+}
+
+/* The date becomes the visual focus of the story */
+.opening-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(2rem, 9vw, 3.4rem);
+    letter-spacing: 0.12em;
+    color: var(--blue-050);
+    text-shadow:
+        0 0 26px var(--glow-blue),
+        0 0 70px rgba(126, 200, 227, 0.4);
+}
+
+.opening-sub {
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: clamp(1.05rem, 4.4vw, 1.5rem);
+    letter-spacing: 0.14em;
+    color: var(--green-200);
+    text-shadow: 0 0 20px var(--glow-green);
+}
+
+/* ---- The emotional passage (word-by-word reveal) ---- */
+.opening-passage {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.2rem, 4.6vw, 1.8rem);
+    line-height: 1.7;
+    color: var(--text-secondary);
+    text-shadow: 0 0 26px rgba(5, 10, 24, 0.6);
+}
+
+/* The passage block is fully legible from the start: the WORDS
+   reveal themselves one after another (the container itself
+   never blurs or scales as a whole). */
+.opening-message-text.opening-passage,
+.opening-message-text.opening-passage.is-in {
+    opacity: 1;
+    filter: none;
+    transform: none;
+}
+
+/* The whole passage bows out together (after its final tap) */
+.opening-message-text.opening-passage.is-out {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(-12px) scale(0.98);
+}
+
+.opening-passage-word {
+    display: inline-block;
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(6px) scale(0.98);
+    will-change: opacity, filter, transform;
+    animation: passage-word-in 0.7s var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * var(--word-step, 95ms));
+}
+
+@keyframes passage-word-in {
+    0% {
+        opacity: 0;
+        filter: blur(6px);
+        transform: translateY(6px) scale(0.98);
+    }
+    100% {
+        opacity: 1;
+        filter: blur(0);
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ============================================================
+   CINEMATIC LOVE LETTER - after the story, before the reveal
+   ------------------------------------------------------------
+   A sealed, premium letter floats over the midnight sky once
+   the story passage ends. A romantic question gate with four
+   answers and the locked "Kholo ❤️" CTA arrive; the right
+   answer unlocks the CTA, the flap lifts with warm light,
+   the paper rises and a short emotional message appears. The
+   letter stays open and readable - only the user's next tap
+   hands over to the full-screen birthday reveal.
+   ============================================================ */
+.letter-scene {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(1.1rem, 4vh, 2rem);
+    padding: 0 max(1.2rem, env(safe-area-inset-left)) 0
+        max(1.2rem, env(safe-area-inset-right));
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    transition:
+        opacity 0.8s var(--ease-soft),
+        visibility 0s linear 0.8s;
+}
+
+.letter-scene::-webkit-scrollbar {
+    display: none;
+}
+
+.letter-scene.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+}
+
+/* The letter's interactive parts only react while the scene is
+   actually on screen (the scene itself passes taps through to
+   the sky, which must never double-advance during the question) */
+.letter-scene.is-visible .letter-card,
+.letter-scene.is-visible .letter-answer,
+.letter-scene.is-visible .letter-cta {
+    pointer-events: auto;
+}
+
+/* The gate is done once the letter opens: the faded answers and
+   CTA must never swallow taps meant for the message/handover */
+.letter-scene.is-open .letter-answer,
+.letter-scene.is-open .letter-cta {
+    pointer-events: none !important;
+}
+
+/* Warm romantic light spreading when the letter opens */
+.letter-warm {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: radial-gradient(circle at 50% 52%,
+        rgba(255, 196, 132, 0.26), transparent 58%);
+    filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.letter-scene.is-open .letter-warm {
+    animation: letter-warm-in 1.6s var(--ease-out) 0.3s both;
+}
+
+@keyframes letter-warm-in {
+    from {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ---- The sealed letter ---- */
+.letter-card {
+    position: relative;
+    z-index: 1;
+    width: clamp(240px, 58vw, 340px);
+    aspect-ratio: 10 / 7;
+    perspective: 1100px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    animation: letter-float 5.5s var(--ease-soft) 0.6s infinite alternate;
+}
+
+.letter-card:focus-visible {
+    outline: 2px solid rgba(255, 214, 150, 0.6);
+    outline-offset: 6px;
+    border-radius: 14px;
+}
+
+/* Soft warm halo hugging the letter */
+.letter-card::before {
+    content: '';
+    position: absolute;
+    inset: -24%;
+    z-index: -1;
+    background:
+        radial-gradient(58% 24% at 50% 96%,
+            rgba(255, 205, 140, 0.16), transparent 70%),
+        radial-gradient(circle at 50% 40%,
+            rgba(255, 214, 150, 0.10) 0%,
+            rgba(126, 200, 227, 0.05) 48%,
+            transparent 68%);
+    filter: blur(18px);
+    pointer-events: none;
+}
+
+/* Depth pool of shadow below the letter */
+.letter-card::after {
+    content: '';
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    bottom: -16%;
+    height: 24%;
+    z-index: -2;
+    background: radial-gradient(ellipse at 50% 50%,
+        rgba(5, 10, 24, 0.6), transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
+}
+
+@keyframes letter-float {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-8px); }
+}
+
+/* The letter sheet rising out */
+.letter-paper {
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 13%;
+    height: 68%;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    padding: 0.85rem 0.7rem;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #fdf3df 0%, #f8e7c6 100%);
+    box-shadow: 0 12px 28px rgba(5, 10, 24, 0.5);
+    opacity: 0;
+    transform: translateY(24%) scale(0.94);
+}
+
+.letter-card.is-opening .letter-paper {
+    animation: letter-paper-rise 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+}
+
+@keyframes letter-paper-rise {
+    0% {
+        opacity: 0;
+        transform: translateY(24%) scale(0.94);
+    }
+    55% {
+        opacity: 1;
+        transform: translateY(-4%) scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(-14%) scale(1);
+    }
+}
+
+.letter-paper-line {
+    display: block;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(122, 74, 30, 0.28);
+}
+
+.letter-paper-line-1 { width: 76%; }
+.letter-paper-line-2 { width: 58%; }
+.letter-paper-line-3 { width: 86%; }
+
+/* Front pocket with the V-shaped notch */
+.letter-body {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: 14px;
+    background:
+        linear-gradient(160deg, rgba(168, 208, 230, 0.15), rgba(5, 10, 24, 0.32) 62%),
+        rgba(11, 20, 40, 0.94);
+    border: 1px solid rgba(168, 208, 230, 0.28);
+    box-shadow:
+        0 22px 44px rgba(5, 10, 24, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    clip-path: polygon(0 0, 50% 38%, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Triangular flap sealed over the notch */
+.letter-flap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    z-index: 4;
+    transform-origin: top center;
+    background:
+        linear-gradient(175deg, rgba(214, 236, 247, 0.16), rgba(168, 208, 230, 0.07) 70%),
+        rgba(13, 24, 48, 0.96);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    box-shadow: 0 0 20px rgba(5, 10, 24, 0.35);
+    transition: transform 1.1s cubic-bezier(0.34, 1.15, 0.5, 1);
+}
+
+.letter-card.is-opening .letter-flap {
+    transform: rotateX(178deg);
+    filter: brightness(1.12);
+}
+
+/* Warm wax seal with the heart */
+.letter-seal {
+    position: absolute;
+    left: 50%;
+    top: 20%;
+    width: clamp(36px, 10vw, 50px);
+    height: clamp(36px, 10vw, 50px);
+    transform: translateX(-50%);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 34% 28%, #f7d9a8 0%, #e3a55a 46%, #b07c3c 100%);
+    box-shadow:
+        0 6px 16px rgba(5, 10, 24, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -2px 5px rgba(90, 55, 20, 0.4);
+    transition: opacity 0.45s var(--ease-soft), transform 0.45s var(--ease-soft);
+}
+
+.letter-card.is-opening .letter-seal {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.5);
+    transition-delay: 0.12s;
+}
+
+.letter-seal-heart {
+    width: 46%;
+    height: 46%;
+    color: #7c4a1f;
+}
+
+/* ---- The caption: invitation before, message after ---- */
+.letter-caption {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: min(86vw, 540px);
+    min-height: clamp(5.5rem, 22vh, 9rem);
+    pointer-events: none;
+}
+
+.letter-invite,
+.letter-message {
+    grid-area: 1 / 1;
+    margin: 0;
+    max-width: 100%;
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(10px);
+    transition:
+        opacity 0.9s var(--ease-soft),
+        filter 0.9s var(--ease-soft),
+        transform 0.9s var(--ease-out);
+}
+
+.letter-invite {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1rem, 4.2vw, 1.3rem);
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.letter-invite-cta {
+    display: block;
+    margin-top: 0.45em;
+    font-family: var(--font-body);
+    font-style: normal;
+    font-size: 1.05em;
+    letter-spacing: 0.1em;
+    color: #ffe9c9;
+    text-shadow: 0 0 18px rgba(255, 209, 145, 0.55);
+}
+
+.letter-invite.is-in,
+.letter-message.is-in {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+}
+
+/* The invitation leaves as the letter opens */
+.letter-scene.is-open .letter-invite {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(-8px);
+}
+
+/* The letter's message: one soft paragraph reveal */
+.letter-message {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.05rem, 4.4vw, 1.45rem);
+    line-height: 1.7;
+    color: #fdf3e0;
+    text-shadow:
+        0 0 22px rgba(255, 209, 145, 0.35),
+        0 2px 12px rgba(5, 10, 24, 0.7);
+}
+
+.letter-message.is-in {
+    transition-duration: 1.2s;
+}
+
+/* ---- The romantic gate before the letter can open ----
+   A small question, four answers, and the locked "Kholo ❤️" CTA
+   live in the letter scene. The letter stays closed until the
+   correct answer is picked and the unlocked CTA is pressed.
+   Premium glass language, part of the letter - never a quiz. */
+
+.letter-question {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.7rem, 2.2vh, 1.1rem);
+    width: min(92vw, 480px);
+    text-align: center;
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(16px);
+    transition:
+        opacity 1s var(--ease-soft),
+        filter 1s var(--ease-soft),
+        transform 1s var(--ease-out);
+}
+
+.letter-question.is-in {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+}
+
+/* The question fades away like the invitation once the letter
+   opens - it belongs to the closed-letter moment only. */
+.letter-scene.is-open .letter-question {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(-8px);
+    pointer-events: none;
+}
+
+.letter-question-text {
+    margin: 0;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.05rem, 4.4vw, 1.35rem);
+    line-height: 1.5;
+    color: #ffe9c9;
+    text-shadow: 0 0 22px rgba(255, 209, 145, 0.35);
+}
+
+.letter-question-title {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: clamp(0.95rem, 3.8vw, 1.15rem);
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+}
+
+/* Four answers in a two-column grid - stack-free, premium */
+.letter-answers {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    width: 100%;
+    max-width: 460px;
+    outline: none;
+}
+
+.letter-answer {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0.5rem 0.9rem;
+    font-family: var(--font-body);
+    font-size: clamp(0.82rem, 3.4vw, 0.95rem);
+    line-height: 1.35;
+    color: #e8eefc;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--radius-full);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+        opacity 0.7s var(--ease-soft),
+        transform 0.7s var(--ease-out),
+        background var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.letter-answer:nth-child(1) { --i: 0; }
+.letter-answer:nth-child(2) { --i: 1; }
+.letter-answer:nth-child(3) { --i: 2; }
+.letter-answer:nth-child(4) { --i: 3; }
+
+.letter-question.is-in .letter-answer {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: calc(var(--i) * 90ms + 180ms);
+}
+
+.letter-answer:focus-visible {
+    outline: 2px solid rgba(255, 214, 150, 0.6);
+    outline-offset: 2px;
+}
+
+/* Picked option: soft warm highlight */
+.letter-answer.is-selected {
+    color: #fff8ec;
+    background: rgba(255, 214, 150, 0.14);
+    border-color: rgba(255, 214, 150, 0.55);
+}
+
+/* The right answer: elegant glow + check */
+.letter-answer.is-correct {
+    color: #fffdf7;
+    background: rgba(214, 178, 96, 0.20);
+    border-color: rgba(255, 222, 150, 0.85);
+    box-shadow:
+        0 0 30px rgba(255, 209, 145, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.letter-answer.is-correct::after {
+    content: '✓';
+    margin-left: 0.5em;
+    font-size: 0.95em;
+    color: #ffe2a8;
+    text-shadow: 0 0 12px rgba(255, 209, 145, 0.8);
+}
+
+/* A wrong guess: subtle shake, nothing is locked */
+.letter-answer.is-wrong {
+    border-color: rgba(255, 132, 122, 0.65);
+    box-shadow: 0 0 22px rgba(255, 120, 100, 0.22);
+    animation: letter-answer-shake 0.5s var(--ease-out);
+}
+
+@keyframes letter-answer-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    55% { transform: translateX(4px); }
+    80% { transform: translateX(-2px); }
+}
+
+/* Once the answer is right, the question settles and the answers
+   stop being interactive (the CTA owns the next step now) */
+.letter-question.is-settled .letter-answers {
+    pointer-events: none;
+}
+
+/* ---- The locked / unlocked "Kholo ❤️" CTA ---- */
+
+.letter-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 56px;
+    max-width: min(86vw, 420px);
+    padding: 0 2.1rem;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(253, 246, 233, 0.75);
+    background: rgba(255, 214, 150, 0.05);
+    border: 1px solid rgba(255, 214, 150, 0.22);
+    border-radius: var(--radius-full);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+    transition:
+        opacity 1s var(--ease-soft),
+        transform 1s var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        background var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+/* The CTA enters with the question, already visible but LOCKED */
+.letter-question.is-in .letter-cta {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition-delay: 520ms;
+}
+
+/* Playful dodge: short, smooth, always inside the scene */
+.letter-cta.is-dodging {
+    transition: transform 0.28s var(--ease-out) !important;
+}
+
+/* Unlocked: premium pop + glow + gentle breathing */
+.letter-cta.is-unlocked {
+    color: #fdf6e9;
+    background: rgba(255, 214, 150, 0.12);
+    border-color: rgba(255, 222, 150, 0.65);
+    box-shadow:
+        0 0 34px rgba(255, 209, 145, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    animation: cta-unlock-in 0.8s var(--ease-out) both,
+        cta-breathe 3.6s var(--ease-soft) 0.8s infinite;
+}
+
+@keyframes cta-unlock-in {
+    0% {
+        transform: translateY(0) scale(0.92);
+        opacity: 0.5;
+    }
+    55% {
+        transform: translateY(0) scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.letter-cta:hover {
+    background: rgba(255, 214, 150, 0.14);
+    box-shadow:
+        0 0 42px rgba(255, 209, 145, 0.32),
+        0 12px 30px rgba(5, 10, 24, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.letter-cta:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow:
+        0 0 14px rgba(255, 209, 145, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    background: rgba(255, 214, 150, 0.10);
+}
+
+.letter-cta:focus-visible {
+    outline: 2px solid rgba(255, 214, 150, 0.65);
+    outline-offset: 3px;
+}
+
+.cta-heart {
+    font-size: 0.95em;
+    filter: drop-shadow(0 0 10px rgba(255, 209, 145, 0.6));
+}
+
+@keyframes cta-breathe {
+    0%, 100% {
+        box-shadow:
+            0 0 22px rgba(255, 209, 145, 0.16),
+            inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+    50% {
+        box-shadow:
+            0 0 40px rgba(255, 209, 145, 0.26),
+            0 0 64px rgba(255, 190, 110, 0.10),
+            inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    }
+}
+
+
+/* ============================================================
+   12. BIRTHDAY REVEAL - the cinematic film + cosmic heartbeat
+   ------------------------------------------------------------
+   A fully opaque full-screen cinematic scene right after the
+   love letter. First the Birthday Love Letter (read by her;
+   the countdown waits for her button), then the 5-4-3-2-1
+   countdown (numbers emerge from soft blur, each with a
+   heartbeat wave and one micro line), then the celebration:
+   warm light, candles igniting, balloons floating and a small
+   burst - and "Happy Birthday, My Love ❤️" rises with the live
+   age, staying on screen forever. The only exit is the
+   "Aage Badho ❤️" button: no automatic timeout, no auto handoff.
+   ============================================================ */
+
+#birthday-reveal {
+    position: fixed;
+    inset: 0;
+    z-index: 15; /* above the scenes, below Memory Lane (20) */
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    text-align: center;
+    pointer-events: none;
+    /* Fully opaque scene background (same night palette as .scene-bg)
+       so the reveal is its own clean full-screen page, never a
+       translucent layer over whatever sits behind it. */
+    background:
+        radial-gradient(ellipse 70% 55% at 50% 42%, rgba(20, 33, 66, 0.92), transparent 70%),
+        linear-gradient(180deg, var(--night-800) 0%, var(--night-900) 100%);
+}
+
+/* Midnight sky: the star field sits behind everything */
+.birthday-reveal-sky {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+/* The breathing center light - a calm cosmic heartbeat */
+.birthday-reveal-glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(62vmin, 560px);
+    height: min(62vmin, 560px);
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle,
+        rgba(126, 200, 227, 0.16),
+        rgba(94, 201, 142, 0.06) 45%,
+        transparent 68%);
+    filter: blur(14px);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* One heartbeat radial wave expanding from the center per number */
+.birthday-reveal-wave {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(46vmin, 420px);
+    height: min(46vmin, 420px);
+    border: 1px solid rgba(126, 200, 227, 0.4);
+    border-radius: 50%;
+    box-shadow:
+        0 0 40px rgba(126, 200, 227, 0.25),
+        inset 0 0 40px rgba(126, 200, 227, 0.12);
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* The stage: countdown -> title -> live age -> continue button.
+   Rides above the celebration decorations (candles/balloons).
+   pointer-events: none - the invisible stage elements (opacity 0,
+   still in layout) must NEVER intercept clicks meant for the
+   love-letter button beneath them; only the visible continue
+   button re-enables itself. */
+.birthday-reveal-stage {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.5rem, 2.2vh, 1.1rem);
+    width: 100%;
+    padding: var(--space-lg) var(--space-md);
+    pointer-events: none;
+}
+
+/* Only the live continue button is interactive - and only once it
+   is actually shown on screen (.is-in). */
+.birthday-reveal-stage .birthday-reveal-continue.is-in {
+    pointer-events: auto;
+}
+
+/* ---- The Birthday Love Letter (before the countdown) ---- */
+
+.birthday-reveal-letter {
+    position: absolute;
+    inset: 0;
+    z-index: 2; /* above glow / wave / decorations, below the stage */
+    display: grid;
+    place-items: center;
+    padding: var(--space-md);
+    pointer-events: none; /* only the letter button re-enables clicks */
+    opacity: 0;
+}
+
+/* The card: a dark glass pane with a warm champagne rim light.
+   dvh-aware max-height keeps the whole card inside the viewport
+   (including mobile browser chrome); the message area scrolls
+   internally, the button stays at the bottom of the card. */
+.birthday-reveal-letter-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.6rem, 1.8vh, 1.05rem);
+    width: min(680px, 100%);
+    max-height: min(72vh, 620px);
+    max-height: min(76dvh, 620px);
+    padding: clamp(1.15rem, 3.4vw, 2.4rem) clamp(1.1rem, 3.4vw, 2.6rem);
+    border-radius: var(--radius-lg);
+    background:
+        radial-gradient(120% 90% at 50% 0%, rgba(255, 190, 120, 0.07), transparent 62%),
+        linear-gradient(180deg, rgba(18, 29, 58, 0.86), rgba(8, 13, 28, 0.94));
+    border: 1px solid rgba(255, 214, 170, 0.16);
+    box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 230, 190, 0.1),
+        inset 0 -1px 0 rgba(255, 190, 130, 0.05),
+        0 0 70px rgba(255, 170, 100, 0.07);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    overflow: hidden;
+}
+
+.birthday-reveal-letter-heading {
+    flex: 0 0 auto;
+    position: relative;
+    margin: 0;
+    padding-bottom: clamp(0.55rem, 1.6vh, 0.8rem);
+    font-family: var(--font-display);
+    font-size: clamp(1.35rem, 5vw, 2rem);
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    background: linear-gradient(120deg, #fff0da 0%, #ffd9ad 55%, #ffc9a1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 18px rgba(255, 180, 110, 0.35));
+}
+
+/* A quiet hairline divider under the heading */
+.birthday-reveal-letter-heading::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: min(46%, 200px);
+    height: 1px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, transparent, rgba(255, 200, 150, 0.5), transparent);
+}
+
+/* The scrollable message area. A soft mask fades the last lines
+   while more text remains below; reaching the bottom removes it
+   (the .is-at-end class is toggled by birthday-reveal.js).
+   pointer-events: auto re-enables hit-testing here - the letter
+   layer itself is pointer-events: none, so without it this area
+   would be transparent to touch/wheel input and could never
+   scroll. */
+.birthday-reveal-letter-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    touch-action: pan-y;
+    pointer-events: auto;
+    padding-right: 0.4rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 200, 150, 0.28) transparent;
+    mask-image: linear-gradient(180deg, #000 86%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, #000 86%, transparent 100%);
+}
+
+.birthday-reveal-letter.is-at-end .birthday-reveal-letter-body {
+    mask-image: none;
+    -webkit-mask-image: none;
+}
+
+.birthday-reveal-letter-text {
+    margin: 0;
+    white-space: pre-line;
+    font-family: var(--font-display);
+    font-size: clamp(0.92rem, 3vw, 1.12rem);
+    font-weight: 400;
+    line-height: 1.72;
+    letter-spacing: 0.015em;
+    color: rgba(240, 229, 214, 0.92);
+    text-shadow: 0 1px 12px rgba(5, 8, 20, 0.6);
+}
+
+/* "Aage Badho ❤️" - the premium cinematic CTA at the end of the
+   letter: a warm glass surface with a soft glow, generous touch
+   target, and a very gentle breathing glow while waiting. The
+   subtle breathing / heartbeat live in animation.css. */
+.birthday-reveal-letter-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    margin-top: clamp(0.35rem, 1.4vh, 0.7rem);
+    padding: 0.85rem 2.2rem;
+    font-family: var(--font-body);
+    font-size: clamp(0.95rem, 3vw, 1.05rem);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+    color: #fff0dc;
+    background: linear-gradient(180deg, rgba(122, 86, 52, 0.42), rgba(74, 50, 30, 0.42));
+    border: 1px solid rgba(255, 205, 150, 0.38);
+    border-radius: var(--radius-full);
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.4),
+        0 0 26px rgba(255, 165, 95, 0.18),
+        inset 0 1px 0 rgba(255, 232, 195, 0.18),
+        inset 0 -2px 6px rgba(60, 30, 12, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    cursor: pointer;
+    pointer-events: auto; /* the letter stage itself is pointer-events: none */
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        border-color 0.3s var(--ease-soft),
+        box-shadow 0.3s var(--ease-soft),
+        background 0.3s var(--ease-soft),
+        transform 0.3s var(--ease-soft);
+}
+
+.birthday-reveal-letter-btn:disabled {
+    cursor: default;
+}
+
+.birthday-reveal-letter-btn:hover {
+    border-color: rgba(255, 215, 165, 0.7);
+    box-shadow:
+        0 12px 34px rgba(0, 0, 0, 0.42),
+        0 0 38px rgba(255, 175, 105, 0.3),
+        inset 0 1px 0 rgba(255, 232, 195, 0.22),
+        inset 0 -2px 6px rgba(60, 30, 12, 0.3);
+    background: linear-gradient(180deg, rgba(140, 98, 60, 0.48), rgba(86, 58, 36, 0.48));
+    transform: translateY(-1px);
+}
+
+.birthday-reveal-letter-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* The heart beats very subtly while the button waits */
+.birthday-reveal-letter-btn-heart {
+    display: inline-block;
+    margin-left: 0.35em;
+    transform-origin: 50% 62%;
+    animation: letter-heart-beat 3.2s ease-in-out 2.2s infinite;
+}
+
+/* ---- Celebration decorations (after the countdown) ---- */
+
+/* Candles hug the bottom edge; balloons drift along the sides */
+.birthday-reveal-candles,
+.birthday-reveal-balloons {
+    position: absolute;
+    inset: 0;
+    z-index: 1; /* behind the stage and the letter */
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.birthday-reveal-candle {
+    position: absolute;
+    bottom: clamp(10px, 3vh, 30px);
+    width: 18px;
+    height: var(--h, 52px);
+    transform: rotate(var(--tilt, 0deg));
+    opacity: 0;
+    pointer-events: none;
+}
+
+.birthday-reveal-candle-body {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px 6px 3px 3px;
+    background: linear-gradient(180deg, #f4e6d7 0%, #e6cfb6 55%, #d8bda2 100%);
+    box-shadow:
+        inset -3px 0 6px rgba(120, 70, 30, 0.25),
+        0 0 14px rgba(255, 190, 120, 0.16);
+}
+
+.birthday-reveal-candle-wick {
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    width: 2px;
+    height: 7px;
+    transform: translateX(-50%);
+    background: #3a2c22;
+    border-radius: 1px;
+}
+
+.birthday-reveal-candle-flame {
+    position: absolute;
+    top: -13px;
+    left: 50%;
+    width: 9px;
+    height: 14px;
+    transform: translateX(-50%);
+    border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+    background: radial-gradient(circle at 50% 78%, #fff7e0 0%, #ffd89b 45%, #ff9d3c 80%);
+    box-shadow:
+        0 0 12px 4px rgba(255, 170, 90, 0.55),
+        0 0 34px 10px rgba(255, 150, 60, 0.26);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.birthday-reveal-balloon {
+    position: absolute;
+    left: var(--left, 10%);
+    top: var(--top, 12%);
+    width: var(--size, 56px);
+    height: calc(var(--size, 56px) * 1.16);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.birthday-reveal-balloon-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: 50% 50% 50% 50% / 56% 56% 44% 44%;
+    background: radial-gradient(circle at 32% 26%, var(--c2) 0%, var(--c1) 72%);
+    box-shadow: 0 0 22px rgba(255, 190, 140, 0.13);
+}
+
+.birthday-reveal-balloon-fill::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -1px;
+    width: 5px;
+    height: 5px;
+    transform: translateX(-50%);
+    background: var(--c1);
+    border-radius: 2px 2px 4px 4px;
+}
+
+.birthday-reveal-balloon-string {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    width: 1px;
+    height: 34px;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, rgba(214, 236, 247, 0.5), rgba(214, 236, 247, 0.1));
+}
+
+/* Tiny burst fragments (spawned inside popping balloons) */
+.birthday-reveal-fragment {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--c2);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Every stage element rests at opacity 0 and appears via .is-in */
+.birthday-reveal-count,
+.birthday-reveal-micro,
+.birthday-reveal-final,
+.birthday-reveal-age,
+.birthday-reveal-continue {
+    max-width: 92vw;
+    margin: 0;
+    opacity: 0;
+}
+
+/* Countdown number: premium cinematic typography, no layout shift */
+.birthday-reveal-count {
+    font-family: var(--font-display);
+    font-size: clamp(4.5rem, 20vw, 8rem);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--blue-050);
+    text-shadow:
+        0 0 30px var(--glow-blue),
+        0 0 80px rgba(126, 200, 227, 0.45);
+}
+
+/* Cinematic micro-copy - one line at a time, quiet under the number */
+.birthday-reveal-micro {
+    font-family: var(--font-body);
+    font-size: clamp(0.8rem, 3vw, 1rem);
+    font-weight: 300;
+    letter-spacing: 0.22em;
+    color: var(--text-secondary);
+}
+
+.birthday-reveal-final {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 7.5vw, 3.8rem);
+    font-weight: 600;
+    line-height: 1.2;
+    background: linear-gradient(120deg,
+        var(--blue-050) 0%,
+        #eaf7ff 45%,
+        var(--green-200) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 24px rgba(126, 200, 227, 0.4));
+}
+
+/* ---- Live age: elegant, no boxes, wraps on small screens ---- */
+.birthday-reveal-age {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    column-gap: clamp(0.4rem, 2vw, 1rem);
+    row-gap: clamp(0.25rem, 1.2vh, 0.6rem);
+}
+
+.birthday-reveal-age-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15em;
+    min-width: 4.2ch; /* steady column width - no layout jumps */
+    margin: 0;
+    font-family: var(--font-display);
+    color: var(--blue-050);
+    text-shadow:
+        0 0 18px var(--glow-blue),
+        0 2px 10px rgba(5, 10, 24, 0.8);
+}
+
+.birthday-reveal-age-row:not(:first-child) {
+    border-left: 1px solid rgba(126, 200, 227, 0.16);
+    padding-left: clamp(0.4rem, 2vw, 1rem);
+}
+
+.birthday-reveal-age-value {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+
+.birthday-reveal-age-unit {
+    font-size: 0.6em;
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.birthday-reveal-age-years {
+    font-size: clamp(1.7rem, 6vw, 2.8rem);
+}
+
+.birthday-reveal-age-years .birthday-reveal-age-value {
+    color: var(--green-200);
+    text-shadow:
+        0 0 26px var(--glow-green),
+        0 0 70px rgba(94, 201, 142, 0.35),
+        0 2px 10px rgba(5, 10, 24, 0.8);
+}
+
+.birthday-reveal-age-row:not(.birthday-reveal-age-years) {
+    font-size: clamp(0.95rem, 3.2vw, 1.3rem);
+}
+
+.birthday-reveal-age-row-seconds {
+    color: var(--green-200);
+    text-shadow:
+        0 0 20px var(--glow-green),
+        0 2px 10px rgba(5, 10, 24, 0.8);
+    transition: opacity 0.25s var(--ease-soft);
+}
+
+.birthday-reveal-age-row-seconds.is-ticking {
+    opacity: 0.55;
+}
+
+/* ---- "Aage Badho ❤️" - the ONLY way forward ---- */
+.birthday-reveal-continue {
+    margin-top: clamp(0.5rem, 2vh, 1.1rem);
+    padding: 0.85rem 2.1rem;
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 3.4vw, 1.15rem);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+    color: var(--blue-050);
+    background: rgba(20, 33, 66, 0.45);
+    border: 1px solid rgba(126, 200, 227, 0.35);
+    border-radius: var(--radius-full);
+    box-shadow:
+        0 0 22px rgba(126, 200, 227, 0.18),
+        inset 0 1px 0 var(--glass-highlight);
+    cursor: pointer;
+    /* Hidden until shown: while the continue button is invisible
+       (opacity 0, still in layout inside the stage above the love
+       letter) it must NEVER intercept clicks meant for the letter
+       button - only .is-in re-enables it (see stage rule above). */
+    pointer-events: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        border-color 0.3s var(--ease-soft),
+        box-shadow 0.3s var(--ease-soft),
+        background 0.3s var(--ease-soft),
+        transform 0.3s var(--ease-soft);
+}
+
+.birthday-reveal-continue:hover {
+    border-color: rgba(126, 200, 227, 0.7);
+    box-shadow:
+        0 0 34px rgba(126, 200, 227, 0.38),
+        inset 0 1px 0 var(--glass-highlight);
+    background: rgba(30, 48, 92, 0.55);
+    transform: translateY(-1px);
+}
+
+.birthday-reveal-continue:active {
+    transform: translateY(0) scale(0.99);
+}
+
+.birthday-reveal-continue-heart {
+    margin-left: 0.35em;
+}

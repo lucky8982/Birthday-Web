@@ -1,0 +1,1185 @@
+/* ============================================================
+   Happy Birthday My Love 💙 - Responsive Styles
+   ------------------------------------------------------------
+   File:    css/responsive.css
+   Purpose: Mobile-first responsive adjustments for phones,
+            tablets and desktop screens.
+   Rules:   Does NOT touch existing styles - only adds
+            responsive refinements on top of style.css.
+   Theme:   Light Blue + Green, kept intact everywhere.
+   ============================================================ */
+
+
+/* ============================================================
+   1. GLOBAL MOBILE REFINEMENTS (applies to all sizes first)
+   ------------------------------------------------------------
+   Hard overflow guards + iOS safe-area support.
+   ============================================================ */
+html {
+    overflow-x: hidden;
+}
+
+/* Keep every content column inside the viewport */
+.scene-content,
+.loading-content {
+    max-width: 100%;
+}
+
+/* Respect notched phones (iOS safe areas) */
+@supports (padding: max(0px)) {
+    .music-toggle {
+        top: max(1.2rem, env(safe-area-inset-top));
+        right: max(1.2rem, env(safe-area-inset-right));
+    }
+
+    .experience-back-btn {
+        top: max(1.2rem, env(safe-area-inset-top));
+        left: max(1.2rem, env(safe-area-inset-left));
+    }
+
+    .loading-content,
+    .scene-content {
+        padding-left: max(var(--space-md), env(safe-area-inset-left));
+        padding-right: max(var(--space-md), env(safe-area-inset-right));
+    }
+}
+
+/* Reduce heavy blur on low-end mobile GPUs for smooth 60fps */
+@media (max-width: 767px) {
+    .loading-logo,
+    .music-toggle,
+    .tap-to-begin,
+    .experience-back-btn,
+    .scene-placeholder {
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+    }
+}
+
+
+/* ============================================================
+   2. SMALL PHONES (320px - 400px)
+   ------------------------------------------------------------
+Tiny screens: compress everything so nothing overflows
+    and the whole loading + letter story fits on one screen.
+   ============================================================ */
+@media (max-width: 400px) {
+    /* ---- Loading screen ---- */
+    .loading-content {
+        gap: var(--space-sm);
+        padding-top: var(--space-md);
+        padding-bottom: var(--space-md);
+    }
+
+    .loading-logo {
+        width: 60px;
+        height: 60px;
+    }
+
+    .logo-heart {
+        width: 28px;
+        height: 28px;
+    }
+
+    .loading-title {
+        font-size: clamp(2.1rem, 12vw, 2.6rem);
+        gap: 0.1em;
+    }
+
+    .loading-subtitle {
+        font-size: 0.85rem;
+        letter-spacing: 0.06em;
+    }
+
+    .loading-progress {
+        width: min(280px, 84vw);
+    }
+
+    /* ---- Tap to begin (touch-friendly) ---- */
+    .tap-to-begin {
+        width: min(280px, 84vw);
+        justify-content: center;
+        padding: 0.9rem 1.6rem;
+        font-size: 0.9rem;
+        min-height: 48px;
+    }
+
+    /* ---- Hero scene ---- */
+    .scene-content {
+        padding: var(--space-md) var(--space-sm);
+    }
+
+    /* ---- Music toggle stays tappable ---- */
+    .music-toggle {
+        width: 44px;
+        height: 44px;
+        top: max(0.9rem, env(safe-area-inset-top));
+        right: max(0.9rem, env(safe-area-inset-right));
+    }
+
+    .music-toggle svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* ---- Back button: compact, keeps a real touch target ---- */
+    .experience-back-btn {
+        top: max(0.9rem, env(safe-area-inset-top));
+        left: max(0.9rem, env(safe-area-inset-left));
+    }
+}
+
+/* Icon-only Back button on very small screens - the label would
+   crowd the corner next to the music toggle. */
+@media (max-width: 480px) {
+    .experience-back-btn {
+        min-height: 44px;
+        padding: 0.55rem 0.7rem;
+    }
+
+    .experience-back-label {
+        display: none;
+    }
+}
+
+/* Short/landscape screens: the letter card nearly touches the
+   corner, so tuck the Back button in tighter while keeping a real
+   touch target. */
+@media (max-height: 600px) {
+    .experience-back-btn {
+        top: max(0.6rem, env(safe-area-inset-top));
+        left: max(0.6rem, env(safe-area-inset-left));
+        min-height: 44px;
+        padding: 0.5rem 0.8rem;
+    }
+}
+
+
+/* ============================================================
+   3. PHONES (401px - 767px)
+   ------------------------------------------------------------
+   Standard phones: keep the premium feel, just tighter.
+   ============================================================ */
+@media (min-width: 401px) and (max-width: 767px) {
+    .loading-content {
+        gap: 1.35rem;
+    }
+
+    .loading-logo {
+        width: 68px;
+        height: 68px;
+    }
+
+    .logo-heart {
+        width: 32px;
+        height: 32px;
+    }
+
+    .loading-title {
+        font-size: clamp(2.4rem, 11vw, 3.2rem);
+    }
+
+    /* ---- Tap to begin - full comfortable touch target ---- */
+    .tap-to-begin {
+        min-height: 52px;
+        padding: 1rem 2rem;
+        font-size: 0.95rem;
+    }
+}
+
+
+/* ============================================================
+   4. LANDSCAPE PHONES & SHORT SCREENS
+   ------------------------------------------------------------
+   When height is limited (landscape), compress vertical
+   spacing so content never overflows the viewport.
+   ============================================================ */
+@media (max-height: 600px) and (orientation: landscape) {
+    .loading-content {
+        gap: 0.6rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .loading-logo {
+        width: 52px;
+        height: 52px;
+    }
+
+    .logo-heart {
+        width: 26px;
+        height: 26px;
+    }
+
+    .loading-title {
+        font-size: clamp(1.7rem, 9vw, 2.4rem);
+    }
+
+    .loading-subtitle {
+        font-size: 0.8rem;
+    }
+
+    .loading-progress {
+        width: min(240px, 60vw);
+    }
+
+    .tap-to-begin {
+        min-height: 44px;
+        padding: 0.6rem 1.4rem;
+        margin-top: 0.25rem;
+    }
+}
+
+
+/* ============================================================
+   5. TABLETS (768px - 1023px)
+   ------------------------------------------------------------
+   Medium screens: breathing room returns.
+   ============================================================ */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .loading-content {
+        gap: var(--space-md);
+        padding: var(--space-xl) var(--space-lg);
+    }
+
+    .loading-logo {
+        width: 84px;
+        height: 84px;
+    }
+
+    .logo-heart {
+        width: 40px;
+        height: 40px;
+    }
+
+    .tap-to-begin {
+        padding: 1.1rem 2.8rem;
+        font-size: 1.05rem;
+    }
+
+    .music-toggle {
+        width: 52px;
+        height: 52px;
+    }
+
+    .scene-content {
+        padding: var(--space-xl) var(--space-lg);
+    }
+}
+
+
+/* ============================================================
+   6. DESKTOP (1024px and up)
+   ------------------------------------------------------------
+   Full cinematic stage: large typography, generous spacing.
+   ============================================================ */
+@media (min-width: 1024px) {
+    .loading-content {
+        gap: var(--space-lg);
+        padding: var(--space-xl) var(--space-lg);
+    }
+
+    .loading-logo {
+        width: 96px;
+        height: 96px;
+    }
+
+    .logo-heart {
+        width: 46px;
+        height: 46px;
+    }
+
+    .loading-title {
+        font-size: clamp(3.4rem, 6vw, 4.8rem);
+    }
+
+    .loading-subtitle {
+        font-size: clamp(1rem, 2vw, 1.2rem);
+    }
+
+    .tap-to-begin {
+        padding: 1.2rem 3rem;
+        font-size: 1.1rem;
+        letter-spacing: 0.14em;
+    }
+
+    .music-toggle {
+        top: 1.8rem;
+        right: 1.8rem;
+        width: 54px;
+        height: 54px;
+    }
+
+    .music-toggle svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    /* ---- Scene content: full cinematic presence ---- */
+    .scene-content {
+        padding: var(--space-xl) var(--space-lg);
+    }
+}
+
+
+/* ============================================================
+   7. LARGE SCREENS (1440px and up)
+   ------------------------------------------------------------
+   Ultra-wide displays: keep the stage centered and calm.
+   ============================================================ */
+@media (min-width: 1440px) {
+    .loading-content {
+        max-width: 720px;
+    }
+
+    .scene-content {
+        max-width: 1120px;
+    }
+
+    .loading-title {
+        font-size: clamp(4rem, 5.5vw, 5.2rem);
+    }
+}
+
+
+/* ============================================================
+   8. TOUCH DEVICES - HOVER BEHAVIOUR
+   ------------------------------------------------------------
+   On touch screens there is no hover - the tap feedback
+   already lives in style.css. Hide sticky hover effects.
+   ============================================================ */
+@media (hover: none) and (pointer: coarse) {
+    .tap-to-begin:hover,
+    .music-toggle:hover {
+        transform: none;
+        box-shadow:
+            0 0 26px var(--glow-blue),
+            inset 0 1px 0 var(--glass-highlight);
+    }
+}
+
+
+/* ============================================================
+   9. REDUCED MOTION (responsive layer)
+   ------------------------------------------------------------
+   Same safety net as animation.css - guaranteed calm mode
+   regardless of stylesheet load order.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+
+/* ============================================================
+   10. MEMORY LANE (Scene 2) - MEMORY BOOK, RESPONSIVE
+   ------------------------------------------------------------
+   On phones all eight compositions fold into one centered
+   column; tablets and desktop keep the cinematic grids from
+   style.css. Tap targets stay comfortable. The chapter scrolls
+   gracefully instead of clipping when a long title or message
+   overflows a short viewport.
+   ============================================================ */
+
+/* The chapter may scroll instead of clipping - at every size */
+.memory-chapter {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* ---- Phones (<= 767px): every composition becomes a column ---- */
+@media (max-width: 767px) {
+    .memory-chapter,
+    .memory-chapter.compose-a,
+    .memory-chapter.compose-b,
+    .memory-chapter.compose-c,
+    .memory-chapter.compose-d,
+    .memory-chapter.compose-e,
+    .memory-chapter.compose-f,
+    .memory-chapter.compose-g,
+    .memory-chapter.compose-h {
+        grid-template-areas:
+            'title'
+            'photo'
+            'message';
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto auto;
+        align-content: start;
+        justify-items: center;
+        gap: clamp(0.7rem, 2.2vh, 1.2rem);
+        padding: clamp(4.2rem, 14vh, 6rem) 1.2rem clamp(4.6rem, 16vh, 6.5rem);
+    }
+
+    /* Title: centered, full width, still cinematic */
+    .memory-chapter.compose-a .memory-title-block,
+    .memory-chapter.compose-b .memory-title-block,
+    .memory-chapter.compose-c .memory-title-block,
+    .memory-chapter.compose-d .memory-title-block,
+    .memory-chapter.compose-e .memory-title-block,
+    .memory-chapter.compose-f .memory-title-block,
+    .memory-chapter.compose-g .memory-title-block,
+    .memory-chapter.compose-h .memory-title-block {
+        justify-self: center;
+        align-self: start;
+        text-align: center;
+        max-width: 100%;
+        --settle-x: 0;
+        --settle-y: 0;
+    }
+
+    .memory-chapter .memory-title-text {
+        font-size: clamp(2rem, 9vw, 3.1rem);
+    }
+
+    /* Photo: centered hero */
+    .memory-chapter.compose-a .memory-photo-block,
+    .memory-chapter.compose-b .memory-photo-block,
+    .memory-chapter.compose-c .memory-photo-block,
+    .memory-chapter.compose-d .memory-photo-block,
+    .memory-chapter.compose-e .memory-photo-block,
+    .memory-chapter.compose-f .memory-photo-block,
+    .memory-chapter.compose-g .memory-photo-block,
+    .memory-chapter.compose-h .memory-photo-block {
+        justify-self: center;
+        align-self: center;
+    }
+
+    .memory-photo {
+        max-height: min(44vh, 46svh);
+    }
+
+    /* ---- Mobile: keep each reveal's idea, but never push the photo
+       outside the viewport. Desktop keeps the original keyframes. ---- */
+
+    /* 05 - film strip slide: smaller travel keeps the photo visible */
+    @keyframes p05-film {
+        0% {
+            opacity: 0;
+            transform: translateX(-11px);
+        }
+        30% {
+            opacity: 1;
+            transform: translateX(4px);
+        }
+        50% {
+            transform: translateX(-3px);
+        }
+        70% {
+            transform: translateX(2px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* 19 - fold: soften the perspective so the 3D fold does not
+       magnify the photo wider than the screen */
+    @keyframes p19-fold {
+        from {
+            opacity: 0.2;
+            transform: perspective(3200px) rotateX(88deg);
+        }
+        70% {
+            opacity: 1;
+            transform: perspective(3200px) rotateX(-6deg);
+        }
+        to {
+            opacity: 1;
+            transform: perspective(3200px) rotateX(0);
+        }
+    }
+
+    /* 23 - blurred merge: smaller zoom stays inside the viewport */
+    @keyframes p23-merge {
+        from {
+            opacity: 0;
+            transform: scale(1.05);
+            filter: blur(18px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0);
+        }
+    }
+
+    /* 30 - final wide reveal: smaller zoom stays inside the viewport */
+    @keyframes p30-wide {
+        0% {
+            opacity: 0;
+            transform: scale(1.08);
+        }
+        60% {
+            opacity: 1;
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* Message: centered beneath the photo */
+    .memory-chapter.compose-a .memory-message-block,
+    .memory-chapter.compose-b .memory-message-block,
+    .memory-chapter.compose-c .memory-message-block,
+    .memory-chapter.compose-d .memory-message-block,
+    .memory-chapter.compose-e .memory-message-block,
+    .memory-chapter.compose-f .memory-message-block,
+    .memory-chapter.compose-g .memory-message-block,
+    .memory-chapter.compose-h .memory-message-block {
+        justify-self: center;
+        align-self: start;
+        text-align: center;
+        max-width: min(480px, 100%);
+    }
+
+    .memory-message {
+        font-size: clamp(0.98rem, 4.3vw, 1.2rem);
+    }
+
+    /* Controls: thumb-reachable, never below 48px */
+    .memory-actions {
+        bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    .memory-next,
+    .memory-prev {
+        min-height: 48px;
+        padding: 0 1.4rem;
+        font-size: 0.78rem;
+    }
+
+    .memory-final {
+        bottom: max(1.1rem, env(safe-area-inset-bottom));
+        width: min(92vw, 520px);
+        padding: var(--space-sm) var(--space-md);
+    }
+
+    .memory-final-title {
+        font-size: clamp(1.3rem, 5.2vw, 1.9rem);
+    }
+
+    .memory-final-love {
+        font-size: clamp(1.2rem, 4.6vw, 1.6rem);
+    }
+
+    .memory-final-eyebrow {
+        font-size: 0.74rem;
+    }
+
+    .memory-reveal-btn,
+    .memory-continue-btn,
+    .memory-final-btn {
+        min-height: 48px;
+        padding: 0 1.5rem;
+        font-size: 0.82rem;
+    }
+
+    .memory-intro {
+        min-height: 100svh;
+        padding-left: var(--space-sm);
+        padding-right: var(--space-sm);
+    }
+
+    /* Opening messages: comfortable on small screens */
+    .opening-line {
+        font-size: clamp(1.05rem, 4.6vw, 1.35rem);
+    }
+
+    .opening-title {
+        font-size: clamp(1.9rem, 9.5vw, 2.6rem);
+    }
+
+    .opening-sub {
+        font-size: clamp(0.98rem, 4.4vw, 1.25rem);
+    }
+
+    .opening-passage {
+        font-size: clamp(1.08rem, 4.8vw, 1.35rem);
+        line-height: 1.65;
+    }
+
+    .letter-card {
+        width: clamp(210px, 56vw, 300px);
+    }
+
+    .letter-caption {
+        min-height: clamp(5rem, 20vh, 7rem);
+    }
+
+    .letter-invite {
+        font-size: clamp(0.95rem, 4.4vw, 1.15rem);
+    }
+
+    .letter-message {
+        font-size: clamp(1rem, 4.8vw, 1.25rem);
+    }
+
+    .letter-question {
+        gap: 0.6rem;
+        width: min(94vw, 460px);
+    }
+
+    .letter-question-text {
+        font-size: clamp(0.98rem, 4.4vw, 1.15rem);
+    }
+
+    .letter-question-title {
+        font-size: clamp(0.88rem, 3.8vw, 1rem);
+    }
+
+    .letter-answers {
+        gap: 0.55rem;
+    }
+
+    .letter-answer {
+        min-height: 46px;
+        padding: 0.45rem 0.8rem;
+        font-size: clamp(0.78rem, 3.4vw, 0.88rem);
+    }
+
+    .letter-cta {
+        min-height: 52px;
+        padding: 0 1.6rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* ---- Very small phones (<= 340px): keep the sky airy ---- */
+@media (max-width: 340px) {
+    .opening-line {
+        font-size: 0.98rem;
+    }
+
+    .opening-title {
+        font-size: clamp(1.7rem, 10vw, 2.2rem);
+        letter-spacing: 0.08em;
+    }
+
+    .opening-sub {
+        font-size: 0.92rem;
+    }
+
+    .opening-passage {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .letter-card {
+        width: clamp(185px, 54vw, 210px);
+    }
+
+    .letter-caption {
+        min-height: 4.6rem;
+    }
+
+    .letter-message {
+        font-size: 0.98rem;
+    }
+
+    .letter-question {
+        gap: 0.5rem;
+    }
+
+    .letter-question-text {
+        font-size: 0.9rem;
+    }
+
+    .letter-question-title {
+        font-size: 0.8rem;
+    }
+
+    .letter-answers {
+        gap: 0.45rem;
+    }
+
+    .letter-answer {
+        min-height: 44px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    .letter-cta {
+        min-height: 48px;
+        padding: 0 1.3rem;
+        font-size: 0.84rem;
+    }
+
+    /* Reveal: tiny phones get a tighter love letter so the message
+       and the button always fit without a horizontal squeeze */
+    .birthday-reveal-letter {
+        padding: 0.6rem;
+    }
+
+    .birthday-reveal-letter-card {
+        max-height: min(80vh, 640px);
+        max-height: min(84dvh, 640px);
+        padding: 0.9rem 0.9rem 1rem;
+    }
+
+    .birthday-reveal-letter-heading {
+        font-size: clamp(1.15rem, 6vw, 1.4rem);
+    }
+
+    .birthday-reveal-letter-text {
+        font-size: 0.9rem;
+        line-height: 1.65;
+    }
+
+    .birthday-reveal-letter-btn {
+        width: 100%;
+        max-width: 320px;
+        justify-content: center;
+    }
+}
+
+/* ---- Phones up to 414px: comfortable, never cramped ---- */
+@media (max-width: 414px) {
+    .birthday-reveal-letter-card {
+        padding: clamp(0.95rem, 3.4vw, 1.25rem) clamp(0.9rem, 3.2vw, 1.1rem);
+    }
+
+    .birthday-reveal-letter-heading {
+        font-size: clamp(1.2rem, 5.4vw, 1.5rem);
+    }
+
+    .birthday-reveal-letter-text {
+        font-size: clamp(0.9rem, 3.2vw, 1rem);
+        line-height: 1.7;
+    }
+
+    .birthday-reveal-letter-btn {
+        padding-left: 1.7rem;
+        padding-right: 1.7rem;
+    }
+}
+
+/* ---- Small phones (<= 400px): squeeze tighter ---- */
+@media (max-width: 400px) {
+    .memory-chapter,
+    .memory-chapter.compose-a,
+    .memory-chapter.compose-b,
+    .memory-chapter.compose-c,
+    .memory-chapter.compose-d,
+    .memory-chapter.compose-e,
+    .memory-chapter.compose-f,
+    .memory-chapter.compose-g,
+    .memory-chapter.compose-h {
+        gap: 0.6rem;
+        padding: 3.4rem 0.9rem 3.8rem;
+    }
+
+    .memory-chapter .memory-title-text {
+        font-size: clamp(1.75rem, 8.6vw, 2.3rem);
+    }
+
+    .memory-frame {
+        padding: 10px;
+    }
+
+    .memory-photo {
+        max-height: min(40vh, 42svh);
+    }
+
+    .memory-message {
+        font-size: clamp(0.92rem, 4.6vw, 1.05rem);
+        line-height: 1.5;
+    }
+}
+
+/* ---- Landscape phones / short screens ---- */
+@media (max-height: 600px) and (orientation: landscape) {
+    .memory-chapter {
+        align-content: center;
+        gap: 0.5rem;
+        padding: 2.4rem 3vw 3.2rem;
+    }
+
+    .memory-chapter .memory-title-text {
+        font-size: clamp(1.55rem, 4.4vw, 2.4rem);
+    }
+
+    .memory-photo {
+        max-height: min(40vh, 48svh);
+    }
+
+    .memory-message {
+        font-size: clamp(0.85rem, 1.9vw, 1rem);
+        line-height: 1.4;
+    }
+
+    .memory-next,
+    .memory-prev,
+    .memory-reveal-btn,
+    .memory-continue-btn,
+    .memory-final-btn {
+        min-height: 44px;
+        padding: 0 1.1rem;
+    }
+
+    .memory-actions {
+        bottom: max(0.7rem, env(safe-area-inset-bottom));
+    }
+
+    /* Final message must fit short screens */
+    .memory-final {
+        max-height: 92svh;
+        overflow-y: auto;
+        gap: 0.5rem;
+    }
+
+    .memory-final-title {
+        font-size: clamp(1.15rem, 3.2vw, 1.6rem);
+    }
+
+    .memory-final-love {
+        font-size: clamp(1.05rem, 3vw, 1.4rem);
+    }
+
+    .memory-final-eyebrow {
+        font-size: 0.68rem;
+    }
+
+    /* Opening messages: compact on short screens */
+    .opening-line {
+        font-size: clamp(0.95rem, 2.4vw, 1.3rem);
+        line-height: 1.4;
+    }
+
+    .opening-title {
+        font-size: clamp(1.6rem, 4.5vw, 2.8rem);
+    }
+
+    .opening-sub {
+        font-size: clamp(0.9rem, 2.2vw, 1.2rem);
+    }
+
+    .opening-passage {
+        font-size: clamp(0.72rem, 1.8vw, 1rem);
+        line-height: 1.5;
+    }
+
+    .letter-cta {
+        min-height: 44px;
+        padding: 0 1.4rem;
+        font-size: 0.85rem;
+    }
+
+    .letter-scene {
+        gap: 0.8rem;
+    }
+
+    .letter-card {
+        width: clamp(120px, 24vh, 170px);
+    }
+
+    .letter-caption {
+        min-height: 3.8rem;
+    }
+
+    .letter-invite {
+        font-size: clamp(0.85rem, 2vw, 1.05rem);
+    }
+
+    .letter-message {
+        font-size: clamp(0.85rem, 1.9vw, 1.05rem);
+        line-height: 1.5;
+    }
+
+    .letter-question {
+        gap: 0.45rem;
+        width: min(94vw, 460px);
+    }
+
+    .letter-question-text {
+        font-size: clamp(0.8rem, 1.9vw, 0.95rem);
+    }
+
+    .letter-question-title {
+        font-size: clamp(0.72rem, 1.7vw, 0.85rem);
+    }
+
+    .letter-answers {
+        gap: 0.4rem;
+    }
+
+    .letter-answer {
+        min-height: 40px;
+        padding: 0.3rem 0.6rem;
+        font-size: clamp(0.68rem, 1.6vw, 0.8rem);
+    }
+
+    /* Birthday reveal: compact so the full sequence (countdown ->
+       title -> live age -> continue button) always fits a short
+       landscape viewport */
+    .birthday-reveal-stage {
+        gap: 0.4rem;
+        padding-top: var(--space-md);
+        padding-bottom: var(--space-md);
+    }
+
+    .birthday-reveal-count {
+        font-size: clamp(2.8rem, 12vh, 4rem);
+    }
+
+    .birthday-reveal-micro {
+        font-size: clamp(0.6rem, 1.6vh, 0.8rem);
+        letter-spacing: 0.18em;
+    }
+
+    .birthday-reveal-final {
+        font-size: clamp(1.3rem, 4.5vh, 1.9rem);
+    }
+
+    .birthday-reveal-age {
+        row-gap: 0.25rem;
+    }
+
+    .birthday-reveal-age-years {
+        font-size: clamp(1.3rem, 4.5vh, 2rem);
+    }
+
+    .birthday-reveal-age-row:not(.birthday-reveal-age-years) {
+        font-size: clamp(0.8rem, 2.4vh, 1.05rem);
+    }
+
+    .birthday-reveal-continue {
+        margin-top: 0.3rem;
+        padding: 0.6rem 1.5rem;
+        font-size: clamp(0.85rem, 2.2vh, 1rem);
+    }
+
+    /* The love letter and the decorations stay elegant but compact
+       in short landscape viewports */
+    .birthday-reveal-letter {
+        padding: var(--space-sm);
+    }
+
+    .birthday-reveal-letter-card {
+        max-height: min(88vh, 640px);
+        max-height: min(88dvh, 640px);
+        padding: clamp(0.7rem, 2.4vh, 1.2rem) clamp(0.9rem, 3vw, 1.4rem);
+    }
+
+    .birthday-reveal-letter-heading {
+        font-size: clamp(1rem, 3vh, 1.35rem);
+    }
+
+    .birthday-reveal-letter-text {
+        font-size: clamp(0.8rem, 2vh, 0.95rem);
+        line-height: 1.6;
+    }
+
+    .birthday-reveal-letter-btn {
+        min-height: 46px;
+        padding: 0.55rem 1.5rem;
+        font-size: clamp(0.8rem, 2vh, 0.95rem);
+    }
+
+    .birthday-reveal-balloon {
+        width: calc(var(--size, 56px) * 0.8);
+        height: calc(var(--size, 56px) * 0.93);
+    }
+
+    .birthday-reveal-balloon-string {
+        height: 24px;
+    }
+
+    .birthday-reveal-candle {
+        bottom: 6px;
+    }
+}
+
+/* ---- Very short portrait screens: the gate must never clip ---- */
+@media (max-height: 520px) and (orientation: portrait) {
+    .opening-passage {
+        font-size: clamp(0.95rem, 4.4vw, 1.2rem);
+        line-height: 1.6;
+    }
+
+    .letter-card {
+        width: clamp(180px, 44vw, 240px);
+    }
+
+    .letter-message {
+        font-size: clamp(0.92rem, 4.4vw, 1.1rem);
+    }
+
+    .letter-question {
+        gap: 0.5rem;
+    }
+
+    .letter-question-text {
+        font-size: clamp(0.9rem, 4.2vw, 1.05rem);
+    }
+
+    .letter-question-title {
+        font-size: clamp(0.8rem, 3.8vw, 0.95rem);
+    }
+
+    .letter-answers {
+        gap: 0.5rem;
+    }
+
+    .letter-answer {
+        min-height: 44px;
+        font-size: clamp(0.72rem, 3.4vw, 0.84rem);
+    }
+
+    .letter-cta {
+        min-height: 48px;
+        padding: 0 1.5rem;
+    }
+}
+
+/* ---- Tablets (768-1023px): keep grids, add breathing room ---- */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .memory-chapter {
+        gap: clamp(1rem, 2.5vh, 2rem);
+        padding: clamp(2.5rem, 6vh, 4rem) clamp(1.6rem, 5vw, 3.2rem);
+    }
+
+    .memory-chapter .memory-title-text {
+        font-size: clamp(2.3rem, 5vw, 4rem);
+    }
+
+    .memory-photo {
+        max-height: min(56vh, 58svh);
+    }
+
+    .memory-frame {
+        padding: 16px;
+    }
+}
+
+/* ---- Desktop: full cinematic stage ---- */
+@media (min-width: 1024px) {
+    .memory-photo {
+        max-height: min(52vh, 54svh);
+    }
+
+    .memory-frame {
+        padding: 18px;
+    }
+}
+
+/* ---- Reduced motion safety net (mirrors animation.css) ---- */
+@media (prefers-reduced-motion: reduce) {
+    .memory-chapter,
+    .memory-chapter .phase,
+    .memory-chapter .tw,
+    .memory-chapter .tl,
+    .memory-chapter .memory-title-text,
+    .memory-chapter .memory-frame,
+    .memory-chapter .memory-frame::before,
+    .memory-chapter .memory-frame::after,
+    .memory-chapter .memory-shine,
+    .memory-intro.is-leaving,
+    .memory-next.memory-next-in,
+    .memory-prev.memory-prev-in,
+    .memory-final.memory-final-in,
+    .memory-final.memory-final-in .memory-final-glow,
+    .memory-final.memory-final-in .memory-final-eyebrow,
+    .memory-final.memory-final-in .memory-final-title,
+    .memory-final.memory-final-in .memory-final-love,
+    .memory-final.memory-final-in .memory-final-subtitle,
+    .memory-final.memory-final-in .memory-final-heart,
+    .opening-cinematic.is-visible,
+    .opening-cinematic.is-leaving,
+    .opening-cinematic.is-visible .opening-star,
+    .opening-cinematic.is-visible .opening-petal,
+    .opening-message-text,
+    .opening-passage-word,
+    .letter-scene,
+    .letter-warm,
+    .letter-card,
+    .letter-paper,
+    .letter-invite,
+    .letter-message,
+    .letter-question,
+    .letter-question-text,
+    .letter-question-title,
+    .letter-answer,
+    .letter-cta,
+    .experience-back-btn,
+    .experience-back-btn.is-visible {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .opening-message-text.is-in {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+    }
+
+    /* The passage words appear instantly, all together */
+    .opening-passage-word {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+    }
+
+    /* The letter: invite + message appear instantly, and the
+       letter still opens (instant flap, seal gone, paper out) */
+    .letter-invite.is-in,
+    .letter-message.is-in {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+    }
+
+    /* The question gate appears instantly; the answers are fully
+       interactive right away (staggered entrances are removed) */
+    .letter-question.is-in,
+    .letter-question.is-in .letter-answer,
+    .letter-question.is-in .letter-cta {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+    }
+
+    /* The unlocked CTA appears instantly, fully clickable */
+    .letter-cta.is-unlocked {
+        opacity: 1 !important;
+        transform: none !important;
+        pointer-events: auto !important;
+    }
+
+    /* Wrong answers: no shake, only a calm border hint */
+    .letter-answer.is-wrong {
+        animation: none !important;
+    }
+
+    .letter-card.is-opening .letter-flap {
+        transform: rotateX(178deg) !important;
+    }
+
+    .letter-card.is-opening .letter-seal {
+        opacity: 0 !important;
+        transform: translateX(-50%) scale(0.5) !important;
+    }
+
+    .letter-card.is-opening .letter-paper {
+        opacity: 1 !important;
+        transform: translateY(-14%) scale(1) !important;
+    }
+
+    .memory-intro,
+    .memory-intro-title,
+    .memory-final-title,
+    .memory-final-eyebrow,
+    .memory-final-love,
+    .memory-final-subtitle,
+    .memory-chapter .phase.is-in,
+    .memory-chapter .phase.is-settled,
+    .memory-chapter .tw,
+    .memory-chapter .tl {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+        clip-path: none !important;
+    }
+}

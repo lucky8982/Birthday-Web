@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A cinematic birthday journey filled with love and memories">
+    <meta name="theme-color" content="#a8d0e6">
+    <title>Happy Birthday My Love 💙</title>
+    
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon-CAZDFZiN.svg">
+
+    <!-- Preload critical assets -->
+    
+    <!-- Stylesheets -->
+    
+    <!-- Fonts - Using system fonts for performance, with Google Fonts as enhancement -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/assets/index-rt1U8nww.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DZo6_TA8.css">
+</head>
+<div>
+    <!-- ============================================
+         LOADING SCREEN - First thing user sees
+         ============================================ -->
+    <div id="loading-screen" class="loading-screen" role="status" aria-label="Loading birthday experience">
+        <!-- Animated Night Sky Background -->
+        <div class="loading-sky">
+            <!-- Aurora Effect Container -->
+            <div class="aurora-container" aria-hidden="true">
+                <div class="aurora aurora-1"></div>
+                <div class="aurora aurora-2"></div>
+                <div class="aurora aurora-3"></div>
+            </div>
+            
+            <!-- Stars Container -->
+            <div class="stars-container" aria-hidden="true">
+                <canvas id="stars-canvas"></canvas>
+            </div>
+            
+            <!-- Floating Particles -->
+            <div class="particles-container" aria-hidden="true">
+                <canvas id="particles-canvas"></canvas>
+            </div>
+        </div>
+        
+        <!-- Loading Content -->
+        <div class="loading-content">
+            <!-- Logo/Brand Mark -->
+            <div class="loading-logo" aria-hidden="true">
+                <svg class="logo-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </div>
+            
+            <!-- Main Title -->
+            <h1 class="loading-title">
+                <span class="title-line">Happy Birthday</span>
+                <span class="title-line title-name">My Love</span>
+                <span class="title-heart" aria-hidden="true">💙</span>
+            </h1>
+            
+            <!-- Subtitle -->
+            <p class="loading-subtitle">A journey through memories awaits...</p>
+            
+            <!-- Loading Progress -->
+            <div class="loading-progress" aria-hidden="true">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <span class="progress-text" id="progress-text">0%</span>
+            </div>
+            
+            <!-- Tap to Begin (hidden until loaded) -->
+            <button class="tap-to-begin" id="tap-to-begin" aria-label="Begin the birthday journey" hidden>
+                <span class="tap-text">Tap to Begin</span>
+                <svg class="tap-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M5 12h14M12 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        </div>
+
+<!-- ============================================
+             CINEMATIC OPENING - the first moments
+             Plays once loading reaches 100%. A blank
+             midnight sky waits silently: twinkling stars,
+             soft breathing light and gently falling coral
+             + jasmine petals set the mood. The first tap
+             starts the existing music through the audio
+             manager, then each tap reveals one line of
+             the story - from "Hello meri cute wife" to
+             the night of 01.12.2023 - and one final
+             emotional passage revealed word by word.
+             After it, a sealed love letter opens with a
+             short message, then the next tap hands over
+             to the full-screen Birthday Reveal (5 -> 4 ->
+             3 -> 2 -> 1 -> "Happy Birthday, My Love ❤️" ->
+             live age -> Memory Lane).
+             ============================================ -->
+        <!-- The whole scene is the tap target: one tap advances to
+             the next story message; Enter/Space work on desktop -->
+        <div id="opening-cinematic" class="opening-cinematic" tabindex="0" hidden>
+            <div class="opening-bg" aria-hidden="true"></div>
+            <div class="opening-stars" id="opening-stars" aria-hidden="true"></div>
+            <div class="opening-petals" id="opening-petals" aria-hidden="true"></div>
+
+            <!-- One story message at a time (written by opening.js) -->
+            <div class="opening-message" id="opening-message" aria-live="polite" aria-hidden="true"></div>
+
+            <!-- The sealed love letter: appears after the story passage.
+                 It stays closed until the right answer is picked and the
+                 unlocked "Kholo ❤️" CTA is pressed, then it opens with a
+                 short message and the next tap hands over to the
+                 full-screen Birthday Reveal. -->
+            <div class="letter-scene" id="letter-scene" aria-hidden="true">
+                <div class="letter-warm" aria-hidden="true"></div>
+
+                <div class="letter-card" id="letter-card" role="button" tabindex="0" aria-label="Open the love letter">
+                    <div class="letter-paper">
+                        <span class="letter-paper-line letter-paper-line-1"></span>
+                        <span class="letter-paper-line letter-paper-line-2"></span>
+                        <span class="letter-paper-line letter-paper-line-3"></span>
+                    </div>
+                    <div class="letter-body"></div>
+                    <div class="letter-flap"></div>
+                    <div class="letter-seal">
+                        <svg class="letter-seal-heart" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="letter-caption" aria-live="polite">
+                    <p class="letter-invite" id="letter-invite">
+                        Ek chhoti si baat aur hai...
+                        <span class="letter-invite-cta">Khologe? ❤️</span>
+                    </p>
+                    <p class="letter-message" id="letter-message">
+                        Jo kuch bhi humare beech shuru hua tha...<br>
+                        shayad tab humein khud bhi nahi pata tha<br>
+                        ki ek din ye kahani itni khoobsurat ho jayegi. ❤️
+                    </p>
+                </div>
+
+                <!-- The romantic gate before the letter can open: a small
+                     question, four answers, and the locked "Kholo ❤️" CTA.
+                     The letter stays closed until the correct answer is
+                     picked and the unlocked CTA is pressed. -->
+                <div class="letter-question" id="letter-question" aria-hidden="true">
+                    <p class="letter-question-text">
+                        Baby, ek chhota sa sawaal hai... ❤️
+                    </p>
+                    <p class="letter-question-title">
+                        Hamari story ki pehli baat kis din hui thi?
+                    </p>
+                    <div class="letter-answers" id="letter-answers" tabindex="-1" role="group" aria-label="Choose the day our story began">
+                        <button type="button" class="letter-answer" data-correct="false" aria-pressed="false">09 August 2023</button>
+                        <button type="button" class="letter-answer" data-correct="true" aria-pressed="false">01 December 2023 ❤️</button>
+                        <button type="button" class="letter-answer" data-correct="false" aria-pressed="false">28 December 2023</button>
+                        <button type="button" class="letter-answer" data-correct="false" aria-pressed="false">01 January 2024</button>
+                    </div>
+                    <button type="button" class="letter-cta" id="letter-cta" aria-disabled="true" tabindex="-1">
+                        Kholo <span class="cta-heart" aria-hidden="true">❤️</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Music Toggle -->
+       </div>
+
+<!-- Music Toggle - available throughout the experience -->
+<button
+    class="music-toggle"
+    id="music-toggle"
+    aria-label="Toggle background music"
+    aria-pressed="false"
+>
+    <svg class="icon-music-on" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M9 18V5l12-2v13"></path>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="16" r="3"></circle>
+    </svg>
+
+    <svg class="icon-music-off" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M9 18V5l12-2v13"></path>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="16" r="3"></circle>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+    </svg>
+</button>
+</div>
+    <!-- ============================================
+         MAIN APP CONTAINER - Hidden until loaded
+         ============================================ -->
+    <main id="app" class="app" hidden>
+
+        <!-- Birthday reveal: the cinematic film + cosmic heartbeat - a
+             fully opaque full-screen scene right after the love letter.
+             First the Birthday Love Letter (read by the wife, countdown
+             waits for her button) -> 5 -> 4 -> 3 -> 2 -> 1 (each number
+             emerges from blur with a heartbeat wave and one micro line)
+             -> candles ignite, balloons float and burst -> "Happy
+             Birthday, My Love ❤️" -> live age. The title and the live
+             age STAY on screen forever - no automatic exit. The only way
+             forward is the "Aage Badho ❤️" button, which hands off to
+             Memory Lane. -->
+        <div id="birthday-reveal" aria-hidden="true" hidden>
+            <div class="birthday-reveal-sky" aria-hidden="true"></div>
+            <div class="birthday-reveal-glow" aria-hidden="true"></div>
+            <div class="birthday-reveal-wave" aria-hidden="true"></div>
+
+            <!-- Birthday Love Letter: shown before the countdown. The
+                 countdown NEVER starts while this message is visible -
+                 only her "Aage Badho ❤️" press continues. -->
+            <div class="birthday-reveal-letter" id="birthday-reveal-letter" aria-hidden="true" hidden>
+                <div class="birthday-reveal-letter-card">
+                    <h2 class="birthday-reveal-letter-heading">Happy Birthday, My Love ❤️</h2>
+                    <div class="birthday-reveal-letter-body">
+                        <p class="birthday-reveal-letter-text">Aaj ka din mere liye sirf tumhara birthday nahi hai…
+yeh woh din hai jis din meri duniya ko tum mili thi.
+
+Kabhi kabhi main sochta hoon ki meri zindagi tumse pehle kaisi thi,
+aur phir mujhe samajh aata hai ki shayad kuch cheezein tab bhi adhuri thi,
+bas mujhe pata nahi tha ki unhe poora karne wali tum hogi.
+
+Tum meri zindagi ka woh khoobsurat hissa ho
+jise main sirf pyaar nahi karta,
+balki har din mehsoos karta hoon.
+
+Tumhari smile,
+tumhari baatein,
+tumhara gussa,
+tumhari care,
+tumhari choti choti aadatein,
+aur tumhara mere saath hona…
+
+in sab ne meri life ko ek aisi kahani bana diya
+jise main baar baar jeena chahta hoon.
+
+Main tumhe har baar perfect words mein explain nahi kar paata,
+lekin ek baat dil se jaanta hoon —
+tum mere liye bahut special ho.
+
+Tumhare saath bitaya hua har moment
+mere liye ek memory hai,
+aur main chahta hoon ki aane wale har saal mein
+hum aur bhi zyada memories banayein.
+
+Aaj tumhara birthday hai,
+lekin honestly,
+gift mujhe mila tha jis din tum meri life ka part bani.
+
+Isliye aaj main sirf tumhe “Happy Birthday” nahi kehna chahta.
+
+Main tumhe thank you kehna chahta hoon.
+
+Mere saath rehne ke liye.
+Mujhe samajhne ke liye.
+Meri life ko itna beautiful banane ke liye.
+Aur sabse zyada…
+meri zindagi mein “tum” hone ke liye.
+
+I hope tumhari aankhon mein hamesha wohi sparkle rahe,
+tumhari smile kabhi kam na ho,
+aur tumhari har wish dheere dheere reality ban jaye.
+
+Aur agar kabhi life difficult ho,
+to bas itna yaad rakhna —
+main tumhare saath hoon.
+
+Aaj,
+kal,
+aur jitne bhi birthdays hum saath celebrate kar sakein.
+
+Happy Birthday, meri jaan.
+I love you. ❤️</p>
+                    </div>
+                    <button type="button" class="birthday-reveal-letter-btn"
+                            id="birthday-reveal-letter-btn">
+                        Aage Badho <span class="birthday-reveal-letter-btn-heart" aria-hidden="true">❤️</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="birthday-reveal-stage">
+                <p class="birthday-reveal-count" aria-live="polite">5</p>
+                <p class="birthday-reveal-micro" aria-hidden="true">Ek pal aur...</p>
+                <p class="birthday-reveal-final">Happy Birthday, My Love ❤️</p>
+                <!-- Live age: filled by js/birthday-reveal.js from the
+                     real clock (born 21 Sep 2007, 01:30:00 IST) -->
+                <div class="birthday-reveal-age">
+                    <p class="birthday-reveal-age-row birthday-reveal-age-years">
+                        <span class="birthday-reveal-age-value" data-age="years">0</span>
+                        <span class="birthday-reveal-age-unit">Years</span>
+                    </p>
+                    <p class="birthday-reveal-age-row">
+                        <span class="birthday-reveal-age-value" data-age="months">0</span>
+                        <span class="birthday-reveal-age-unit">Months</span>
+                    </p>
+                    <p class="birthday-reveal-age-row">
+                        <span class="birthday-reveal-age-value" data-age="weeks">0</span>
+                        <span class="birthday-reveal-age-unit">Weeks</span>
+                    </p>
+                    <p class="birthday-reveal-age-row">
+                        <span class="birthday-reveal-age-value" data-age="days">0</span>
+                        <span class="birthday-reveal-age-unit">Days</span>
+                    </p>
+                    <p class="birthday-reveal-age-row">
+                        <span class="birthday-reveal-age-value" data-age="hours">0</span>
+                        <span class="birthday-reveal-age-unit">Hours</span>
+                    </p>
+                    <p class="birthday-reveal-age-row">
+                        <span class="birthday-reveal-age-value" data-age="minutes">0</span>
+                        <span class="birthday-reveal-age-unit">Minutes</span>
+                    </p>
+                    <p class="birthday-reveal-age-row birthday-reveal-age-row-seconds">
+                        <span class="birthday-reveal-age-value" data-age="seconds">0</span>
+                        <span class="birthday-reveal-age-unit">Seconds</span>
+                    </p>
+                </div>
+                <button type="button" class="birthday-reveal-continue"
+                        id="birthday-reveal-continue">
+                    Aage Badho <span class="birthday-reveal-continue-heart" aria-hidden="true">❤️</span>
+                </button>
+            </div>
+
+            <!-- Celebration decorations: candles + balloons appear only
+                 AFTER the countdown reaches 1 (spawned by
+                 js/birthday-reveal.js) -->
+            <div class="birthday-reveal-candles" id="birthday-reveal-candles" aria-hidden="true"></div>
+            <div class="birthday-reveal-balloons" id="birthday-reveal-balloons" aria-hidden="true"></div>
+        </div>
+
+        <!-- Scene 2: Memory Lane - an interactive romantic memory book -->
+        <section id="scene-2" class="scene scene-memory-lane" aria-labelledby="scene2-title" hidden>
+            <div class="scene-bg"></div>
+            <div class="scene-content memory-content">
+                <!-- Hidden surprise state: only a promise + reveal CTA -->
+                <div class="memory-intro" id="memory-intro">
+                    <p class="memory-eyebrow">Our Memories 💙</p>
+                    <h2 id="scene2-title" class="memory-intro-title">There's something waiting for you...</h2>
+                    <p class="memory-subtitle">A few little pieces of us, hidden away just for you.</p>
+                    <button type="button" class="memory-reveal-btn" id="memory-reveal" aria-label="Reveal the first memory">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M12 3v18M5 10l7-7 7 7"></path>
+                        </svg>
+                        <span>Reveal the first memory</span>
+                    </button>
+                    <button type="button" class="memory-continue-btn" id="memory-continue" aria-label="Continue from your last memory" hidden>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M5 12h14M12 5l7 7-7 7"></path>
+                        </svg>
+                        <span id="memory-continue-label">Continue Our Story</span>
+                    </button>
+                </div>
+                
+                <!-- Memory chapter: title -> photo -> love message, all stay visible -->
+                <div class="memory-chapter" id="memory-chapter" hidden>
+                    <div class="memory-title-block phase" id="memory-title" role="heading" aria-level="2">
+                        <span class="memory-title-text" id="memory-title-text"></span>
+                    </div>
+                    
+                    <figure class="memory-photo-block phase" id="memory-photo-block">
+                        <div class="memory-frame" id="memory-frame">
+                            <img id="memory-photo" class="memory-photo" src="" alt="Memory photo" loading="lazy" draggable="false">
+                            <div class="memory-shine" aria-hidden="true"></div>
+                        </div>
+                    </figure>
+                    
+                    <div class="memory-message-block phase" id="memory-message-block">
+                        <p class="memory-message" id="memory-message"></p>
+                    </div>
+                </div>
+                
+                <!-- Next Memory - appears only once the whole chapter has settled -->
+                <div class="memory-actions" id="memory-actions">
+                    <button type="button" class="memory-nav memory-prev" id="memory-prev" aria-label="Previous memory" hidden>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                        </svg>
+                        <span>Back</span>
+                    </button>
+                    <button type="button" class="memory-nav memory-next" id="memory-next" aria-label="Next memory" hidden>
+                        <span>Next Memory</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M5 12h14M12 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Final CTA - appears over the settled Memory 30, never hides it -->
+                <div class="memory-final" id="memory-final" hidden>
+                    <div class="memory-final-glow" aria-hidden="true"></div>
+                    <div class="memory-final-hearts" aria-hidden="true">
+                        <span class="memory-final-heart heart-1">❤</span>
+                        <span class="memory-final-heart heart-2">❤</span>
+                        <span class="memory-final-heart heart-3">❤</span>
+                    </div>
+                    <p class="memory-final-eyebrow">After all these memories...</p>
+                    <h2 class="memory-final-title">Every moment with you<br>is my favorite memory.</h2>
+                    <p class="memory-final-love">Happy Birthday, My Love ❤️</p>
+                    <p class="memory-final-subtitle">There's still more to our story... and the best chapters are yet to come.</p>
+                    <button type="button" class="memory-final-btn" id="memory-final-cta" aria-label="Begin a new chapter">
+                        <span>A New Beginning</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M5 12h14M12 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <section id="scene-3" class="scene scene-message-bottle" aria-labelledby="scene3-title" hidden>
+            <div class="scene-bg"></div>
+            <div class="scene-content">
+                <h2 id="scene3-title" class="scene-title">Message in a Bottle</h2>
+                <p class="scene-placeholder">Coming in Phase 2...</p>
+            </div>
+        </section>
+        
+        <section id="scene-4" class="scene scene-star-map" aria-labelledby="scene4-title" hidden>
+            <div class="scene-bg"></div>
+            <div class="scene-content">
+                <h2 id="scene4-title" class="scene-title">Star Map</h2>
+                <p class="scene-placeholder">Coming in Phase 2...</p>
+            </div>
+        </section>
+        
+        <section id="scene-5" class="scene scene-wish-garden" aria-labelledby="scene5-title" hidden>
+            <div class="scene-bg"></div>
+            <div class="scene-content">
+                <h2 id="scene5-title" class="scene-title">Wish Garden</h2>
+                <p class="scene-placeholder">Coming in Phase 2...</p>
+            </div>
+        </section>
+        
+        <section id="scene-6" class="scene scene-time-capsule" aria-labelledby="scene6-title" hidden>
+            <div class="scene-bg"></div>
+            <div class="scene-content">
+                <h2 id="scene6-title" class="scene-title">Time Capsule</h2>
+                <p class="scene-placeholder">Coming in Phase 2...</p>
+            </div>
+        </section>
+        
+        <section id="scene-7" class="scene scene-celebration" aria-labelledby="scene7-title" hidden>
+            <div class="scene-bg"></div>
+            <div class="scene-content">
+                <h2 id="scene7-title" class="scene-title">Celebration</h2>
+                <p class="scene-placeholder">Coming in Phase 2...</p>
+            </div>
+        </section>
+        
+        <section id="scene-8" class="scene scene-epilogue" aria-labelledby="scene8-title" hidden>
+            <div class="scene-bg"></div>
+            <div class="scene-content">
+                <h2 id="scene8-title" class="scene-title">Epilogue</h2>
+                <p class="scene-placeholder">Coming in Phase 2...</p>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Audio Element for Background Music -->
+    <audio id="bg-music" loop preload="auto">
+        <source src="/assets/main-theme-BGH96P_C.mp3" type="audio/mpeg">
+    </audio>
+    
+    <!-- Global Back Button - a fixed glass control in the top-left
+         corner, mounted OUTSIDE #app so no scene can clip or cover
+         it. Shown/hidden by js/back-button.js; what "back" means for
+         the current scene is decided by the state machine in
+         js/main.js (never history.back(), never a reload). -->
+    <button type="button" class="experience-back-btn" id="experience-back-btn"
+            aria-label="Go back" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M19 12H5M12 19l-7-7 7-7"></path>
+        </svg>
+        <span class="experience-back-label" aria-hidden="true">Back</span>
+    </button>
+    
+    <!-- JavaScript Modules -->
+    <!-- main.js is the ES module entry point; it imports the other modules -->
+</body>
+</html>
