@@ -14,8 +14,11 @@ import { AudioManager } from './audio-manager.js';
 import { LoadingManager, BEGIN_EVENT } from './loading-manager.js';
 import { MemoryLane } from './memory-lane.js';
 import { OpeningCinematic } from './opening.js';
+import { EntryLockIntro } from './entry-lock.js';
+import { QuestionLockScreen } from './question-lock.js';
 import { BirthdayReveal } from './birthday-reveal.js';
 import { BackButton } from './back-button.js';
+import { SecretGame } from './secret-game.js';
 import { sleep } from './utils.js';
 
 
@@ -29,11 +32,15 @@ const app = {
     effects: null,        // { loadingStars, loadingParticles }
     memoryLane: null,     // MemoryLane instance (Scene 2)
     opening: null,        // OpeningCinematic instance (cinematic intro layer)
+    entryLock: null,      // EntryLockIntro instance (entry lock intro scene)
+    questionLock: null,   // QuestionLockScreen instance (question lock screen)
     birthdayReveal: null, // BirthdayReveal instance (letter -> memory handoff)
+    secretGame: null,     // SecretGame instance (THE SECRET OF US)
     backBtn: null,        // BackButton instance (global UI-only control)
     backState: 'none',    // 'none' | 'love-letter' | 'love-message' |
                           // 'countdown' | 'birthday-reveal' |
-                          // 'memory-landing' | 'memory' | 'post-memory'
+                          // 'memory-landing' | 'memory' | 'post-memory' |
+                          // 'timeline' | 'secret-game' | 'reward' | 'post-reward'
     revealStage: 'none',  // last reveal stage reported: 'letter' | 'countdown' | 'final'
     revealRun: 0,         // reveal run id - bumped to invalidate stale callbacks
     memoryOpened: false,  // true once the surprise scene is on screen
@@ -72,6 +79,9 @@ function initApp() {
         app.audio.init();
         app.audioInitialized = true;
         wireMusicToggle();
+        // Refresh survival: if the saved preference is ON, resume
+        // the music on the earliest user interaction (browser-safe).
+        wireMusicResumeOnGesture();
     } catch (error) {
         console.warn('Audio unavailable, continuing silently.', error);
     }
@@ -100,6 +110,55 @@ function initApp() {
         }
     };
 
+    // When the user taps "A New Beginning" at the end of Memory Lane,
+    // hand over to the separate "Every movement..." message screen,
+    // which then leads to Our Timeline. This keeps the final OUR FOREVER
+    // page clean (Preview left, New Beginning right) and the message
+    // on its own cinematic screen.
+    app.memoryLane.onFinal = () => {
+        if (app.cleaned) return true;
+        showPostMemoryMessage();
+        return true; // handled - prevent default reset
+    };
+
+    // Post-Memory Message Continue -> THE SECRET OF US game intro
+    // ("Tumne hamari kahani dekhi... Ab ek chhota sa secret hai...").
+    // The "Har pal, ek kahani" / Our Timeline step is no longer part
+    // of the forward flow - hideTimelineForGame() hands control
+    // directly to the game's intro screen.
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('#post-memory-continue');
+        if (!btn) return;
+        const msg = document.querySelector('#post-memory-message');
+        if (!msg || msg.hidden || !msg.classList.contains('is-visible')) return;
+        e.preventDefault();
+        // Hide message, then enter the Secret Game intro directly
+        msg.classList.remove('is-visible');
+        setTimeout(() => { if (msg) msg.hidden = true; }, 600);
+        hideTimelineForGame();
+    });
+
+    // 5b. THE SECRET OF US - independent cinematic game (after timeline)
+    try {
+        app.secretGame = new SecretGame().init();
+        // After the reward is fully read, hand over to future sections
+        app.secretGame.onRewardContinue = () => afterSecretGameReward();
+    } catch (error) {
+        console.warn('Secret Game unavailable, continuing without it.', error);
+    }
+
+    // Timeline CTA -> Secret Game: delegated listener (robust, no duplicate)
+    // Handles the button even if it is re-rendered or if direct binding failed.
+    // Only fires when timeline is actually visible to avoid double-start.
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('#timeline-enter-btn');
+        if (!btn) return;
+        const tl = document.querySelector('#our-timeline');
+        if (!tl || tl.hidden || !tl.classList.contains('is-visible')) return;
+        e.preventDefault();
+        hideTimelineForGame();
+    });
+
     // 6. Opening cinematic - a romantic starry layer over the
     //    finished loading screen. Its first tap fires BEGIN_EVENT
     //    itself (music + effects), then each tap reveals the story
@@ -125,6 +184,46 @@ function initApp() {
         console.warn('Opening cinematic unavailable, continuing without it.', error);
     }
 
+    // 7. Entry Lock Intro - cinematic entry scene that plays
+    //    after loading completes, BEFORE the Opening cinematic.
+    try {
+        app.entryLock = new EntryLockIntro();
+        app.entryLock.init();
+
+        // The entry lock reports when it's finished so we can
+        // start the Question Lock Screen (Phase 2).
+        app.entryLock.onHandover = () => {
+            if (app.questionLock) {
+                app.questionLock.start();
+            } else {
+                // Fallback if QuestionLock is unavailable
+                if (app.opening) {
+                    app.opening.start();
+                }
+            }
+        };
+    } catch (error) {
+        console.warn('Entry Lock Intro unavailable, continuing without it.', error);
+    }
+
+    // 7b. Question Lock Screen (Phase 2) - Question/Entry Lock Screen
+    //    Appears after Entry Lock Intro completes. A cinematic question
+    //    screen with text input validation and cinematic unlock.
+    try {
+        app.questionLock = new QuestionLockScreen();
+        app.questionLock.init();
+
+        // The question lock reports when it's finished so we can
+        // start the Opening cinematic.
+        app.questionLock.onHandover = () => {
+            if (app.opening) {
+                app.opening.start();
+            }
+        };
+    } catch (error) {
+        console.warn('Question Lock Screen unavailable, continuing without it.', error);
+    }
+
     // 7. Essentials are ready - let the loading screen reach 100%
     app.loading.complete();
 
@@ -147,6 +246,22 @@ function initApp() {
     //     when it appears and what "back" means for the current scene.
     app.backBtn = new BackButton().init();
     app.backBtn.onBack = () => handleBack();
+
+    // Level 1: Memory Lane start - Return to Beginning button
+    const restartIntroBtn = document.querySelector('#memory-restart-intro');
+    if (restartIntroBtn) {
+        restartIntroBtn.addEventListener('click', () => {
+            showRestartConfirmation();
+        });
+    }
+
+    // Level 2: Final ending - Experience Again button
+    const epilogueRestartBtn = document.querySelector('#epilogue-restart');
+    if (epilogueRestartBtn) {
+        epilogueRestartBtn.addEventListener('click', () => {
+            restartExperience();
+        });
+    }
 
     // 9. Reveal the cinematic layer on top of the loading screen,
     //    OR restore the scene the user was in before a refresh.
@@ -174,7 +289,13 @@ function initApp() {
         if (savedScene) {
             restoreExperience(savedScene);
         } else {
-            app.opening.start();
+            // Start the Entry Lock Intro first, which will then
+            // hand over to the Opening cinematic when complete.
+            if (app.entryLock) {
+                app.entryLock.start();
+            } else {
+                app.opening.start();
+            }
         }
     } catch (error) {
         console.warn('Opening layer could not start, using the tap-to-begin fallback.', error);
@@ -223,7 +344,7 @@ function beginExperience() {
    Called by the opening layer when the love letter has been
    read (and by the tap-to-begin fallback when the opening is
    missing). Plays the clean full-screen Birthday Reveal
-   (5 -> 4 -> 3 -> 2 -> 1 -> "Happy Birthday, My Love ❤️" ->
+   (3 -> 2 -> 1 -> "Happy Birthday, My Love ❤️" ->
    live age -> loveMessageStage -> Memory Lane handoff).
    ============================================================ */
 
@@ -280,6 +401,136 @@ function openMemoryScene() {
     app.memoryLane?.enter();
 }
 
+function showPostMemoryMessage() {
+    if (app.cleaned) return;
+    // Hide Memory Lane completely
+    const scene2 = document.querySelector('#scene-2');
+    if (scene2) {
+        scene2.hidden = true;
+        scene2.classList.remove('is-visible', 'is-active');
+    }
+    for (let i = 3; i <= 8; i++) {
+        const s = document.querySelector(`#scene-${i}`);
+        if (s) { s.hidden = true; s.classList.remove('is-visible', 'is-active'); }
+    }
+    // Hide any existing timeline/game
+    const tl = document.querySelector('#our-timeline');
+    if (tl) { tl.hidden = true; tl.classList.remove('is-visible'); }
+    const sg = document.querySelector('#secret-game');
+    if (sg) { sg.hidden = true; sg.classList.remove('is-visible'); }
+    const appEl = document.querySelector('#app');
+    if (appEl) appEl.hidden = false;
+    // Show the separate Every-movement message screen
+    const msg = document.querySelector('#post-memory-message');
+    if (msg) {
+        msg.hidden = false;
+        void msg.offsetWidth;
+        msg.classList.add('is-visible');
+    }
+    // Cinematic message: no global Back (keep Preview on final memory, not here)
+    setBackState('post-memory-message');
+    window.scrollTo(0, 0);
+}
+
+/* ============================================================
+   Our Timeline → THE SECRET OF US handoff
+   ------------------------------------------------------------
+   The game is NOT the next screen after the intro. It appears
+   ONLY after Our Timeline is completed, which itself appears
+   after Memory Lane's final celebration. This keeps the order:
+   Our Story → Memory Lane → Love Letters → Special Moments
+   → Our Timeline → THE SECRET OF US → Reward → Special
+   Message → Final Birthday Celebration → Final Love Message
+   ============================================================ */
+function showTimelineScene() {
+    if (app.cleaned) return;
+    // Hide Memory Lane completely - it must not remain behind
+    const scene2 = document.querySelector('#scene-2');
+    if (scene2) {
+        scene2.hidden = true;
+        scene2.classList.remove('is-visible', 'is-active');
+    }
+    // Hide post-memory message if visible
+    const pm = document.querySelector('#post-memory-message');
+    if (pm) {
+        pm.hidden = true;
+        pm.classList.remove('is-visible');
+    }
+    // Hide any other placeholder scenes that might be visible
+    for (let i = 3; i <= 8; i++) {
+        const s = document.querySelector(`#scene-${i}`);
+        if (s) { s.hidden = true; s.classList.remove('is-visible', 'is-active'); }
+    }
+    // Ensure the app container is visible (it hosts #our-timeline)
+    const appEl = document.querySelector('#app');
+    if (appEl) appEl.hidden = false;
+
+    // Hand over to the SecretGame's timeline view
+    app.secretGame?.showTimeline();
+    setBackState('timeline');
+}
+
+function hideTimelineForGame() {
+    if (app.cleaned) return;
+    // Prevent double-start if already in game
+    if (app.backState === 'secret-game' && app.secretGame?.started) return;
+    const tl = document.querySelector('#our-timeline');
+    if (tl && !tl.hidden) {
+        // Smooth fade: remove visible class, then hide after transition
+        tl.classList.remove('is-visible');
+        setTimeout(() => { if (tl) tl.hidden = true; }, 620);
+    } else if (tl) {
+        tl.hidden = true;
+        tl.classList.remove('is-visible');
+    }
+    // Fully hide the previous lane background so nothing leaks
+    const scene2 = document.querySelector('#scene-2');
+    if (scene2) {
+        scene2.hidden = true;
+        scene2.classList.remove('is-visible', 'is-active');
+    }
+    // Ensure game container is ready (hidden -> visible will be handled by SecretGame.start)
+    // The game itself is outside #app so it covers everything with its own background
+    setBackState('secret-game');
+    // Small delay to let timeline fade begin, then start game (which also hides timeline)
+    setTimeout(() => app.secretGame?.start(), 180);
+}
+
+function afterSecretGameReward() {
+    if (app.cleaned) return;
+    // Reward has been read - reveal the next sections.
+    // If future sections exist (Special Message etc.), show them.
+    // Otherwise reveal the placeholder scenes as the handoff interface.
+    setBackState('post-reward');
+    // Hide game is already done by SecretGame handoff
+    // Show the dedicated future sections if they exist
+    const futureIds = ['#scene-3', '#scene-4', '#scene-5', '#scene-6'];
+    let anyShown = false;
+    for (const sel of futureIds) {
+        const el = document.querySelector(sel);
+        if (el) {
+            // Only reveal if it was a placeholder - keep existing content
+            el.hidden = false;
+            el.classList.add('is-visible');
+            anyShown = true;
+        }
+    }
+    // Final celebration placeholder (scene-7)
+    const celeb = document.querySelector('#scene-7');
+    if (celeb) { celeb.hidden = false; celeb.classList.add('is-visible'); anyShown = true; }
+    // Final love message / epilogue (scene-8)
+    const epi = document.querySelector('#scene-8');
+    if (epi) { epi.hidden = false; epi.classList.add('is-visible'); }
+
+    // If nothing was configured for the future, at least show a
+    // clean completion handoff inside the app so the flow feels done
+    if (!anyShown) {
+        const appEl = document.querySelector('#app');
+        if (appEl) appEl.hidden = false;
+    }
+    window.scrollTo(0, 0);
+}
+
 
 /* ============================================================
    Global Back button state machine
@@ -295,18 +546,21 @@ function openMemoryScene() {
                        a legacy snapshot value
      'countdown'       reveal letter + 5..4..3..2..1 countdown
      'birthday-reveal' final: title + live age + continue
-     'memory-landing'  Our Memories landing (lane intro on screen)
-     'memory'          inside a memory chapter (lane's own nav)
-     'post-memory'     end-of-lane celebration + future sections
+     'memory-landing'  Our Memories landing (Preview only, no global Back)
+     'memory'          inside a memory chapter (Preview/Next only)
+     'post-memory'     end-of-lane celebration (NEW BEGINNING only, no Back)
+     'timeline'        Our Timeline (Har pal, ek kahani) - Back -> post-memory
+     'secret-game'     THE SECRET OF US intro/levels - Back -> timeline
+     'reward'          Game Reward (envelope) - Back -> secret-game
+     'post-reward'     Reward handoff / Special Message - Back -> timeline
 
-   Visibility rule: the Back button is VISIBLE on 'birthday-reveal'
-   (Back -> open letter message), 'memory-landing'
-   (Back -> reveal final) and 'post-memory' (Back -> reveal
-   final). It stays hidden on the Love Letter gate, on the
-   reveal's long-letter page and through the whole countdown,
-   and inside memory chapters, which have their own Back/Next
-   controls.
-   Never history.back(), never a reload - main.js decides
+    Visibility rule: the Back button is VISIBLE on 'birthday-reveal'
+    (Back -> open letter), 'memory-landing' (Our Memory → Back to birthday-reveal),
+    'timeline' (Back -> post-memory), 'secret-game' (Back -> timeline),
+    'reward' and 'post-reward'.
+    It stays HIDDEN on 'post-memory' (Preview owns final navigation),
+    on Love Letter gate, countdown, and inside memory chapters.
+    Never history.back(), never a reload - main.js decides
    what "back" means for the current state.
    ============================================================ */
 
@@ -315,7 +569,11 @@ function backButtonVisible(state) {
     return (
         state === 'birthday-reveal' ||
         state === 'memory-landing' ||
-        state === 'post-memory'
+        state === 'post-memory-message' ||
+        state === 'timeline' ||
+        state === 'secret-game' ||
+        state === 'reward' ||
+        state === 'post-reward'
     );
 }
 
@@ -428,6 +686,10 @@ async function handleBack() {
             scene2.hidden = true;
             scene2.classList.remove('is-visible', 'is-active');
         }
+        // Also hide timeline/game if they were somehow visible
+        try { app.secretGame?.destroy(); } catch {}
+        const tl = document.querySelector('#our-timeline');
+        if (tl) { tl.hidden = true; tl.classList.remove('is-visible'); }
         // 4. Re-play the final stage (title + live age + continue).
         //    The button stays visible the whole time - Back again
         //    from the reveal final returns to the open letter
@@ -438,6 +700,68 @@ async function handleBack() {
             if (app.cleaned || run !== app.revealRun) return;
             openMemoryScene();
         });
+        return;
+    }
+
+    if (app.backState === 'post-memory-message') {
+        // Back from post-memory cinematic page -> Memory Final
+        const msg = document.querySelector('#post-memory-message');
+        if (msg) { msg.hidden = true; msg.classList.remove('is-visible'); }
+        const scene2 = document.querySelector('#scene-2');
+        if (scene2) {
+            scene2.hidden = false;
+            scene2.classList.add('is-visible', 'is-active');
+        }
+        app.memoryLane?.onState?.('final');
+        setBackState('post-memory');
+        return;
+    }
+
+    if (app.backState === 'timeline') {
+        // Back from Our Timeline -> post-memory-message (if it exists) else post-memory
+        const tl = document.querySelector('#our-timeline');
+        if (tl) { tl.hidden = true; tl.classList.remove('is-visible'); }
+        const msg = document.querySelector('#post-memory-message');
+        // Prefer returning to the cinematic post-memory message if it was the previous step
+        if (msg) {
+            msg.hidden = false;
+            void msg.offsetWidth;
+            msg.classList.add('is-visible');
+            setBackState('post-memory-message');
+            return;
+        }
+        // Fallback to Memory Final
+        const scene2 = document.querySelector('#scene-2');
+        if (scene2) {
+            scene2.hidden = false;
+            scene2.classList.add('is-visible', 'is-active');
+        }
+        app.memoryLane?.onState?.('final');
+        setBackState('post-memory');
+        return;
+    }
+
+    if (app.backState === 'secret-game') {
+        // Back from inside the game -> return to the "After all these
+        // memories..." page (the step that now leads into the game).
+        try { app.secretGame?.destroy(); } catch {}
+        app.secretGame = new SecretGame().init();
+        app.secretGame.onRewardContinue = () => afterSecretGameReward();
+        showPostMemoryMessage();
+        return;
+    }
+
+    if (app.backState === 'post-reward') {
+        // Back from reward handoff stage -> "After all these memories..."
+        // page (the step before the game in the current flow).
+        // Hide future sections if they were shown
+        for (let i = 3; i <= 8; i++) {
+            const s = document.querySelector(`#scene-${i}`);
+            if (s) { s.hidden = true; s.classList.remove('is-visible', 'is-active'); }
+        }
+        const sg = document.querySelector('#secret-game');
+        if (sg) { sg.hidden = true; sg.classList.remove('is-visible'); }
+        showPostMemoryMessage();
         return;
     }
 
@@ -465,10 +789,12 @@ const STATE_KEY = 'hbm.experienceState';
 const STATE_VERSION = 1;
 
 /** Scenes that can be restored after a refresh. 'none' (loading /
-    opening story) intentionally restarts fresh, and 'post-memory'
-    (end-of-lane celebration / future sections) restores into the
-    lane intro instead - the snapshot keeps the last restorable
-    state, exactly like a mid-chapter refresh. */
+     opening story) intentionally restarts fresh, and 'post-memory'
+     (end-of-lane celebration / future sections) restores into the
+     lane intro instead - the snapshot keeps the last restorable
+     state, exactly like a mid-chapter refresh.
+     Timeline and post-reward are also restorable so a refresh
+     inside the game flow never loses the place. */
 const RESTORABLE_SCENES = new Set([
     'love-letter',
     'love-message',
@@ -476,6 +802,9 @@ const RESTORABLE_SCENES = new Set([
     'birthday-reveal',
     'memory-landing',
     'memory',
+    'timeline',
+    'secret-game',
+    'post-reward',
 ]);
 
 /** Persist the current scene. Called from setBackState() on every
@@ -563,6 +892,18 @@ function restoreExperience(scene) {
         // block lands here too - the snapshot only ever stores
         // logical scenes, and the lane always re-enters its intro.
         openMemoryScene();
+    } else if (scene === 'timeline') {
+        // The "Har pal, ek kahani" / Our Timeline step is removed from
+        // the flow - restore to the "After all these memories..." page,
+        // whose Continue now leads into the game.
+        openMemoryScene();
+        setTimeout(() => showPostMemoryMessage(), 320);
+    } else if (scene === 'secret-game' || scene === 'post-reward') {
+        // Inside the game or post-reward: restore to the
+        // "After all these memories..." page (the game itself restarts
+        // from its intro via Continue, but the flow is preserved).
+        openMemoryScene();
+        setTimeout(() => showPostMemoryMessage(), 320);
     }
 }
 
@@ -582,6 +923,65 @@ function startBackgroundEffects() {
         } catch (error) {
             console.warn('One background effect failed to start.', error);
         }
+    }
+}
+
+
+/* ============================================================
+   Music resume after refresh (saved preference = ON)
+   ------------------------------------------------------------
+   The AudioManager already restores volume/mute preferences, but
+   browsers block playback until a user gesture - so after a
+   refresh the music stayed silent even though the preference was
+   ON. This wires ONE self-removing capture-phase listener set:
+   the earliest existing user interaction retries play() exactly
+   once per gesture until the saved track is audible. No new
+   button, no second audio element, no autoplay hack - when the
+   preference is OFF or music already plays, it stands down.
+   ============================================================ */
+
+function wireMusicResumeOnGesture() {
+    if (!app.audio) return;
+
+    // If saved preference is OFF, never auto-start - stay silent
+    if (app.audio.muted) return;
+
+    const EVENTS = ['pointerdown', 'touchend', 'click', 'keydown'];
+    let detached = false;
+
+    const detach = () => {
+        if (detached) return;
+        detached = true;
+        for (const type of EVENTS) {
+            document.removeEventListener(type, onGesture, true);
+            window.removeEventListener(type, onGesture, true);
+        }
+    };
+
+    const onGesture = async () => {
+        const audio = app.audio;
+        if (!audio) { detach(); return; }
+
+        // Re-evaluate preference on each gesture (user may have toggled)
+        if (audio.muted) { detach(); return; }
+        if (audio.isPlaying()) { detach(); return; }
+        // Extra guard: element may be paused but AudioManager thinks not
+        if (audio.audio && !audio.audio.paused && !audio.audio.ended) { detach(); return; }
+
+        try {
+            const started = await audio.play();
+            if (started) {
+                detach();
+            }
+            // If blocked, keep listeners so the next gesture retries
+        } catch {
+            // Keep attached for next gesture
+        }
+    };
+
+    for (const type of EVENTS) {
+        document.addEventListener(type, onGesture, { capture: true });
+        window.addEventListener(type, onGesture, { capture: true });
     }
 }
 
@@ -667,6 +1067,9 @@ function cleanup() {
     try { app.birthdayReveal?.destroy?.(); } catch { /* ignore */ }
     app.birthdayReveal = null;
 
+    try { app.secretGame?.destroy(); } catch { /* ignore */ }
+    app.secretGame = null;
+
     try { app.backBtn?.destroy(); } catch { /* ignore */ }
     app.backBtn = null;
 
@@ -684,6 +1087,254 @@ window.addEventListener('pagehide', (e) => {
     if (!e.persisted) cleanup();
 });
 
+
+/* ============================================================
+   Centralized restart mechanism
+   ------------------------------------------------------------
+   Single source of truth for restarting the entire experience
+   from the beginning. Can be called from:
+   - Memory Lane start navigation (Level 1, with confirmation)
+   - Final "Experience Again" button (Level 2, no confirmation)
+   ------------------------------------------------------------ */
+async function restartExperience() {
+    if (app.cleaned) return;
+
+    // 1. Invalidate any running reveal run so stale callbacks
+    //    can never re-open Memory Lane behind the restart.
+    app.revealRun += 1;
+
+    // 2. Reset Memory Lane to its initial state (intro).
+    //    This clears all timers, clears chapter state, hides
+    //    the chapter, shows the intro, and fires 'intro' state.
+    app.memoryLane?.reset();
+
+    // 3. Hide Memory Lane scene completely.
+    const scene2 = document.querySelector('#scene-2');
+    if (scene2) {
+        scene2.hidden = true;
+        scene2.classList.remove('is-visible', 'is-active');
+    }
+
+    // 4. Hide any post-Memory-Lane scenes (celebration, epilogue, etc.).
+    for (let i = 3; i <= 8; i++) {
+        const scene = document.querySelector(`#scene-${i}`);
+        if (scene) {
+            scene.hidden = true;
+            scene.classList.remove('is-visible', 'is-active');
+        }
+    }
+
+    // 5. Hide the final CTA if it's showing.
+    const memoryFinal = document.querySelector('#memory-final');
+    if (memoryFinal) {
+        memoryFinal.hidden = true;
+        memoryFinal.classList.remove('memory-final-in');
+    }
+
+    // 6. Hide the Memory Lane intro back button.
+    const memoryBackIntro = document.querySelector('#memory-back-intro');
+    if (memoryBackIntro) {
+        memoryBackIntro.hidden = true;
+        memoryBackIntro.classList.remove('is-visible');
+    }
+
+    // 7. Hide the global experience back button.
+    app.backBtn?.setVisible(false);
+
+    // 8. Reset reveal state so the experience starts fresh.
+    app.revealStarted = false;
+    app.revealStage = 'none';
+    app.memoryOpened = false;
+
+    // 8b. Reset Secret Game and Timeline
+    try { app.secretGame?.destroy(); } catch {}
+    try {
+        app.secretGame = new SecretGame().init();
+        app.secretGame.onRewardContinue = () => afterSecretGameReward();
+    } catch {}
+    const tl = document.querySelector('#our-timeline');
+    if (tl) { tl.hidden = true; tl.classList.remove('is-visible'); }
+    const sg = document.querySelector('#secret-game');
+    if (sg) { sg.hidden = true; sg.classList.remove('is-visible', 'is-leaving'); }
+
+    // 9. Cancel any running reveal safely.
+    await app.birthdayReveal?.cancel();
+
+    // 9b. Reset Memory Lane opened flag so it can be entered again.
+    app.memoryOpened = false;
+
+    // 10. Clear the persisted experience state so a refresh
+    //     also starts fresh.
+    try {
+        window.localStorage.removeItem(STATE_KEY);
+    } catch { /* ignore */ }
+
+    // 11. Hide the #app container at the beginning (it will be shown after loading/opening handoff).
+    const appEl = document.querySelector('#app');
+    if (appEl) {
+        appEl.hidden = true;
+    }
+
+    // 12. Show the loading screen for the beginning scene.
+    const loadingScreen = document.querySelector('#loading-screen');
+    if (loadingScreen) {
+        loadingScreen.hidden = false;
+        loadingScreen.classList.remove('is-leaving', 'is-lettering');
+    }
+
+    // 13. Hide the tap-to-begin fallback if it exists (will be re-shown by loading completion if needed).
+    const tapToBegin = document.querySelector('#tap-to-begin');
+    if (tapToBegin) {
+        tapToBegin.hidden = true;
+    }
+
+    // 14. Reset opening layer - it will be shown by app.opening.reset()/start().
+    // Do not hide it here with leftover classes; let reset handle it.
+    const openingLayer = document.querySelector('.opening-cinematic');
+    if (openingLayer) {
+        openingLayer.classList.remove('is-visible', 'is-leaving');
+        // keep hidden until reset/start shows it
+        openingLayer.hidden = true;
+    }
+
+    // 15. Scroll to top to ensure clean slate.
+    window.scrollTo(0, 0);
+
+    // 16. Fire the 'none' back state so the global back button
+    //     is hidden (we're at the true beginning).
+    setBackState('none');
+
+    // 17. Start from the very beginning - entry lock (which hands over to
+    //     question lock then opening). Reset entry/question/opening so they
+    //     can start again even after a prior run.
+    //     Do not hide the loading screen with leftover is-leaving/is-lettering.
+    const loadingEl = document.querySelector('#loading-screen');
+    if (loadingEl) {
+        loadingEl.hidden = false;
+        loadingEl.classList.remove('is-leaving', 'is-lettering');
+        loadingEl.removeAttribute('aria-hidden');
+    }
+    // Reset entry-lock if it was finished
+    if (app.entryLock) {
+        try { app.entryLock.cleanup(); } catch {}
+        app.entryLock.started = false;
+        app.entryLock.finished = false;
+        app.entryLock.busy = false;
+        app.entryLock.currentScene = 0;
+        // Ensure overlay is ready to show again
+        const entryOverlay = document.querySelector('#entry-lock');
+        if (entryOverlay) {
+            entryOverlay.hidden = true;
+            entryOverlay.classList.remove('is-visible', 'is-leaving');
+        }
+    }
+    if (app.questionLock) {
+        try { app.questionLock.cleanup?.(); } catch {}
+        // question-lock cleanup will reset its state; ensure overlay hidden
+        const qOverlay = document.querySelector('#question-lock');
+        if (qOverlay) {
+            qOverlay.hidden = true;
+            qOverlay.classList.remove('is-visible', 'is-leaving');
+        }
+        // Reset internal flags if they exist
+        if ('started' in app.questionLock) app.questionLock.started = false;
+        if ('finished' in app.questionLock) app.questionLock.finished = false;
+        if ('unlocked' in app.questionLock) app.questionLock.unlocked = false;
+    }
+    if (app.opening) {
+        try { app.opening.cleanup(); } catch {}
+        app.opening.started = false;
+        app.opening.finished = false;
+        app.opening.busy = false;
+        app.opening.state = 'idle';
+    }
+    // Ensure loading progress is reset and tap-to-begin hidden (entry will handle)
+    app.loading?.complete?.();
+    const tapBtn2 = document.querySelector('#tap-to-begin');
+    if (tapBtn2) tapBtn2.hidden = true;
+    if (loadingEl) loadingEl.classList.add('is-lettering');
+
+    if (app.entryLock) {
+        app.entryLock.start();
+    } else if (app.opening) {
+        app.opening.reset();
+        app.opening.start();
+    } else {
+        startReveal();
+    }
+}
+
+/* ============================================================
+   Level 1: Memory Lane Start - Restart Confirmation
+   ------------------------------------------------------------
+   Shows a premium confirmation dialog when the user taps
+   "Return to Beginning" at the Memory Lane intro.
+   ============================================================ */
+function showRestartConfirmation() {
+    // Create premium confirmation overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'restart-confirm-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', 'restart-confirm-title');
+    overlay.innerHTML = `
+        <div class="restart-confirm-backdrop" aria-hidden="true"></div>
+        <div class="restart-confirm-dialog" role="document">
+            <div class="restart-confirm-glow" aria-hidden="true"></div>
+            <h2 id="restart-confirm-title" class="restart-confirm-title">Return to Beginning?</h2>
+            <p class="restart-confirm-message">
+                This will take you back to the very beginning of the experience.
+                Your progress in Memory Lane will be preserved, but you'll start
+                from the opening again.
+            </p>
+            <div class="restart-confirm-actions">
+                <button type="button" class="restart-confirm-btn restart-confirm-cancel" aria-label="Cancel, stay here">
+                    <span>Stay Here</span>
+                </button>
+                <button type="button" class="restart-confirm-btn restart-confirm-confirm" aria-label="Confirm, return to beginning">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"></path>
+                        <path d="M3 12h6M9 18l-6-6 6-6"></path>
+                    </svg>
+                    <span>Return to Beginning</span>
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Force reflow then animate in
+    void overlay.offsetWidth;
+    overlay.classList.add('is-visible');
+
+    const cancelBtn = overlay.querySelector('.restart-confirm-cancel');
+    const confirmBtn = overlay.querySelector('.restart-confirm-confirm');
+    const backdrop = overlay.querySelector('.restart-confirm-backdrop');
+
+    const close = (confirmed) => {
+        overlay.classList.remove('is-visible');
+        overlay.addEventListener('transitionend', () => {
+            overlay.remove();
+        }, { once: true });
+        if (confirmed) {
+            restartExperience();
+        }
+    };
+
+    cancelBtn?.addEventListener('click', () => close(false));
+    confirmBtn?.addEventListener('click', () => close(true));
+    backdrop?.addEventListener('click', () => close(false));
+
+    // ESC key to cancel
+    const onKey = (e) => {
+        if (e.key === 'Escape') {
+            close(false);
+            document.removeEventListener('keydown', onKey);
+        }
+    };
+    document.addEventListener('keydown', onKey);
+}
 
 /* ============================================================
    Boot - wait for the DOM, then init once

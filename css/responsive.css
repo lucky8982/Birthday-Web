@@ -123,16 +123,25 @@ Tiny screens: compress everything so nothing overflows
     }
 
     /* ---- Back button: compact, keeps a real touch target ---- */
-    .experience-back-btn {
+    .experience-back-btn,
+    .memory-back-intro {
         top: max(0.9rem, env(safe-area-inset-top));
         left: max(0.9rem, env(safe-area-inset-left));
+    }
+
+    /* ---- Level 1: Return to Beginning (Memory Lane intro) ---- */
+    .memory-restart-intro {
+        bottom: var(--space-sm);
+        padding: 0.4rem 0.85rem;
+        font-size: 0.65rem;
     }
 }
 
 /* Icon-only Back button on very small screens - the label would
    crowd the corner next to the music toggle. */
 @media (max-width: 480px) {
-    .experience-back-btn {
+    .experience-back-btn,
+    .memory-back-intro {
         min-height: 44px;
         padding: 0.55rem 0.7rem;
     }
@@ -140,17 +149,54 @@ Tiny screens: compress everything so nothing overflows
     .experience-back-label {
         display: none;
     }
+
+    .memory-restart-intro {
+        bottom: var(--space-xs);
+        padding: 0.35rem 0.75rem;
+        font-size: 0.6rem;
+    }
+
+    .restart-confirm-dialog {
+        padding: var(--space-lg) var(--space-md);
+    }
+
+    .restart-confirm-title {
+        font-size: clamp(1.4rem, 6vw, 2rem);
+    }
+
+    .restart-confirm-message {
+        font-size: clamp(0.85rem, 2.5vw, 1rem);
+    }
+
+    .epilogue-btn {
+        min-height: 52px;
+        padding: 0.7rem 1.75rem;
+        font-size: 0.78rem;
+    }
 }
 
 /* Short/landscape screens: the letter card nearly touches the
    corner, so tuck the Back button in tighter while keeping a real
    touch target. */
 @media (max-height: 600px) {
-    .experience-back-btn {
+    .experience-back-btn,
+    .memory-back-intro {
         top: max(0.6rem, env(safe-area-inset-top));
         left: max(0.6rem, env(safe-area-inset-left));
         min-height: 44px;
         padding: 0.5rem 0.8rem;
+    }
+
+    .memory-restart-intro {
+        bottom: var(--space-xs);
+        padding: 0.3rem 0.65rem;
+        font-size: 0.55rem;
+    }
+
+    .epilogue-btn {
+        min-height: 48px;
+        padding: 0.6rem 1.5rem;
+        font-size: 0.72rem;
     }
 }
 
@@ -315,11 +361,34 @@ Tiny screens: compress everything so nothing overflows
         height: 24px;
     }
 
-    /* ---- Scene content: full cinematic presence ---- */
-    .scene-content {
-        padding: var(--space-xl) var(--space-lg);
+    /* Back button: top-left matching experience-back-btn */
+    .memory-back-intro {
+        top: 1.8rem;
+        left: 1.8rem;
+    }
+
+    .memory-restart-intro {
+        bottom: var(--space-lg);
+        padding: 0.6rem 1.25rem;
+        font-size: 0.75rem;
+    }
+
+    .epilogue-btn {
+        min-height: 68px;
+        padding: 1rem 3rem;
+        font-size: 0.95rem;
+    }
+
+    .restart-confirm-dialog {
+        padding: var(--space-xl) var(--space-xl);
     }
 }
+
+/* ============================================================
+   7. LARGE SCREENS (1440px and up)
+   ------------------------------------------------------------
+   Ultra-wide displays: keep the stage centered and calm.
+   ============================================================ */
 
 
 /* ============================================================
@@ -402,13 +471,14 @@ Tiny screens: compress everything so nothing overflows
         grid-template-areas:
             'title'
             'photo'
-            'message';
+            'message'
+            'nav';
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto auto auto;
+        grid-template-rows: auto auto auto 1fr;
         align-content: start;
         justify-items: center;
         gap: clamp(0.7rem, 2.2vh, 1.2rem);
-        padding: clamp(4.2rem, 14vh, 6rem) 1.2rem clamp(4.6rem, 16vh, 6.5rem);
+        padding: clamp(4.2rem, 14vh, 6rem) 1.2rem max(1.1rem, env(safe-area-inset-bottom));
     }
 
     /* Title: centered, full width, still cinematic */
@@ -429,7 +499,9 @@ Tiny screens: compress everything so nothing overflows
     }
 
     .memory-chapter .memory-title-text {
-        font-size: clamp(2rem, 9vw, 3.1rem);
+        /* Slightly smaller heading on phones so the photo gets the
+           main visual space (title, message and animations stay) */
+        font-size: clamp(1.8rem, 7.5vw, 2.5rem);
     }
 
     /* Photo: centered hero */
@@ -445,79 +517,39 @@ Tiny screens: compress everything so nothing overflows
         align-self: center;
     }
 
+    /* ISSUE FIX: photos must present large and consistent on
+       phones. Fluid full-width sizing upscales small originals,
+       while portraits cap by height and keep their aspect ratio
+       (the replaced-element min/max algorithm scales width in
+       proportion - no stretching, no cropping, no overflow). */
     .memory-photo {
-        max-height: min(44vh, 46svh);
+        width: 100%;
+        height: auto;
+        max-height: min(52vh, 54svh);
     }
 
-    /* ---- Mobile: keep each reveal's idea, but never push the photo
-       outside the viewport. Desktop keeps the original keyframes. ---- */
-
     /* 05 - film strip slide: smaller travel keeps the photo visible */
-    @keyframes p05-film {
-        0% {
-            opacity: 0;
-            transform: translateX(-11px);
-        }
-        30% {
-            opacity: 1;
-            transform: translateX(4px);
-        }
-        50% {
-            transform: translateX(-3px);
-        }
-        70% {
-            transform: translateX(2px);
-        }
-        100% {
-            opacity: 1;
-            transform: translateX(0);
-        }
+    .memory-frame.photo-memory-05.is-in {
+        animation: p05-film-mobile 1.2s var(--ease-out) both;
     }
 
     /* 19 - fold: soften the perspective so the 3D fold does not
        magnify the photo wider than the screen */
-    @keyframes p19-fold {
-        from {
-            opacity: 0.2;
-            transform: perspective(3200px) rotateX(88deg);
-        }
-        70% {
-            opacity: 1;
-            transform: perspective(3200px) rotateX(-6deg);
-        }
-        to {
-            opacity: 1;
-            transform: perspective(3200px) rotateX(0);
-        }
+    .memory-frame.photo-memory-19.is-in {
+        animation: p19-fold-mobile 1.15s var(--ease-out) both;
+    }
+    .memory-frame.photo-memory-19.is-in .memory-shine {
+        animation: p19-fold-mobile 1.15s var(--ease-out) both;
     }
 
     /* 23 - blurred merge: smaller zoom stays inside the viewport */
-    @keyframes p23-merge {
-        from {
-            opacity: 0;
-            transform: scale(1.05);
-            filter: blur(18px);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-            filter: blur(0);
-        }
+    .memory-frame.photo-memory-23.is-in {
+        animation: p23-merge-mobile 1.35s var(--ease-out) both;
     }
 
     /* 30 - final wide reveal: smaller zoom stays inside the viewport */
-    @keyframes p30-wide {
-        0% {
-            opacity: 0;
-            transform: scale(1.08);
-        }
-        60% {
-            opacity: 1;
-        }
-        100% {
-            opacity: 1;
-            transform: scale(1);
-        }
+    .memory-frame.photo-memory-30.is-in {
+        animation: p30-wide-mobile 1.4s var(--ease-out) both;
     }
 
     /* Message: centered beneath the photo */
@@ -539,16 +571,13 @@ Tiny screens: compress everything so nothing overflows
         font-size: clamp(0.98rem, 4.3vw, 1.2rem);
     }
 
-    /* Controls: thumb-reachable, never below 48px */
-    .memory-actions {
-        bottom: max(1rem, env(safe-area-inset-bottom));
-    }
-
+    /* Controls: anchored bottom-left / bottom-right, thumb-reachable,
+       never below 48px touch */
     .memory-next,
     .memory-prev {
         min-height: 48px;
-        padding: 0 1.4rem;
-        font-size: 0.78rem;
+        padding: 0 1.15rem;
+        font-size: 0.74rem;
     }
 
     .memory-final {
@@ -772,20 +801,32 @@ Tiny screens: compress everything so nothing overflows
     }
 
     .memory-chapter .memory-title-text {
-        font-size: clamp(1.75rem, 8.6vw, 2.3rem);
+        font-size: clamp(1.6rem, 7vw, 2rem);
     }
 
     .memory-frame {
         padding: 10px;
     }
 
+    /* ISSUE FIX: tiny phones get the same large, consistent photo
+       presentation - the fluid width keeps small originals big. */
     .memory-photo {
-        max-height: min(40vh, 42svh);
+        max-height: min(48vh, 50svh);
     }
 
     .memory-message {
         font-size: clamp(0.92rem, 4.6vw, 1.05rem);
         line-height: 1.5;
+    }
+
+    /* Very small screens (320px): tighten the pills so the pair
+       keeps its bottom-left / bottom-right anchors without
+       overlapping */
+    .memory-next,
+    .memory-prev {
+        padding: 0 0.9rem;
+        font-size: 0.68rem;
+        min-height: 44px;
     }
 }
 
@@ -794,7 +835,7 @@ Tiny screens: compress everything so nothing overflows
     .memory-chapter {
         align-content: center;
         gap: 0.5rem;
-        padding: 2.4rem 3vw 3.2rem;
+        padding: 2.4rem 3vw max(0.9rem, env(safe-area-inset-bottom));
     }
 
     .memory-chapter .memory-title-text {
@@ -819,8 +860,14 @@ Tiny screens: compress everything so nothing overflows
         padding: 0 1.1rem;
     }
 
-    .memory-actions {
-        bottom: max(0.7rem, env(safe-area-inset-bottom));
+    /* First page (intro): compress so the CTA stays fully visible
+       on short screens without scrolling */
+    .memory-intro {
+        padding: 1.5rem var(--space-md);
+    }
+
+    .memory-intro-actions {
+        padding-top: var(--space-sm);
     }
 
     /* Final message must fit short screens */
@@ -1065,6 +1112,97 @@ Tiny screens: compress everything so nothing overflows
     }
 }
 
+/* ============================================================
+   11. BIRTHDAY COUNTDOWN - MOBILE CENTERING FIX
+   ------------------------------------------------------------
+   On small phones the countdown number was rendered above the
+   circular wave due to flex gap pushing the number off the
+   circle center and hidden age/final blocks still influencing
+   layout. This keeps the entire 5→1 composition inside the
+   viewport, respects safe-area and dvh/svh, prevents horizontal
+   scroll, and places the number exactly at the visual center of
+   the existing circle. Desktop unchanged.
+   ============================================================ */
+@media (max-width: 767px) {
+    /* Viewport-safe container, no horizontal scroll */
+    #birthday-reveal {
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        min-height: 100dvh;
+        min-height: 100svh;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        box-sizing: border-box;
+    }
+
+    .birthday-reveal-stage {
+        width: 100%;
+        max-width: 100vw;
+        min-height: 100dvh;
+        min-height: 100svh;
+        padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+        box-sizing: border-box;
+        overflow-x: hidden;
+        /* keep stage centered via grid parent, but allow absolute countdown */
+        position: relative;
+    }
+
+    /* Countdown numbers: exactly at circle center on 320–414px */
+    .birthday-reveal-count.is-in {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        width: 92vw;
+        max-width: 92vw;
+        text-align: center;
+        z-index: 4;
+        /* keep inside wave even at 320px */
+        line-height: 1;
+    }
+
+    .birthday-reveal-micro.is-in {
+        position: absolute !important;
+        top: calc(50% + 3.8rem) !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        margin: 0 !important;
+        width: 92vw;
+        max-width: 300px;
+        text-align: center;
+        /* prevent overflow on 320px */
+        white-space: normal;
+        text-wrap: balance;
+    }
+
+    /* Circles must never exceed viewport width on 320px */
+    .birthday-reveal-wave {
+        width: min(46vmin, 82vw) !important;
+        height: min(46vmin, 82vw) !important;
+        max-width: 82vw;
+        max-height: 82vw;
+    }
+
+    .birthday-reveal-glow {
+        width: min(62vmin, 90vw) !important;
+        height: min(62vmin, 90vw) !important;
+        max-width: 90vw;
+        max-height: 90vw;
+    }
+
+    /* Very small widths need slightly tighter offset so micro stays inside viewport */
+    @media (max-width: 340px) {
+        .birthday-reveal-micro.is-in {
+            top: calc(50% + 3.3rem) !important;
+            font-size: 0.72rem !important;
+        }
+        .birthday-reveal-count.is-in {
+            font-size: clamp(3.8rem, 18vw, 5rem) !important;
+        }
+    }
+}
+
 /* ---- Reduced motion safety net (mirrors animation.css) ---- */
 @media (prefers-reduced-motion: reduce) {
     .memory-chapter,
@@ -1079,6 +1217,12 @@ Tiny screens: compress everything so nothing overflows
     .memory-intro.is-leaving,
     .memory-next.memory-next-in,
     .memory-prev.memory-prev-in,
+    .memory-back-intro.is-visible,
+    .memory-title-block.title-letter.is-in,
+    .memory-photo-block.photo-letter.is-in,
+    .memory-message-block.message-letter.is-in,
+    .memory-message-block.message-letter .memory-letter-para.is-in,
+    .memory-message-block.message-letter .memory-letter-sign.is-in,
     .memory-final.memory-final-in,
     .memory-final.memory-final-in .memory-final-glow,
     .memory-final.memory-final-in .memory-final-eyebrow,
@@ -1104,7 +1248,9 @@ Tiny screens: compress everything so nothing overflows
     .letter-answer,
     .letter-cta,
     .experience-back-btn,
-    .experience-back-btn.is-visible {
+    .experience-back-btn.is-visible,
+    .memory-back-intro,
+    .memory-back-intro.is-visible {
         animation: none !important;
         transition: none !important;
     }
@@ -1176,7 +1322,9 @@ Tiny screens: compress everything so nothing overflows
     .memory-chapter .phase.is-in,
     .memory-chapter .phase.is-settled,
     .memory-chapter .tw,
-    .memory-chapter .tl {
+    .memory-chapter .tl,
+    .memory-message-block.message-letter .memory-letter-para,
+    .memory-message-block.message-letter .memory-letter-sign {
         opacity: 1 !important;
         transform: none !important;
         filter: none !important;

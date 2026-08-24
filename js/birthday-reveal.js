@@ -2,13 +2,13 @@
    Happy Birthday My Love 💙 - Birthday Reveal
    ------------------------------------------------------------
    File:    js/birthday-reveal.js
-   Purpose: Plays the birthday moment right after the love letter
-            opens, as its own full-screen cinematic scene before
-            the Memory Lane handoff:
-            Birthday Love Letter (read by her; the countdown waits
-            for her "Aage Badho ❤️" press) -> 5 -> 4 -> 3 -> 2 -> 1
-            -> candles ignite -> balloons float + burst ->
-            "Happy Birthday, My Love ❤️" -> live age display.
+    Purpose: Plays the birthday moment right after the love letter
+             opens, as its own full-screen cinematic scene before
+             the Memory Lane handoff:
+             Birthday Love Letter (read by her; the countdown waits
+             for her "Aage Badho ❤️" press) -> 5 -> 4 -> 3 -> 2 -> 1
+             -> candles ignite -> balloons float + burst ->
+             "Happy Birthday, My Love ❤️" -> live age display.
             The title and the live age STAY on screen indefinitely.
             There is no automatic exit and no auto handoff - the
             only way forward is the "Aage Badho ❤️" button, and
@@ -40,7 +40,7 @@ import { sleep, prefersReducedMotion } from './utils.js';
 export const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
 export function birthTimestampIST() {
-    return Date.UTC(2003, 8, 21, 1, 30, 0) - IST_OFFSET_MS;
+    return Date.UTC(2007, 8, 21, 1, 30, 0) - IST_OFFSET_MS;
 }
 
 /* Wall-clock components of t expressed in IST calendar terms.
@@ -130,21 +130,21 @@ export function ageParts(now = Date.now()) {
    The sequence is explicit and fixed: 5 -> 4 -> 3 -> 2 -> 1,
    in exactly this order, never starting elsewhere. */
 const COUNT_STEPS = [
-    { n: 5, text: 'Bas kuch hi pal...' },
-    { n: 4, text: 'Char kadam aur...' },
+    { n: 5, text: 'Bas kuch pal...' },
+    { n: 4, text: 'Thoda aur...' },
     { n: 3, text: 'Ek pal aur...' },
     { n: 2, text: 'Bas thoda sa...' },
     { n: 1, text: 'Ab sirf tum...' },
 ];
 
-/* Countdown pacing - one full cycle per number (≈2.0s):
+/* Countdown pacing - one full cycle per number (≈2.45s):
      count-emerge (CSS)  + READ hold  + count-dissolve (CSS)
-     0.55s               + 1.05s      + 0.45s               ≈ 2.05s
+     0.55s               + 2.00s      + 0.45s               ≈ 3.0s visible, 2.0s fully opaque
    The next number never starts before the previous one has
    finished its dissolve phase. Reduced motion keeps a calm
    readable hold (CSS animations are off, so no in/out wait). */
-const STEP_READ = 1050; // number stays readable after entering
-const STEP_OUT = 450;   // dissolve duration (matches count-dissolve)
+const STEP_READ = 1000; // number stays readable after entering (spec: ~2000ms)
+const STEP_OUT = 250;   // dissolve duration (matches count-dissolve)
 
 export class BirthdayReveal {
     constructor() {
@@ -167,6 +167,7 @@ export class BirthdayReveal {
         this._resolveContinue = null;
         this._resolveLetter = null;
         this._canceled = false; // set by destroy(): stop any running sequence
+        this._run = 0; // monotonic run token; invalidated by cancel()/destroy()
         this._onContinue = () => this._continue();
         this._onLetterContinue = () => this._letterContinue();
         // Toggles .is-at-end on the letter stage when the message is
@@ -203,6 +204,7 @@ export class BirthdayReveal {
      */
     async play() {
         if (!this.layer || this.playing) return;
+        const run = (this._run += 1);
         this.playing = true;
         this._canceled = false;
 
@@ -224,7 +226,7 @@ export class BirthdayReveal {
         this._showLetter();
         this._fireStage('letter');
         await this._waitForLetter();
-        if (this._canceled) {
+        if (this._canceled || run !== this._run) {
             await this._cancelSequence();
             return;
         }
@@ -236,10 +238,10 @@ export class BirthdayReveal {
         //    dissolves, and only then does the next number begin.
         //    Title, age, candles and balloons stay hidden throughout.
         for (const step of COUNT_STEPS) {
-            if (this._canceled) break;
-            await this._playCountStep(step);
+            if (this._canceled || run !== this._run) break;
+            await this._playCountStep(step, run);
         }
-        if (this._canceled) {
+        if (this._canceled || run !== this._run) {
             await this._cancelSequence();
             return;
         }
@@ -248,7 +250,7 @@ export class BirthdayReveal {
         //    candles ignite and balloons rise into the scene. A small
         //    burst pops a couple of balloons as the title reveals.
         await sleep(pauseMs);
-        if (this._canceled) {
+        if (this._canceled || run !== this._run) {
             await this._cancelSequence();
             return;
         }
@@ -256,13 +258,13 @@ export class BirthdayReveal {
         this._spawnCandles();
         this._spawnBalloons();
         await sleep(celebrationMs);
-        if (this._canceled) {
+        if (this._canceled || run !== this._run) {
             await this._cancelSequence();
             return;
         }
         this._popBalloons();
         await sleep(burstMs);
-        if (this._canceled) {
+        if (this._canceled || run !== this._run) {
             await this._cancelSequence();
             return;
         }
@@ -271,14 +273,14 @@ export class BirthdayReveal {
         //    + "Aage Badho ❤️"). From here on the scene stays on
         //    screen indefinitely - the only way forward is the
         //    continue button, which resolves this stage.
-        await this._showFinalStage();
+        await this._showFinalStage(run);
     }
 
     /* The final stage: the title, the live age and the continue
        button. Used by play() and re-shown by showFinal() when the
        visitor returns from Memory Lane. Resolves only when the
        continue button is pressed (or the sequence is canceled). */
-    async _showFinalStage() {
+    async _showFinalStage(run) {
         this._fireStage('final');
 
         const settleTitle = this.reduced ? 120 : 900;
@@ -287,21 +289,21 @@ export class BirthdayReveal {
         // 1. "Happy Birthday, My Love ❤️" - the emotional centerpiece.
         this._show(this.final);
         await sleep(settleTitle);
-        if (this._canceled) return;
+        if (this._canceled || run !== this._run) return;
 
         // 2. Live age - recomputed from Date.now() every second.
         this._show(this.age);
         this._updateAge();
         this.ageTimer = setInterval(() => this._updateAge(), 1000);
         await sleep(settleAge);
-        if (this._canceled) return;
+        if (this._canceled || run !== this._run) return;
 
         // 3. The ONLY way forward: the user presses "Aage Badho ❤️".
         //    No timeouts, no auto handoff - the scene waits forever.
         this._show(this.continueBtn);
         if (this.continueBtn) this.continueBtn.focus({ preventScroll: true });
         await this._waitForContinue();
-        if (this._canceled) return;
+        if (this._canceled || run !== this._run) return;
 
         // Future love-message insertion point: a message scene (or
         // several) can be awaited here without rewriting the
@@ -309,10 +311,10 @@ export class BirthdayReveal {
         if (typeof this.loveMessageStage === 'function') {
             await this.loveMessageStage();
         }
-        if (this._canceled) return;
+        if (this._canceled || run !== this._run) return;
 
         // Exit: stop the clock, fade the scene out and resolve.
-        await this._exit();
+        await this._exit(run);
     }
 
     /* Interrupt the running sequence (used by the global Back button
@@ -321,6 +323,7 @@ export class BirthdayReveal {
        teardown cleanly, then hides the scene. Safe to call at any
        point of the sequence. */
     async cancel() {
+        this._run += 1; // invalidate any in-flight play()/showFinal() chain
         this._canceled = true;
         this._letterContinue();
         this._continue();
@@ -337,6 +340,7 @@ export class BirthdayReveal {
        button again - the same way the first visit did. */
     async showFinal() {
         if (!this.layer || this.playing) return;
+        const run = (this._run += 1);
         this.playing = true;
         this._canceled = false;
 
@@ -347,7 +351,7 @@ export class BirthdayReveal {
         this._spawnCandles();
         this._spawnBalloons();
 
-        await this._showFinalStage();
+        await this._showFinalStage(run);
     }
 
     /* ---- Birthday Love Letter stage ---- */
@@ -498,19 +502,19 @@ export class BirthdayReveal {
     /* One full countdown step: show -> hold -> dissolve -> hide.
        Resolves only after this number has completely left the
        screen, so steps can never overlap or race. */
-    async _playCountStep(step) {
+    async _playCountStep(step, run) {
         if (this.count) this.count.textContent = String(step.n);
         if (this.micro) this.micro.textContent = step.text;
         this._show(this.count);
         this._show(this.micro);
         this._beat();
         await sleep(this.reduced ? 750 : STEP_READ);
-        if (this._canceled) return;
+        if (this._canceled || run !== this._run) return;
         this._out(this.count);
         this._out(this.micro);
         this._hide(this.wave);
         await sleep(this.reduced ? 0 : STEP_OUT);
-        if (this._canceled) return;
+        if (this._canceled || run !== this._run) return;
         this._hide(this.count);
         this._hide(this.micro);
     }
@@ -592,7 +596,7 @@ export class BirthdayReveal {
     }
 
     /* Stop the clock and fade the whole scene out. */
-    async _exit() {
+    async _exit(run) {
         if (this.ageTimer) {
             clearInterval(this.ageTimer);
             this.ageTimer = null;
@@ -600,6 +604,7 @@ export class BirthdayReveal {
 
         this.layer?.classList.add('is-leaving');
         await sleep(this.reduced ? 0 : 450);
+        if (run !== undefined && run !== this._run) return;
 
         this._hide(this.count);
         this._hide(this.micro);
@@ -669,6 +674,7 @@ export class BirthdayReveal {
         // Stop any running sequence (countdown/age timer) so nothing
         // keeps ticking after the reveal is gone.
         this._canceled = true;
+        this._run += 1; // invalidate any in-flight play()/showFinal() chain
         // Resolve any pending waits (letter button / continue button)
         // so a re-entry never hangs on a stale click promise.
         this._letterContinue();

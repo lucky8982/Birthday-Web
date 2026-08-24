@@ -478,7 +478,7 @@ h1, h2, h3 {
     position: fixed;
     top: calc(1.4rem + env(safe-area-inset-top));
     left: calc(1.4rem + env(safe-area-inset-left));
-    z-index: 30;
+    z-index: 100;
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
@@ -665,6 +665,16 @@ h1, h2, h3 {
     max-width: 100%;
     padding: 0;
     position: static;
+    min-height: 100svh;
+}
+
+/* Chapter state: once the intro is hidden the nav bar is the only
+   element in flow, so the scene's flex centering would float it at
+   the vertical middle. Fill the stage and anchor it to the bottom
+   instead - the intro is not hidden, so it stays exactly as-is. */
+.scene-memory-lane .scene-content:has(.memory-intro[hidden]) {
+    justify-content: flex-end;
+    padding-bottom: max(clamp(2.2rem, 6vh, 4rem), env(safe-area-inset-bottom));
 }
 
 /* ---- Shared bits ---- */
@@ -684,17 +694,35 @@ h1, h2, h3 {
     max-width: 420px;
 }
 
-/* ---- Hidden surprise state (intro) ---- */
+/* ---- Hidden surprise state (intro) ----
+   The copy and the CTA buttons are in normal flow: the copy is
+   centered by auto margins and the buttons settle below it. When
+   the viewport is short (landscape) or fonts are scaled up, the
+   intro scrolls instead of letting the buttons overlap the text. */
 .memory-intro {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: min(520px, 100%);
+    min-width: 0;
+    padding: var(--space-lg) var(--space-md);
+    min-height: 100svh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Eyebrow + title + subtitle group. The flex parent centers the
+   entire intro composition (copy + actions) vertically. */
+.memory-intro-copy {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--space-sm);
-    text-align: center;
-    max-width: 520px;
-    padding: var(--space-lg) var(--space-md);
-    min-height: 100svh;
-    justify-content: center;
 }
 
 .memory-intro-title {
@@ -709,8 +737,11 @@ h1, h2, h3 {
 .memory-continue-btn {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.6rem;
-    margin-top: var(--space-sm);
+    margin-inline: auto;
+    width: max-content;
+    max-width: 100%;
     min-height: 56px;
     padding: 0 2rem;
     font-family: var(--font-body);
@@ -735,12 +766,40 @@ h1, h2, h3 {
         background var(--duration-fast) var(--ease-out);
 }
 
+/* Button labels wrap (never clip) when fonts are scaled up or the
+   viewport is very narrow */
+.memory-reveal-btn span,
+.memory-continue-btn span {
+    white-space: normal;
+    text-align: center;
+}
+
 .memory-reveal-btn svg,
 .memory-continue-btn svg {
     width: 18px;
     height: 18px;
     color: var(--green-300);
 }
+
+/* CTA button stack: normal flow directly under the copy group.
+   The flex parent centers the combined unit, so Reveal (and
+   Continue, when visible) stay centered as a group - never
+   bottom-anchored. Reveal is first in the DOM and has no order
+   override, so it always stays above Continue. */
+.memory-intro-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    width: 100%;
+    padding-top: var(--space-md);
+}
+
+/* Reveal always sits FIRST (above Continue), in normal document
+   flow, so the order can never flip regardless of saved progress,
+   responsive rules or Continue visibility. When Continue is hidden,
+   Reveal stays centered on its own; when Continue appears it slots
+   in below, exactly where the DOM puts it. */
 
 .memory-reveal-btn:hover,
 .memory-continue-btn:hover {
@@ -770,7 +829,7 @@ h1, h2, h3 {
     inset: 0;
     display: grid;
     gap: clamp(1rem, 3vh, 2.5rem);
-    padding: clamp(3rem, 8vh, 5rem) clamp(1.4rem, 5vw, 4.5rem);
+    padding: clamp(3rem, 8vh, 5rem) clamp(1.4rem, 5vw, 4.5rem) clamp(2.2rem, 6vh, 4rem);
     align-content: center;
     min-height: 100svh;
     overflow: hidden;
@@ -803,12 +862,12 @@ h1, h2, h3 {
     font-family: var(--font-display);
     font-size: clamp(2.6rem, 6vw, 6.6rem);
     font-weight: 500;
-    line-height: 1.02;
-    letter-spacing: 0.01em;
+    line-height: 1.04;
+    letter-spacing: 0.005em;
     color: var(--blue-050);
     text-shadow:
-        0 0 34px var(--glow-blue),
-        0 2px 10px rgba(5, 10, 24, 0.8);
+        0 0 30px rgba(126, 200, 227, 0.45),
+        0 3px 14px rgba(5, 10, 24, 0.85);
 }
 
 /* Words and letters are individually animatable */
@@ -846,16 +905,19 @@ h1, h2, h3 {
     position: relative;
     display: flex;
     justify-content: center;
-    padding: 14px;
+    padding: 16px;
     border-radius: var(--radius-lg);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: 
+        linear-gradient(160deg, rgba(168, 208, 230, 0.18), rgba(168, 208, 230, 0.06)),
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(126, 200, 227, 0.12), transparent 70%);
+    border: 1px solid rgba(168, 208, 230, 0.25);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     box-shadow:
-        0 0 40px var(--glow-blue),
-        0 18px 50px rgba(5, 10, 24, 0.65),
-        inset 0 1px 0 var(--glass-highlight);
+        0 0 50px rgba(126, 200, 227, 0.35),
+        0 28px 70px rgba(5, 10, 24, 0.75),
+        inset 0 1px 0 rgba(242, 249, 255, 0.16),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.28);
     transform-origin: center;
     /*
      * Never let the frame (and therefore the photo) exceed
@@ -866,18 +928,44 @@ h1, h2, h3 {
     max-width: 100%;
 }
 
+/* Subtle edge highlight for premium frame depth */
+.memory-frame::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: calc(var(--radius-lg) - 1px);
+    border: 1px solid rgba(242, 249, 255, 0.08);
+    pointer-events: none;
+    z-index: 1;
+}
+
 .memory-photo {
     display: block;
     width: auto;
     height: auto;
     max-width: 100%;
-    max-height: min(56vh, 58svh);
-    border-radius: calc(var(--radius-lg) - 10px);
-    box-shadow: 0 10px 34px rgba(5, 10, 24, 0.6);
+    max-height: min(54vh, 56svh);
+    border-radius: calc(var(--radius-lg) - 12px);
+    box-shadow:
+        0 16px 44px rgba(5, 10, 24, 0.7),
+        0 4px 14px rgba(5, 10, 24, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03);
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
-     transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.6s var(--ease-out), filter 0.6s var(--ease-out);
+}
+
+/* Subtle vignette overlay for cinematic photo depth */
+.memory-frame::after {
+    content: '';
+    position: absolute;
+    inset: 14px;
+    border-radius: calc(var(--radius-lg) - 10px);
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(5, 10, 24, 0.35) 100%);
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.6;
 }
 
 /* Soft light wash across the top of the frame */
@@ -952,66 +1040,146 @@ h1, h2, h3 {
     text-align: left;
 }
 
+/* Premium message typography with emotional weight */
 .memory-message {
     font-size: clamp(1.05rem, 2vw, 1.5rem);
-    line-height: 1.55;
+    line-height: 1.75;
     font-weight: 300;
     color: var(--text-secondary);
-    letter-spacing: 0.02em;
-    text-shadow: 0 0 18px rgba(5, 10, 24, 0.6);
+    letter-spacing: 0.015em;
+    text-shadow: 
+        0 0 18px rgba(5, 10, 24, 0.7),
+        0 0 30px rgba(126, 200, 227, 0.16);
 }
 
-/* ---- Next Memory pill (appears once the chapter settles) ---- */
+/* Subtle entrance glow for emotional impact */
+.memory-message-block.is-in .memory-message {
+    animation: message-glow-bloom 1.4s var(--ease-soft) 0.2s both;
+}
+
+@keyframes message-glow-bloom {
+    from {
+        text-shadow: 0 0 0 transparent;
+    }
+    50% {
+        text-shadow: 
+            0 0 24px rgba(126, 200, 227, 0.3),
+            0 0 40px rgba(5, 10, 24, 0.8);
+    }
+    to {
+        text-shadow: 
+            0 0 18px rgba(5, 10, 24, 0.7),
+            0 0 30px rgba(126, 200, 227, 0.16);
+    }
+}
+
+/* ---- Preview / Next bar: a reserved grid row (nav) at the bottom
+   of the chapter. Preview anchors bottom-left, Next Memory
+   bottom-right, always on the same baseline, never overlapping
+   the message or photo - the grid reserves the space instead of
+   overlaying content. ---- */
 .memory-actions {
-    position: absolute;
-    left: 50%;
-    bottom: clamp(1.2rem, 4vh, 2.6rem);
-    transform: translateX(-50%);
+    grid-area: nav;
+    position: relative;
+    justify-self: stretch;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-inline: clamp(1.2rem, 3vw, 3.5rem);
     z-index: 6;
 }
 
+/* Premium navigation pills with cinematic glass depth */
 .memory-nav {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.55rem;
+    gap: 0.6rem;
+    min-height: 56px;
+    padding: 0 1.75rem;
+    border-radius: var(--radius-full);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    white-space: nowrap;
     color: var(--blue-200);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: 
+        linear-gradient(180deg, rgba(168, 208, 230, 0.18), rgba(168, 208, 230, 0.06)),
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(126, 200, 227, 0.12), transparent 70%);
+    border: 1px solid rgba(168, 208, 230, 0.3);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 40px rgba(126, 200, 227, 0.25),
+        0 12px 36px rgba(5, 10, 24, 0.55),
+        inset 0 1px 0 rgba(242, 249, 255, 0.14),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.25);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition:
         transform var(--duration-fast) var(--ease-out),
         box-shadow var(--duration-fast) var(--ease-out),
-        color var(--duration-fast) var(--ease-out);
+        background var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out);
 }
 
-.memory-next,
+/* Subtle inner highlight for premium depth */
+.memory-nav::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: calc(var(--radius-full) - 1px);
+    border: 1px solid rgba(242, 249, 255, 0.08);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Anchor each pill to its own side of the bar (with one button
+   hidden, the other stays anchored to its side) */
 .memory-prev {
-    min-height: 56px;
-    padding: 0 2rem;
-    border-radius: var(--radius-full);
-    font-family: var(--font-body);
-    font-size: 0.85rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    background: var(--glass-bg-strong);
-    box-shadow:
-        0 0 22px var(--glow-blue),
-        inset 0 1px 0 var(--glass-highlight);
+    margin-right: auto;
+}
+
+.memory-next {
+    margin-left: auto;
 }
 
 .memory-nav:hover {
-    color: var(--blue-300);
-    box-shadow: 0 0 30px var(--glow-blue);
-    transform: translateY(-2px);
+    color: var(--blue-050);
+    background: 
+        linear-gradient(180deg, rgba(126, 200, 227, 0.22), rgba(126, 200, 227, 0.08)),
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(126, 200, 227, 0.18), transparent 70%);
+    border-color: rgba(126, 200, 227, 0.45);
+    box-shadow:
+        0 0 50px rgba(126, 200, 227, 0.4),
+        0 16px 44px rgba(5, 10, 24, 0.6),
+        inset 0 1px 0 rgba(242, 249, 255, 0.16),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.28);
+    transform: translateY(-3px);
 }
 
 .memory-nav:active {
-    transform: translateY(0) scale(0.96);
+    transform: translateY(-1px) scale(0.97);
+    box-shadow:
+        0 0 30px rgba(126, 200, 227, 0.3),
+        0 8px 24px rgba(5, 10, 24, 0.5),
+        inset 0 1px 0 rgba(242, 249, 255, 0.12),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.2);
+}
+
+.memory-nav:focus-visible {
+    outline: 2px solid var(--blue-300);
+    outline-offset: 3px;
+}
+
+.memory-nav:focus-visible {
+    outline: 2px solid var(--blue-300);
+    outline-offset: 3px;
 }
 
 .memory-nav svg {
@@ -1020,7 +1188,978 @@ h1, h2, h3 {
     color: var(--green-300);
 }
 
-/* ---- Final CTA overlay: floats over the settled Memory 30 ---- */
+/* ---- Back to the Our Memories landing ----
+   Matches the global experience-back-btn exactly:
+   fixed top-left, same sizing, styling, and animation.
+   Shown ONLY inside the first memory chapter by js/memory-lane.js.
+   Returns the visitor to the intro screen of the lane. */
+.memory-back-intro {
+    position: fixed;
+    top: calc(1.4rem + env(safe-area-inset-top));
+    left: calc(1.4rem + env(safe-area-inset-left));
+    z-index: 30;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 48px;
+    padding: 0.65rem 1.15rem 0.65rem 0.9rem;
+    border-radius: 999px;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--blue-200);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 18px rgba(5, 10, 24, 0.5),
+        inset 0 1px 0 var(--glass-highlight);
+    cursor: pointer;
+    pointer-events: none;
+    transition:
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+/* Visible state: entrance animation matches experience-back-btn */
+.memory-back-intro.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    animation: back-btn-in 0.6s var(--ease-out);
+}
+
+.memory-back-intro svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    color: var(--green-300);
+}
+
+.memory-back-intro:hover {
+    color: var(--blue-300);
+    border-color: var(--glass-highlight);
+    box-shadow:
+        0 0 26px var(--glow-blue),
+        inset 0 1px 0 var(--glass-highlight);
+    transform: translateX(-2px);
+}
+
+.memory-back-intro:active {
+    transform: scale(0.96);
+}
+
+.memory-back-intro:focus-visible {
+    outline: 2px solid var(--blue-200);
+    outline-offset: 3px;
+}
+
+.memory-back-intro svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    color: var(--green-300);
+}
+
+.memory-back-intro:hover {
+    color: var(--blue-300);
+    box-shadow:
+        0 0 26px var(--glow-blue),
+        inset 0 1px 0 var(--glass-highlight);
+    transform: translateY(-2px);
+}
+
+.memory-back-intro:active {
+    transform: scale(0.96);
+}
+
+.memory-back-intro:focus-visible {
+    outline: 2px solid var(--blue-300);
+    outline-offset: 3px;
+}
+
+/* ============================================================
+   Level 1: Return to Beginning (Memory Lane Intro)
+   ------------------------------------------------------------
+   Subtle restart control at the Memory Lane intro.
+   Visually distinct from the main CTAs - minimal, unobtrusive.
+   ============================================================ */
+.memory-restart-intro {
+    position: absolute;
+    bottom: var(--space-md);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--blue-200);
+    background: rgba(168, 208, 230, 0.10);
+    border: 1px solid rgba(168, 208, 230, 0.18);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 12px rgba(5, 10, 24, 0.3),
+        inset 0 1px 0 rgba(242, 249, 255, 0.08);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity var(--duration-normal) var(--ease-out),
+        visibility var(--duration-normal) var(--ease-out),
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        background var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.memory-restart-intro.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    animation: restart-intro-in 0.7s var(--ease-out);
+}
+
+@keyframes restart-intro-in {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(12px);
+        filter: blur(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        filter: blur(0);
+    }
+}
+
+.memory-restart-intro svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    color: var(--green-300);
+}
+
+.memory-restart-intro:hover {
+    color: var(--blue-300);
+    background: rgba(126, 200, 227, 0.18);
+    border-color: rgba(126, 200, 227, 0.35);
+    box-shadow:
+        0 0 20px rgba(126, 200, 227, 0.25),
+        inset 0 1px 0 rgba(242, 249, 255, 0.12);
+    transform: translateX(-50%) translateY(-1px);
+}
+
+.memory-restart-intro:active {
+    transform: translateX(-50%) scale(0.97);
+}
+
+.memory-restart-intro:focus-visible {
+    outline: 2px solid var(--blue-200);
+    outline-offset: 2px;
+}
+
+/* ============================================================
+   Level 2: Experience Again (Final Ending / Epilogue)
+   ------------------------------------------------------------
+   Prominent "Experience Again" button at the true ending.
+   Matches the premium cinematic design language.
+   ============================================================ */
+.epilogue-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: min(560px, 92vw);
+    padding: var(--space-xl) var(--space-lg);
+    gap: var(--space-md);
+}
+
+.epilogue-glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 50vmin;
+    height: 50vmin;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle,
+            rgba(126, 200, 227, 0.24) 0%,
+            rgba(94, 201, 142, 0.12) 45%,
+            transparent 70%);
+    filter: blur(8px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.epilogue-hearts {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.epilogue-heart {
+    position: absolute;
+    bottom: 0;
+    font-size: 1rem;
+    opacity: 0;
+    color: var(--green-300);
+    text-shadow: 0 0 12px var(--glow-blue);
+}
+
+.epilogue-eyebrow {
+    position: relative;
+    z-index: 1;
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--green-300);
+    font-weight: 500;
+    margin: 0;
+    opacity: 0.85;
+}
+
+.epilogue-title {
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 6vw, 4.2rem);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: 0.005em;
+    color: var(--blue-050);
+    text-shadow:
+        0 0 30px rgba(126, 200, 227, 0.5),
+        0 4px 20px rgba(5, 10, 24, 0.9);
+    margin: 0;
+}
+
+.epilogue-subtitle {
+    position: relative;
+    z-index: 1;
+    font-size: clamp(1rem, 2.8vw, 1.3rem);
+    line-height: 1.7;
+    color: var(--text-secondary);
+    letter-spacing: 0.01em;
+    max-width: 480px;
+    margin: 0;
+}
+
+/* Premium "Experience Again" button */
+.epilogue-btn {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 60px;
+    padding: 0.85rem 2.5rem;
+    border-radius: var(--radius-full);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--blue-050);
+    background: 
+        linear-gradient(180deg, rgba(126, 200, 227, 0.22), rgba(126, 200, 227, 0.08)),
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(126, 200, 227, 0.18), transparent 70%);
+    border: 1px solid rgba(126, 200, 227, 0.4);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 50px rgba(126, 200, 227, 0.35),
+        0 16px 44px rgba(5, 10, 24, 0.6),
+        inset 0 1px 0 rgba(242, 249, 255, 0.16),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.28);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        background var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.epilogue-btn::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: calc(var(--radius-full) - 1px);
+    border: 1px solid rgba(242, 249, 255, 0.1);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.epilogue-btn svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    color: var(--green-300);
+}
+
+.epilogue-btn:hover {
+    color: var(--blue-300);
+    border-color: rgba(126, 200, 227, 0.6);
+    box-shadow:
+        0 0 60px rgba(126, 200, 227, 0.45),
+        0 20px 52px rgba(5, 10, 24, 0.65),
+        inset 0 1px 0 rgba(242, 249, 255, 0.18),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.3);
+    transform: translateY(-3px);
+}
+
+.epilogue-btn:active {
+    transform: translateY(-1px) scale(0.97);
+    box-shadow:
+        0 0 40px rgba(126, 200, 227, 0.35),
+        0 10px 28px rgba(5, 10, 24, 0.55),
+        inset 0 1px 0 rgba(242, 249, 255, 0.14),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.25);
+}
+
+.epilogue-btn:focus-visible {
+    outline: 2px solid var(--blue-300);
+    outline-offset: 3px;
+}
+
+/* Entrance animation for epilogue content */
+.epilogue-content {
+    opacity: 0;
+    animation: epilogue-in 1.4s var(--ease-out) 0.2s both;
+}
+
+@keyframes epilogue-in {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.98);
+        filter: blur(8px);
+    }
+    60% {
+        opacity: 0.8;
+        transform: translateY(-8px) scale(1.01);
+        filter: blur(2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+/* Heart drift animations for epilogue */
+.epilogue-heart.heart-1 {
+    left: 15%;
+    animation: epilogue-heart-drift 6s var(--ease-soft) 0.5s infinite alternate;
+}
+
+.epilogue-heart.heart-2 {
+    left: 50%;
+    animation: epilogue-heart-drift 7s var(--ease-soft) 1.2s infinite alternate;
+}
+
+.epilogue-heart.heart-3 {
+    right: 15%;
+    animation: epilogue-heart-drift 5.5s var(--ease-soft) 0.8s infinite alternate;
+}
+
+@keyframes epilogue-heart-drift {
+    from {
+        opacity: 0;
+        transform: translateY(0) scale(0.8) rotate(-10deg);
+    }
+    40% {
+        opacity: 0.7;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-120px) scale(1.2) rotate(10deg);
+    }
+}
+
+/* ============================================================
+   Entry Lock Intro Scene
+   ------------------------------------------------------------
+   Cinematic entry scene that plays before the Opening.
+   Premium typography with cinematic dissolves.
+   ============================================================ */
+
+/* ---- Scene container ---- */
+.scene-entry-lock {
+    position: absolute;
+    inset: 0;
+    z-index: 70;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 130% 110% at 50% 50%,
+            transparent 60%,
+            rgba(2, 4, 12, 0.7) 100%),
+        radial-gradient(ellipse 95% 75% at 50% 22%,
+            rgba(23, 52, 62, 0.6), transparent 72%),
+        radial-gradient(ellipse 80% 60% at 50% 42%,
+            rgba(24, 40, 82, 0.9), transparent 70%),
+        linear-gradient(180deg,
+            var(--night-800) 0%,
+            #0a1724 55%,
+            var(--night-900) 100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.scene-entry-lock.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.scene-entry-lock.is-leaving {
+    pointer-events: none;
+}
+
+/* ---- Background atmosphere ---- */
+.entry-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 50% 35%,
+            rgba(126, 200, 227, 0.08), transparent 55%),
+        radial-gradient(circle at 20% 80%,
+            rgba(94, 201, 142, 0.05), transparent 50%),
+        radial-gradient(circle at 80% 65%,
+            rgba(126, 200, 227, 0.05), transparent 48%);
+    pointer-events: none;
+}
+
+/* ---- Starfield ---- */
+.entry-stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.entry-star {
+    position: absolute;
+    border-radius: 50%;
+    background: #e8f6ff;
+    box-shadow: 0 0 6px 1px rgba(174, 220, 255, 0.5);
+    animation: entry-star-twinkle var(--dur, 3s) ease-in-out var(--delay, 0s) infinite;
+}
+
+@keyframes entry-star-twinkle {
+    0%, 100% {
+        opacity: var(--o, 0.18);
+        transform: scale(1);
+    }
+    50% {
+        opacity: calc(var(--o, 0.18) + 0.6);
+        transform: scale(1.5);
+    }
+}
+
+/* ---- Floating particles ---- */
+.entry-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.entry-particle {
+    position: absolute;
+    top: -6vh;
+    border-radius: 70% 30% 70% 30% / 60% 40% 60% 40%;
+    opacity: 0;
+    will-change: transform;
+    animation: entry-particle-fall var(--dur, 10s) linear var(--delay, 0s) infinite;
+}
+
+@keyframes entry-particle-fall {
+    from {
+        opacity: 0;
+        transform: translateY(-10vh) rotate(var(--rot, 0deg));
+    }
+    10% {
+        opacity: var(--o, 0.4);
+    }
+    90% {
+        opacity: var(--o, 0.4);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(110vh) translateX(var(--sway, 0px)) rotate(calc(var(--rot, 0deg) + 180deg));
+    }
+}
+
+/* ---- Stage & Scenes ---- */
+.entry-content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg) var(--space-md);
+    text-align: center;
+}
+
+.entry-stage {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xl);
+}
+
+.entry-scene {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity var(--duration-slow) var(--ease-soft),
+        visibility var(--duration-slow) var(--ease-soft),
+        transform var(--duration-slow) var(--ease-soft),
+        filter var(--duration-slow) var(--ease-soft);
+    transform: translateY(30px) scale(0.95);
+    filter: blur(10px);
+}
+
+.entry-scene.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+}
+
+/* ---- Text groups ---- */
+.entry-text-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+    max-width: min(600px, 90vw);
+    text-align: center;
+}
+
+.entry-text-group-2 {
+    gap: var(--space-lg);
+}
+
+/* ---- Titles (Scene 1) ---- */
+.entry-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: 1.15;
+    color: var(--blue-050);
+    text-shadow:
+        0 0 30px rgba(126, 200, 227, 0.6),
+        0 4px 20px rgba(5, 10, 24, 0.9);
+    margin: 0;
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+    filter: blur(12px);
+    transition:
+        opacity 0.8s var(--ease-out),
+        transform 0.8s var(--ease-out),
+        filter 0.8s var(--ease-out);
+}
+
+.entry-title-1 {
+    font-size: clamp(2.2rem, 7vw, 4.8rem);
+    text-shadow:
+        0 0 40px rgba(126, 200, 227, 0.7),
+        0 6px 28px rgba(5, 10, 24, 0.95);
+}
+
+.entry-title-2 {
+    font-size: clamp(1.8rem, 5.5vw, 3.6rem);
+    font-weight: 400;
+    color: var(--blue-100);
+    text-shadow:
+        0 0 24px rgba(94, 201, 142, 0.5),
+        0 4px 20px rgba(5, 10, 24, 0.9);
+}
+
+.entry-title-3 {
+    font-size: clamp(1.4rem, 4vw, 2.4rem);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--green-300);
+    text-shadow:
+        0 0 20px rgba(94, 201, 142, 0.6),
+        0 2px 12px rgba(5, 10, 24, 0.85);
+}
+
+.entry-scene.is-visible .entry-title-1 {
+    animation: entry-title-1-in 1.2s var(--ease-out) 0.2s both;
+}
+.entry-scene.is-visible .entry-title-2 {
+    animation: entry-title-2-in 1.2s var(--ease-out) 0.5s both;
+}
+.entry-scene.is-visible .entry-title-3 {
+    animation: entry-title-3-in 1.2s var(--ease-out) 0.8s both;
+}
+
+@keyframes entry-title-1-in {
+    from {
+        opacity: 0;
+        transform: translateY(50px) scale(0.85);
+        filter: blur(16px);
+    }
+    60% {
+        opacity: 0.8;
+        transform: translateY(-8px) scale(1.02);
+        filter: blur(3px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes entry-title-2-in {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.9);
+        filter: blur(12px);
+    }
+    60% {
+        opacity: 0.8;
+        transform: translateY(-6px) scale(1.01);
+        filter: blur(2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes entry-title-3-in {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+        filter: blur(10px);
+    }
+    60% {
+        opacity: 0.8;
+        transform: translateY(-4px) scale(1.01);
+        filter: blur(2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+/* ---- Sub titles (Scene 2) ---- */
+.entry-sub {
+    font-family: var(--font-body);
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+    margin: 0;
+    opacity: 0;
+    transform: translateY(25px);
+    filter: blur(8px);
+    transition:
+        opacity 0.7s var(--ease-out),
+        transform 0.7s var(--ease-out),
+        filter 0.7s var(--ease-out);
+}
+
+.entry-sub-1 {
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    color: var(--green-300);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.entry-sub-2 {
+    font-size: clamp(1.2rem, 3.5vw, 1.7rem);
+    color: var(--blue-100);
+    font-weight: 400;
+}
+
+.entry-sub-3 {
+    font-size: clamp(1.1rem, 3.2vw, 1.5rem);
+    color: var(--blue-200);
+    font-weight: 300;
+    font-style: italic;
+}
+
+.entry-scene-2.is-visible .entry-sub-1 {
+    animation: entry-sub-in 0.8s var(--ease-out) 0.2s both;
+}
+.entry-scene-2.is-visible .entry-sub-2 {
+    animation: entry-sub-in 0.8s var(--ease-out) 0.5s both;
+}
+.entry-scene-2.is-visible .entry-sub-3 {
+    animation: entry-sub-in 0.8s var(--ease-out) 0.8s both;
+}
+
+@keyframes entry-sub-in {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+        filter: blur(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+/* ============================================================
+   Level 1: Restart Confirmation Overlay
+   ------------------------------------------------------------
+   Premium confirmation dialog for "Return to Beginning"
+   at the Memory Lane intro.
+   ============================================================ */
+.restart-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity var(--duration-normal) var(--ease-out),
+        visibility var(--duration-normal) var(--ease-out);
+}
+
+.restart-confirm-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.restart-confirm-backdrop {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(5, 10, 24, 0.85), rgba(5, 10, 24, 0.95));
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: confirm-backdrop-in 0.3s var(--ease-out) both;
+}
+
+@keyframes confirm-backdrop-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.restart-confirm-dialog {
+    position: relative;
+    z-index: 1;
+    max-width: min(400px, 90vw);
+    width: 100%;
+    padding: var(--space-xl) var(--space-lg);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    background: 
+        linear-gradient(170deg, rgba(168, 208, 230, 0.18), rgba(168, 208, 230, 0.06)),
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(126, 200, 227, 0.15), transparent 70%);
+    border: 1px solid rgba(168, 208, 230, 0.25);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 50px rgba(126, 200, 227, 0.3),
+        0 24px 60px rgba(5, 10, 24, 0.75),
+        inset 0 1px 0 rgba(242, 249, 255, 0.14),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.25);
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+    animation: confirm-dialog-in 0.4s var(--ease-out) 0.05s both;
+}
+
+@keyframes confirm-dialog-in {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.restart-confirm-glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 40vmin;
+    height: 40vmin;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle,
+            rgba(126, 200, 227, 0.22) 0%,
+            rgba(94, 201, 142, 0.12) 45%,
+            transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.restart-confirm-title {
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.005em;
+    color: var(--blue-050);
+    text-shadow:
+        0 0 24px rgba(126, 200, 227, 0.45),
+        0 3px 12px rgba(5, 10, 24, 0.85);
+    margin: 0 0 var(--space-sm);
+}
+
+.restart-confirm-message {
+    position: relative;
+    z-index: 1;
+    font-size: clamp(0.95rem, 2.2vw, 1.1rem);
+    line-height: 1.65;
+    color: var(--text-secondary);
+    letter-spacing: 0.01em;
+    margin: 0 0 var(--space-lg);
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.restart-confirm-actions {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    align-items: stretch;
+}
+
+.restart-confirm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 52px;
+    padding: 0 1.5rem;
+    border-radius: var(--radius-full);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue-200);
+    background: rgba(168, 208, 230, 0.12);
+    border: 1px solid rgba(168, 208, 230, 0.22);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 8px 24px rgba(5, 10, 24, 0.45),
+        inset 0 1px 0 rgba(242, 249, 255, 0.10);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        background var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.restart-confirm-btn svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    color: var(--green-300);
+}
+
+.restart-confirm-cancel {
+    color: var(--text-secondary);
+    background: rgba(168, 208, 230, 0.08);
+    border-color: rgba(168, 208, 230, 0.15);
+}
+
+.restart-confirm-cancel:hover {
+    color: var(--text-primary);
+    background: rgba(168, 208, 230, 0.16);
+    border-color: rgba(168, 208, 230, 0.25);
+    transform: translateY(-1px);
+}
+
+.restart-confirm-confirm {
+    color: var(--blue-050);
+    background: 
+        linear-gradient(180deg, rgba(126, 200, 227, 0.20), rgba(126, 200, 227, 0.08)),
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(126, 200, 227, 0.15), transparent 70%);
+    border-color: rgba(126, 200, 227, 0.35);
+    box-shadow:
+        0 0 30px rgba(126, 200, 227, 0.25),
+        0 8px 24px rgba(5, 10, 24, 0.5),
+        inset 0 1px 0 rgba(242, 249, 255, 0.12);
+}
+
+.restart-confirm-confirm:hover {
+    color: var(--blue-300);
+    border-color: rgba(126, 200, 227, 0.5);
+    box-shadow:
+        0 0 40px rgba(126, 200, 227, 0.35),
+        0 12px 32px rgba(5, 10, 24, 0.55),
+        inset 0 1px 0 rgba(242, 249, 255, 0.14);
+    transform: translateY(-2px);
+}
+
+.restart-confirm-confirm:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.restart-confirm-btn:focus-visible {
+    outline: 2px solid var(--blue-300);
+    outline-offset: 2px;
+}
+
+/* ============================================================
+   Final CTA overlay: floats over the settled last chapter ----
 .memory-final {
     position: absolute;
     left: 50%;
@@ -1032,18 +2171,141 @@ h1, h2, h3 {
     align-items: center;
     gap: var(--space-sm);
     text-align: center;
-    max-width: 520px;
+    width: min(520px, 92vw);
     padding: var(--space-md) var(--space-lg);
-    background: var(--glass-bg-strong);
-    border: 1px solid var(--glass-border);
+    background: linear-gradient(170deg, rgba(168, 208, 230, 0.16), rgba(168, 208, 230, 0.06));
+    border: 1px solid rgba(168, 208, 230, 0.20);
     border-radius: var(--radius-lg);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     box-shadow:
-        0 0 40px var(--glow-blue),
-        0 18px 50px rgba(5, 10, 24, 0.6),
-        inset 0 1px 0 var(--glass-highlight);
+        0 0 44px rgba(126, 200, 227, 0.28),
+        0 24px 56px rgba(5, 10, 24, 0.65),
+        inset 0 1px 0 rgba(242, 249, 255, 0.12);
 }
+
+/* Final page: hide overlay text, button moved to normal nav */
+#memory-final.memory-final-in .memory-final-eyebrow,
+#memory-final.memory-final-in .memory-final-title,
+#memory-final.memory-final-in .memory-final-love,
+#memory-final.memory-final-in .memory-final-subtitle,
+#memory-final.memory-final-in .memory-final-glow,
+#memory-final.memory-final-in .memory-final-hearts {
+    display: none;
+}
+#memory-final.memory-final-in {
+    display: none !important;
+}
+
+/* Post-Memory Message — premium cinematic full-screen (restored) */
+.scene-post-memory-message {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 70% 55% at 50% 40%, rgba(20,33,66,0.85), transparent 70%),
+        linear-gradient(180deg, var(--night-800) 0%, var(--night-900) 100%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.7s var(--ease-soft), visibility 0s linear 0.7s;
+}
+.scene-post-memory-message.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
+}
+.post-memory-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-sm);
+    width: min(560px, 92vw);
+    padding: var(--space-lg) var(--space-md);
+}
+.post-memory-glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 50vmin;
+    height: 50vmin;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(126,200,227,0.20) 0%, rgba(94,201,142,0.10) 45%, transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
+    z-index: 0;
+}
+.post-memory-eyebrow {
+    font-size: 0.82rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--blue-300);
+    position: relative;
+    z-index: 1;
+}
+.post-memory-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    color: var(--blue-050);
+    text-shadow: 0 0 26px var(--glow-blue);
+    line-height: 1.2;
+    position: relative;
+    z-index: 1;
+}
+.post-memory-love {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+    color: #fff;
+    text-shadow: 0 0 22px var(--glow-blue);
+    position: relative;
+    z-index: 1;
+}
+.post-memory-subtitle {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+.post-memory-continue {
+    margin-top: var(--space-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 52px;
+    padding: 0 2rem;
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue-050);
+    background: linear-gradient(180deg, rgba(126,200,227,0.22), rgba(126,200,227,0.08));
+    border: 1px solid rgba(126,200,227,0.32);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 0 28px rgba(126,200,227,0.26), inset 0 1px 0 rgba(255,255,255,0.12);
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.22s var(--ease-out), box-shadow 0.22s;
+}
+.post-memory-continue:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 38px rgba(126,200,227,0.38);
+}
+.post-memory-continue:active { transform: scale(0.97); }
+.post-memory-continue svg { width: 18px; height: 18px; color: var(--green-300); }
 
 /* Soft cinematic halo behind the final message */
 .memory-final-glow {
@@ -1198,9 +2460,10 @@ h1, h2, h3 {
 .memory-chapter.compose-a {
     grid-template-areas:
         'title  title'
-        'photo  message';
+        'photo  message'
+        'nav    nav';
     grid-template-columns: 1.05fr 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
 }
 
 .memory-chapter.compose-a .memory-title-block {
@@ -1223,9 +2486,10 @@ h1, h2, h3 {
 .memory-chapter.compose-b {
     grid-template-areas:
         'title   photo'
-        'message photo';
+        'message photo'
+        'nav     nav';
     grid-template-columns: 1fr 1.1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
 }
 
 .memory-chapter.compose-b .memory-title-block {
@@ -1250,9 +2514,10 @@ h1, h2, h3 {
 .memory-chapter.compose-c {
     grid-template-areas:
         'title  title'
-        'photo  message';
+        'photo  message'
+        'nav    nav';
     grid-template-columns: 1.1fr 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
 }
 
 .memory-chapter.compose-c .memory-title-block {
@@ -1278,9 +2543,10 @@ h1, h2, h3 {
 .memory-chapter.compose-d {
     grid-template-areas:
         'title   photo'
-        'message photo';
+        'message photo'
+        'nav     nav';
     grid-template-columns: 1fr 1.15fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
 }
 
 .memory-chapter.compose-d .memory-title-block {
@@ -1304,9 +2570,10 @@ h1, h2, h3 {
 .memory-chapter.compose-e {
     grid-template-areas:
         'title  title'
-        'photo  message';
+        'photo  message'
+        'nav    nav';
     grid-template-columns: 1.05fr 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
 }
 
 .memory-chapter.compose-e .memory-title-block {
@@ -1330,9 +2597,10 @@ h1, h2, h3 {
 .memory-chapter.compose-f {
     grid-template-areas:
         'title   photo'
-        'message photo';
+        'message photo'
+        'nav     nav';
     grid-template-columns: 1.1fr 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
 }
 
 .memory-chapter.compose-f .memory-title-block {
@@ -1355,9 +2623,10 @@ h1, h2, h3 {
 .memory-chapter.compose-g {
     grid-template-areas:
         'title   photo'
-        'message photo';
+        'message photo'
+        'nav     nav';
     grid-template-columns: 1fr 1.15fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
 }
 
 .memory-chapter.compose-g .memory-title-block {
@@ -1380,9 +2649,10 @@ h1, h2, h3 {
 .memory-chapter.compose-h {
     grid-template-areas:
         'title  title'
-        'photo  message';
+        'photo  message'
+        'nav    nav';
     grid-template-columns: 1.15fr 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
 }
 
 .memory-chapter.compose-h .memory-title-block {
@@ -1403,6 +2673,188 @@ h1, h2, h3 {
     grid-area: message;
     align-self: end;
     justify-self: start;
+}
+
+/* ---- Letter chapters (compose-letter) ----
+   A cinematic reading column: marker + heading, a single
+   glowing heart divider, then the letter paragraphs and
+   signature. The nav row stays pinned at the bottom.
+   The message row is minmax(0, 1fr): it can never push the
+   title out of reach - the message area itself scrolls when
+   the letter is taller than the viewport. */
+.memory-chapter.compose-letter {
+    grid-template-areas:
+        'title'
+        'photo'
+        'message'
+        'nav';
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    /*
+     * Center the letter when it fits, but never clip its top when
+     * it is taller than the viewport: safe alignment falls back to
+     * start, so the heading and the first words are always
+     * reachable (the plain start above is the pre-safe fallback).
+     */
+    align-content: start;
+    align-content: safe center;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.memory-chapter.compose-letter .memory-title-block {
+    grid-area: title;
+    justify-self: center;
+    align-self: center;
+    max-width: min(660px, 100%);
+    text-align: center;
+    --settle-x: 0;
+    --settle-y: 0;
+}
+
+.memory-chapter.compose-letter .memory-title-text {
+    font-size: clamp(2rem, 5vw, 4.2rem);
+    line-height: 1.15;
+}
+
+/* Small elegant chapter marker above the heading */
+.memory-letter-marker {
+    display: block;
+    margin-bottom: 1rem;
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--blue-300);
+    text-shadow: 0 0 12px rgba(126, 200, 227, 0.35);
+}
+
+.memory-chapter.compose-letter .memory-photo-block {
+    grid-area: photo;
+    justify-self: center;
+    align-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+}
+
+/* The photo frame is replaced by a single glowing heart */
+.memory-chapter.compose-letter .memory-photo,
+.memory-chapter.compose-letter .memory-shine,
+.memory-chapter.compose-letter .memory-frame {
+    display: none;
+}
+
+.memory-chapter.compose-letter .memory-photo-block::before {
+    content: '\2665';
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--blue-300);
+    text-shadow:
+        0 0 18px rgba(126, 200, 227, 0.70),
+        0 0 46px rgba(126, 200, 227, 0.35);
+    opacity: 0.9;
+}
+
+.memory-chapter.compose-letter .memory-message-block {
+    grid-area: message;
+    justify-self: center;
+    align-self: stretch;
+    max-width: min(660px, 100%);
+    text-align: left;
+    /*
+     * The letter message is its own scroll area: the title and the
+     * heart stay put while the reader moves through the message.
+     * min-height 0 + the minmax(0, 1fr) grid row keep it inside the
+     * viewport instead of growing past it (min-height 0 is implied
+     * by overflow, kept explicit for older engines).
+     *
+     * Short letters are centered inside the area by .memory-message's
+     * auto margins; long letters start at the top and scroll.
+     */
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    /* Breathing room for the premium scrollbar */
+    padding-right: 0.5rem;
+    /* Firefox thin scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(126, 200, 227, 0.45) transparent;
+}
+
+/* A quiet, glowing scrollbar for the letter message area */
+.memory-chapter.compose-letter .memory-message-block::-webkit-scrollbar {
+    width: 5px;
+}
+
+.memory-chapter.compose-letter .memory-message-block::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.memory-chapter.compose-letter .memory-message-block::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        180deg,
+        rgba(126, 200, 227, 0.55),
+        rgba(94, 201, 142, 0.35)
+    );
+    border-radius: 999px;
+}
+
+.memory-chapter.compose-letter .memory-message-block::-webkit-scrollbar-thumb:hover {
+    background: rgba(126, 200, 227, 0.75);
+}
+
+.memory-chapter.compose-letter .memory-message {
+    font-size: clamp(1.05rem, 1.9vw, 1.3rem);
+    line-height: 1.75;
+    letter-spacing: 0.015em;
+    /* Faint romantic glow behind the letter text */
+    text-shadow:
+        0 0 18px rgba(5, 10, 24, 0.7),
+        0 0 30px rgba(126, 200, 227, 0.16);
+    /*
+     * Centered vertically inside the message area when the letter
+     * is short; auto margins collapse to zero when it overflows,
+     * so the first words stay reachable.
+     */
+    margin-block: auto;
+    width: 100%;
+}
+
+.memory-letter-para {
+    margin: 0 0 1.15em;
+}
+
+.memory-letter-para:last-of-type {
+    margin-bottom: 0;
+}
+
+.memory-letter-sign {
+    margin-top: 1.7rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(168, 208, 230, 0.18);
+}
+
+.memory-letter-sign p {
+    margin: 0;
+    font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+    letter-spacing: 0.08em;
+}
+
+.memory-letter-sign p:first-child {
+    margin-bottom: 0.4rem;
+    color: var(--text-secondary);
+}
+
+.memory-letter-sign p:last-child {
+    font-weight: 500;
+    color: var(--blue-200);
 }
 
 /* ============================================================
@@ -2281,7 +3733,7 @@ h1, h2, h3 {
    ------------------------------------------------------------
    A fully opaque full-screen cinematic scene right after the
    love letter. First the Birthday Love Letter (read by her;
-   the countdown waits for her button), then the 5-4-3-2-1
+   the countdown waits for her button), then the 3-2-1
    countdown (numbers emerge from soft blur, each with a
    heartbeat wave and one micro line), then the celebration:
    warm light, candles igniting, balloons floating and a small
@@ -2305,6 +3757,18 @@ h1, h2, h3 {
     background:
         radial-gradient(ellipse 70% 55% at 50% 42%, rgba(20, 33, 66, 0.92), transparent 70%),
         linear-gradient(180deg, var(--night-800) 0%, var(--night-900) 100%);
+}
+
+/* ISSUE FIX: hidden stage parts must truly leave the layout.
+   `.birthday-reveal-age` declares display:flex, and an author
+   display value overrides the UA [hidden] rule - so the invisible
+   age block kept occupying layout space during the countdown,
+   pushing the visible number far ABOVE the heartbeat wave circle
+   (worst on small screens). Removing hidden children from layout
+   keeps count + micro centered inside the glow/wave circles on
+   mobile and desktop alike. */
+#birthday-reveal [hidden] {
+    display: none !important;
 }
 
 /* Midnight sky: the star field sits behind everything */
@@ -2825,4 +4289,1021 @@ h1, h2, h3 {
 
 .birthday-reveal-continue-heart {
     margin-left: 0.35em;
+}
+
+/* ============================================================
+   Question Lock Screen (Phase 2)
+   ------------------------------------------------------------
+   Cinematic question screen that appears after Phase 1.
+   Premium text input validation with cinematic unlock.
+   ============================================================ */
+
+/* ---- Scene container ---- */
+.scene-question-lock {
+    position: absolute;
+    inset: 0;
+    z-index: 80;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 130% 110% at 50% 50%,
+            transparent 60%,
+            rgba(2, 4, 12, 0.7) 100%),
+        radial-gradient(ellipse 95% 75% at 50% 22%,
+            rgba(23, 52, 62, 0.6), transparent 72%),
+        radial-gradient(ellipse 80% 60% at 50% 42%,
+            rgba(24, 40, 82, 0.9), transparent 70%),
+        linear-gradient(180deg,
+            var(--night-800) 0%,
+            #0a1724 55%,
+            var(--night-900) 100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.scene-question-lock.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.scene-question-lock.is-leaving {
+    pointer-events: none;
+}
+
+/* ---- Background atmosphere ---- */
+.question-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 50% 35%,
+            rgba(126, 200, 227, 0.08), transparent 55%),
+        radial-gradient(circle at 20% 80%,
+            rgba(94, 201, 142, 0.05), transparent 50%),
+        radial-gradient(circle at 80% 65%,
+            rgba(126, 200, 227, 0.05), transparent 48%);
+    pointer-events: none;
+}
+
+/* ---- Starfield ---- */
+.question-stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.question-star {
+    position: absolute;
+    border-radius: 50%;
+    background: #e8f6ff;
+    box-shadow: 0 0 6px 1px rgba(174, 220, 255, 0.5);
+    animation: question-star-twinkle var(--dur, 3s) ease-in-out var(--delay, 0s) infinite;
+}
+
+@keyframes question-star-twinkle {
+    0%, 100% {
+        opacity: var(--o, 0.18);
+        transform: scale(1);
+    }
+    50% {
+        opacity: calc(var(--o, 0.18) + 0.6);
+        transform: scale(1.5);
+    }
+}
+
+/* ---- Floating particles ---- */
+.question-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.question-particle {
+    position: absolute;
+    top: -6vh;
+    border-radius: 70% 30% 70% 30% / 60% 40% 60% 40%;
+    opacity: 0;
+    will-change: transform;
+    animation: question-particle-fall var(--dur, 10s) linear var(--delay, 0s) infinite;
+}
+
+@keyframes question-particle-fall {
+    from {
+        opacity: 0;
+        transform: translateY(-10vh) rotate(var(--rot, 0deg));
+    }
+    10% {
+        opacity: var(--o, 0.4);
+    }
+    90% {
+        opacity: var(--o, 0.4);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(110vh) translateX(var(--sway, 0px)) rotate(calc(var(--rot, 0deg) + 180deg));
+    }
+}
+
+/* ---- Stage & Content ---- */
+.question-content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg) var(--space-md);
+    text-align: center;
+}
+
+.question-stage {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xl);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity var(--duration-slow) var(--ease-soft),
+        visibility var(--duration-slow) var(--ease-soft),
+        transform var(--duration-slow) var(--ease-soft),
+        filter var(--duration-slow) var(--ease-soft);
+    transform: translateY(30px) scale(0.95);
+    filter: blur(10px);
+}
+
+.question-stage.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+}
+
+/* ---- Lock Icon ---- */
+.question-lock-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(64px, 12vw, 96px);
+    height: clamp(64px, 12vw, 96px);
+    border-radius: 50%;
+    background:
+        linear-gradient(180deg, rgba(126, 200, 227, 0.18), rgba(126, 200, 227, 0.06)),
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(126, 200, 227, 0.15), transparent 70%);
+    border: 1px solid rgba(168, 208, 230, 0.25);
+    border-radius: 50%;
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 30px rgba(126, 200, 227, 0.25),
+        0 12px 36px rgba(5, 10, 24, 0.55),
+        inset 0 1px 0 rgba(242, 249, 255, 0.12),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.22);
+    transition:
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        background var(--duration-fast) var(--ease-out);
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+    filter: blur(8px);
+    pointer-events: none;
+}
+
+.question-lock-icon.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+    animation: question-lock-in 1s var(--ease-out) 0.1s both;
+}
+
+@keyframes question-lock-in {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.85);
+        filter: blur(12px);
+    }
+    60% {
+        opacity: 0.8;
+        transform: translateY(-8px) scale(1.02);
+        filter: blur(2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+.question-lock-svg {
+    width: 48%;
+    height: 48%;
+    color: var(--blue-300);
+    filter: drop-shadow(0 0 8px rgba(126, 200, 227, 0.6));
+}
+
+.question-lock-icon.unlocking {
+    animation: question-lock-unlock 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+    box-shadow:
+        0 0 45px rgba(94, 201, 142, 0.45),
+        0 0 80px rgba(126, 200, 227, 0.35),
+        0 14px 40px rgba(5, 10, 24, 0.6),
+        inset 0 1px 0 rgba(242, 249, 255, 0.18);
+    border-color: rgba(94, 201, 142, 0.5);
+}
+
+@keyframes question-lock-unlock {
+    0% {
+        transform: scale(1) rotate(0deg);
+        filter: brightness(1);
+    }
+    25% {
+        transform: scale(1.22) rotate(-12deg);
+        filter: brightness(1.15);
+    }
+    50% {
+        transform: scale(0.96) rotate(8deg);
+        filter: brightness(1.05);
+    }
+    75% {
+        transform: scale(1.08) rotate(-4deg);
+        filter: brightness(1.12);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        filter: brightness(1.08);
+    }
+}
+
+.question-lock-icon.unlocking .question-lock-svg {
+    animation: lock-svg-unlock 0.8s var(--ease-out) both;
+}
+
+@keyframes lock-svg-unlock {
+    from {
+        stroke-dashoffset: 100;
+        stroke-dasharray: 100;
+    }
+    to {
+        stroke-dashoffset: 0;
+        stroke-dasharray: 100;
+    }
+}
+
+/* ---- Heading ---- */
+.question-heading {
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--blue-050);
+    text-shadow:
+        0 0 24px rgba(126, 200, 227, 0.5),
+        0 3px 14px rgba(5, 10, 24, 0.9);
+    margin: 0;
+    font-size: clamp(1.5rem, 4.5vw, 2.4rem);
+    opacity: 0;
+    transform: translateY(25px) scale(0.95);
+    filter: blur(8px);
+    transition:
+        opacity 0.7s var(--ease-out),
+        transform 0.7s var(--ease-out),
+        filter 0.7s var(--ease-out);
+}
+
+.question-heading.is-visible {
+    animation: question-heading-in 0.9s var(--ease-out) 0.3s both;
+}
+
+@keyframes question-heading-in {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+        filter: blur(10px);
+    }
+    60% {
+        opacity: 0.8;
+        transform: translateY(-6px) scale(1.02);
+        filter: blur(2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+/* ---- Question Text ---- */
+.question-text {
+    font-family: var(--font-body);
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    letter-spacing: 0.015em;
+    margin: 0;
+    font-size: clamp(1.05rem, 2.8vw, 1.35rem);
+    line-height: 1.7;
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(6px);
+    transition:
+        opacity 0.7s var(--ease-out),
+        transform 0.7s var(--ease-out),
+        filter 0.7s var(--ease-out);
+}
+
+.question-text.is-visible {
+    animation: question-text-in 0.9s var(--ease-out) 0.3s both;
+}
+
+@keyframes question-text-in {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+        filter: blur(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+/* ---- Input Wrapper ---- */
+.question-input-wrapper {
+    position: relative;
+    width: min(360px, 88vw);
+    max-width: 100%;
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(6px);
+    transition:
+        opacity 0.7s var(--ease-out),
+        transform 0.7s var(--ease-out),
+        filter 0.7s var(--ease-out);
+}
+
+.question-input-wrapper.is-visible {
+    animation: input-wrapper-in 0.8s var(--ease-out) 0.5s both;
+}
+
+@keyframes input-wrapper-in {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+        filter: blur(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+/* Input field */
+.question-input {
+    width: 100%;
+    padding: 0.9rem 1.25rem;
+    padding-bottom: 0.6rem;
+    font-family: var(--font-body);
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    font-weight: 400;
+    color: var(--blue-050);
+    background: rgba(168, 208, 230, 0.08);
+    border: none;
+    border-radius: var(--radius-md);
+    outline: none;
+    text-align: center;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    caret-color: var(--blue-300);
+    background:
+        linear-gradient(180deg, rgba(168, 208, 230, 0.12), rgba(168, 208, 230, 0.04)),
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(126, 200, 227, 0.1), transparent 70%);
+    border: 1px solid rgba(168, 208, 230, 0.22);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 0 24px rgba(126, 200, 227, 0.15),
+        0 8px 24px rgba(5, 10, 24, 0.45),
+        inset 0 1px 0 rgba(242, 249, 255, 0.08),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.2);
+    transition:
+        border-color var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        background var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.question-input::placeholder {
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+    font-weight: 300;
+}
+
+.question-input:focus {
+    border-color: rgba(126, 200, 227, 0.5);
+    box-shadow:
+        0 0 32px rgba(126, 200, 227, 0.3),
+        0 12px 32px rgba(5, 10, 24, 0.5),
+        inset 0 1px 0 rgba(242, 249, 255, 0.12);
+    background:
+        linear-gradient(180deg, rgba(126, 200, 227, 0.12), rgba(126, 200, 227, 0.05)),
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(126, 200, 227, 0.18), transparent 70%);
+}
+
+.question-input:focus::placeholder {
+    color: rgba(168, 208, 230, 0.5);
+}
+
+.input-underline {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--blue-400), var(--green-300), var(--blue-400));
+    border-radius: var(--radius-full);
+    transition: width 0.4s var(--ease-out);
+}
+
+.question-input:focus + .input-underline,
+.question-input:not(:placeholder-shown) + .input-underline {
+    width: 80%;
+}
+
+.question-input-wrapper.shake {
+    animation: input-shake 0.5s var(--ease-out);
+}
+
+@keyframes input-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(4px); }
+}
+
+/* ---- Feedback Message ---- */
+.question-feedback {
+    position: relative;
+    z-index: 1;
+    margin-top: var(--space-md);
+    font-family: var(--font-body);
+    font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+    line-height: 1.55;
+    color: var(--text-secondary);
+    letter-spacing: 0.01em;
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+        opacity 0.3s var(--ease-out),
+        transform 0.3s var(--ease-out);
+}
+
+.question-feedback.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    animation: feedback-pop 0.4s var(--ease-out) both;
+}
+
+@keyframes feedback-pop {
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(0.95);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-4px) scale(1.02);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.question-feedback.feedback-success {
+    color: var(--green-300);
+    text-shadow: 0 0 18px rgba(94, 201, 142, 0.4);
+}
+
+.question-feedback.feedback-error {
+    color: var(--blue-300);
+    text-shadow: 0 0 18px rgba(126, 200, 227, 0.35);
+}
+
+/* ---- Unlock Button ---- */
+.question-unlock-btn {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 60px;
+    padding: 0.85rem 2.5rem;
+    border-radius: var(--radius-full);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--blue-200);
+    background: rgba(168, 208, 230, 0.12);
+    border: 1px solid rgba(168, 208, 230, 0.22);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+        0 8px 24px rgba(5, 10, 24, 0.45),
+        inset 0 1px 0 rgba(242, 249, 255, 0.10);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    filter: blur(6px);
+    transition:
+        opacity 0.7s var(--ease-out),
+        transform 0.7s var(--ease-out),
+        filter 0.7s var(--ease-out),
+        transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out),
+        background var(--duration-fast) var(--ease-out),
+        border-color var(--duration-fast) var(--ease-out),
+        color var(--duration-fast) var(--ease-out);
+}
+
+.question-unlock-btn.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+    animation: unlock-btn-in 0.7s var(--ease-out) 0.6s both;
+    pointer-events: none; /* stays disabled until valid */
+}
+
+@keyframes unlock-btn-in {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+        filter: blur(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+.question-unlock-btn.is-enabled {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.question-unlock-btn svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    color: var(--green-300);
+    transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.question-unlock-btn:hover:not(:disabled) {
+    color: var(--blue-300);
+    border-color: rgba(126, 200, 227, 0.5);
+    box-shadow:
+        0 0 40px rgba(126, 200, 227, 0.4),
+        0 12px 32px rgba(5, 10, 24, 0.55),
+        inset 0 1px 0 rgba(242, 249, 255, 0.14);
+    transform: translateY(-2px);
+}
+
+.question-unlock-btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+}
+
+.question-unlock-btn.unlocked {
+    color: var(--blue-300);
+    border-color: rgba(126, 200, 227, 0.6);
+    background:
+        linear-gradient(180deg, rgba(94, 201, 142, 0.22), rgba(94, 201, 142, 0.08)),
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(94, 201, 142, 0.18), transparent 70%);
+    box-shadow:
+        0 0 50px rgba(94, 201, 142, 0.4),
+        0 16px 44px rgba(5, 10, 24, 0.6),
+        inset 0 1px 0 rgba(242, 249, 255, 0.16),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.28);
+    animation: unlock-btn-glow 1.5s var(--ease-soft) infinite alternate;
+}
+
+@keyframes unlock-btn-glow {
+    from {
+        box-shadow:
+            0 0 40px rgba(94, 201, 142, 0.35),
+            0 12px 32px rgba(5, 10, 24, 0.5),
+            inset 0 1px 0 rgba(242, 249, 255, 0.14),
+            inset 0 -1px 0 rgba(5, 10, 24, 0.25);
+    }
+    to {
+        box-shadow:
+            0 0 60px rgba(94, 201, 142, 0.5),
+            0 20px 50px rgba(5, 10, 24, 0.65),
+            inset 0 1px 0 rgba(242, 249, 255, 0.18),
+            inset 0 -1px 0 rgba(5, 10, 24, 0.3);
+    }
+}
+
+.question-unlock-btn:focus-visible {
+    outline: 2px solid var(--blue-300);
+    outline-offset: 2px;
+}
+
+/* Unlock button icon animation */
+.question-unlock-btn.unlocked .unlock-btn-icon {
+    animation: unlock-icon-spin 0.6s var(--ease-out) both;
+}
+
+@keyframes unlock-icon-spin {
+    from {
+        transform: rotate(-90deg) scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: rotate(180deg) scale(1.2);
+    }
+    to {
+        transform: rotate(360deg) scale(1);
+        opacity: 1;
+    }
+}
+
+/* ---- Question must stay visible while typing (bug fix: never hide) ---- */
+.question-heading.is-hidden,
+.question-text.is-hidden {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
+}
+
+/* Ensure remaining fields stay visible and correctly positioned */
+.question-input-wrapper.is-visible,
+.question-unlock-btn.is-visible,
+.question-lock-icon.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* ---- Cinematic Gate - premium doors opening from center ---- */
+.question-gate {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: flex;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s var(--ease-soft), visibility 0.3s var(--ease-soft);
+}
+
+.question-gate.is-opening,
+.question-gate.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.gate-panel {
+    flex: 1;
+    position: relative;
+    background:
+        radial-gradient(ellipse 90% 70% at 50% 20%, rgba(126, 200, 227, 0.18), transparent 65%),
+        radial-gradient(ellipse 70% 50% at 50% 80%, rgba(94, 201, 142, 0.08), transparent 60%),
+        linear-gradient(180deg, rgba(18, 32, 62, 0.99) 0%, rgba(10, 20, 48, 0.99) 45%, rgba(5, 12, 30, 1) 100%);
+    border: 1px solid rgba(168, 208, 230, 0.22);
+    box-shadow:
+        inset 0 1px 0 rgba(242, 249, 255, 0.10),
+        inset 0 -1px 0 rgba(5, 10, 24, 0.5),
+        0 0 40px rgba(5, 10, 24, 0.4);
+    transition: transform 1.35s cubic-bezier(0.77, 0, 0.175, 1), filter 1.35s var(--ease-soft), box-shadow 1.35s var(--ease-soft);
+    will-change: transform;
+}
+
+.gate-left {
+    border-right: 1px solid rgba(168, 208, 230, 0.16);
+    box-shadow:
+        inset -30px 0 60px rgba(5, 10, 24, 0.65),
+        inset -1px 0 0 rgba(168, 208, 230, 0.18),
+        inset 0 1px 0 rgba(242, 249, 255, 0.08);
+}
+
+.gate-right {
+    border-left: 1px solid rgba(168, 208, 230, 0.16);
+    box-shadow:
+        inset 30px 0 60px rgba(5, 10, 24, 0.65),
+        inset 1px 0 0 rgba(168, 208, 230, 0.18),
+        inset 0 1px 0 rgba(242, 249, 255, 0.08);
+}
+
+.gate-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 50% 18%, rgba(126, 200, 227, 0.10), transparent 58%),
+        radial-gradient(circle at 25% 85%, rgba(94, 201, 142, 0.06), transparent 52%),
+        linear-gradient(90deg, transparent 0%, rgba(242, 249, 255, 0.03) 50%, transparent 100%);
+    opacity: 0.9;
+}
+
+.gate-panel::after {
+    content: '';
+    position: absolute;
+    top: 2%;
+    bottom: 2%;
+    width: 1px;
+    background: linear-gradient(180deg, transparent 5%, rgba(168, 208, 230, 0.35) 20%, rgba(168, 208, 230, 0.45) 50%, rgba(168, 208, 230, 0.25) 80%, transparent 95%);
+    box-shadow: 0 0 12px rgba(126, 200, 227, 0.5);
+}
+
+.gate-left::after { right: -1px; }
+.gate-right::after { left: -1px; }
+
+.gate-shine {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2px;
+    height: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(168, 208, 230, 0.15) 10%, rgba(126, 200, 227, 0.95) 35%, rgba(94, 201, 142, 0.75) 55%, rgba(168, 208, 230, 0.9) 75%, transparent 100%);
+    box-shadow: 0 0 24px rgba(126, 200, 227, 0.9), 0 0 50px rgba(126, 200, 227, 0.6), 0 0 80px rgba(94, 201, 142, 0.35);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+}
+
+.question-gate.is-opening .gate-shine {
+    animation: gate-shine-grow 1.35s cubic-bezier(0.77, 0, 0.175, 1) both;
+}
+
+@keyframes gate-shine-grow {
+    0% { height: 0; opacity: 0; }
+    15% { opacity: 1; }
+    45% { height: 90vh; opacity: 1; }
+    85% { height: 90vh; opacity: 1; }
+    100% { height: 90vh; opacity: 0; }
+}
+
+.gate-lock-glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 220px;
+    height: 220px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(126, 200, 227, 0.32) 0%, rgba(94, 201, 142, 0.14) 35%, transparent 72%);
+    filter: blur(18px);
+    opacity: 0;
+}
+
+.question-gate.is-opening .gate-lock-glow {
+    animation: gate-glow-pulse 1.35s var(--ease-soft) both;
+}
+
+@keyframes gate-glow-pulse {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); filter: blur(22px); }
+    30% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(18px); }
+    70% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.15); filter: blur(20px); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.45); filter: blur(26px); }
+}
+
+.question-gate.is-opening .gate-left {
+    transform: translateX(-100%);
+    filter: brightness(0.9) blur(1px);
+}
+
+.question-gate.is-opening .gate-right {
+    transform: translateX(100%);
+    filter: brightness(0.9) blur(1px);
+}
+
+.question-gate.is-open .gate-left {
+    transform: translateX(-100%);
+    visibility: hidden;
+}
+
+.question-gate.is-open .gate-right {
+    transform: translateX(100%);
+    visibility: hidden;
+}
+
+.scene-question-lock.is-gate-opening .question-stage {
+    transform: scale(0.96);
+    filter: blur(12px);
+    opacity: 0.3;
+    transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1), filter 1.2s var(--ease-soft), opacity 1.2s var(--ease-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gate-panel,
+    .scene-question-lock.is-gate-opening .question-stage {
+        transition-duration: 0.01ms !important;
+    }
+    .gate-shine,
+    .gate-lock-glow {
+        animation-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================================
+   Mobile Responsive for Question Lock
+   ============================================================ */
+
+/* ---- Phones: the answer input + unlock button stay one usable
+   interaction area, and the success/error feedback always opens
+   fully inside the viewport ---- */
+@media (max-width: 767px) {
+
+    /* ISSUE FIX (mobile keyboard): while the keyboard is open,
+       js/question-lock.js adds .is-keyboard and measures the
+       covered area as --kb-inset. The stage then anchors to the
+       bottom edge directly above the keyboard, so the button sits
+       right below the input - visible, reachable, no hunting or
+       scrolling. The decorative lock icon steps aside to make
+       room. Desktop never gets these rules. */
+    .scene-question-lock.is-keyboard .question-lock-icon {
+        display: none;
+    }
+
+    .scene-question-lock.is-keyboard .question-stage {
+        justify-content: flex-end;
+        gap: clamp(0.8rem, 2.4vh, 1.4rem);
+        padding-bottom: var(--kb-inset, 0px);
+    }
+
+    /* ISSUE FIX (success message clipped + blank handover): viewport-safe
+       sizing ensures the success feedback is fully inside the mobile
+       viewport and the stage never pushes content past the top edge.
+       safe center avoids the flexbox overflow clipping that hides the top
+       when the stage is taller than the viewport. dvh/svh keep sizing
+       stable across browser chrome. */
+    .scene-question-lock .question-content {
+        min-height: 100dvh;
+        min-height: 100svh;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        justify-content: safe center;
+        align-items: safe center;
+        padding-top: max(var(--space-md), env(safe-area-inset-top));
+        padding-bottom: max(var(--space-md), env(safe-area-inset-bottom));
+        padding-left: max(var(--space-md), env(safe-area-inset-left));
+        padding-right: max(var(--space-md), env(safe-area-inset-right));
+    }
+
+    .scene-question-lock .question-stage {
+        height: auto;
+        min-height: auto;
+        max-height: none;
+        width: 100%;
+        justify-content: center;
+        align-items: center;
+        gap: clamp(0.85rem, 2.6vh, 1.25rem);
+        padding: 1rem 0;
+        overflow: visible;
+    }
+
+    .scene-question-lock .question-feedback {
+        max-width: min(92vw, 360px);
+        margin-inline: auto;
+        max-height: min(26vh, 160px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.4rem 0.6rem;
+        word-wrap: break-word;
+        text-wrap: balance;
+    }
+
+    /* Opening message must also be fully inside the mobile viewport
+       with safe-area and dynamic viewport support. */
+    .opening-cinematic {
+        min-height: 100dvh;
+        min-height: 100svh;
+    }
+
+    .opening-message {
+        min-height: 100dvh;
+        min-height: 100svh;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        align-content: safe center;
+        justify-items: center;
+        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    .opening-message-text {
+        max-width: min(92vw, 560px);
+        margin-inline: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .question-lock-icon {
+        width: clamp(56px, 14vw, 80px);
+        height: clamp(56px, 14vw, 80px);
+    }
+
+    .question-heading {
+        font-size: clamp(1.3rem, 5vw, 2rem);
+    }
+
+    .question-text {
+        font-size: clamp(0.9rem, 3vw, 1.15rem);
+    }
+
+    .question-input {
+        font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+        padding: 0.75rem 1rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .question-unlock-btn {
+        min-height: 52px;
+        padding: 0.7rem 1.75rem;
+        font-size: 0.78rem;
+    }
+}
+
+@media (max-height: 600px) and (orientation: landscape) {
+    .question-stage {
+        gap: var(--space-lg);
+    }
+
+    .question-lock-icon {
+        width: clamp(56px, 12vw, 72px);
+        height: clamp(56px, 12vw, 72px);
+    }
+
+    .question-heading {
+        font-size: clamp(1.4rem, 4.5vw, 2rem);
+    }
+
+    .question-text {
+        font-size: clamp(0.9rem, 2.8vw, 1.2rem);
+    }
+
+    .question-input {
+        padding: 0.6rem 1rem;
+        padding-bottom: 0.4rem;
+    }
+
+    .question-unlock-btn {
+        min-height: 48px;
+        padding: 0.6rem 1.5rem;
+        font-size: 0.72rem;
+    }
+}
+
+/* ============================================================
+   LARGE SCREENS (1024px and up)
+   ============================================================ */
+@media (min-width: 1024px) {
+    .question-lock-icon {
+        width: clamp(72px, 10vw, 110px);
+        height: clamp(72px, 10vw, 110px);
+    }
+
+    .question-heading {
+        font-size: clamp(1.8rem, 3.5vw, 3rem);
+    }
+
+    .question-text {
+        font-size: clamp(1.15rem, 2.2vw, 1.5rem);
+    }
+
+    .question-input {
+        padding: 1rem 1.5rem;
+        padding-bottom: 0.7rem;
+        font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+    }
+
+    .question-unlock-btn {
+        min-height: 68px;
+        padding: 1rem 3rem;
+        font-size: 0.9rem;
+    }
 }

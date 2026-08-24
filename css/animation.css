@@ -35,6 +35,23 @@
     }
 }
 
+/* Premium message glow bloom */
+@keyframes message-glow-bloom {
+    from {
+        text-shadow: 0 0 0 transparent;
+    }
+    50% {
+        text-shadow: 
+            0 0 24px rgba(126, 200, 227, 0.3),
+            0 0 40px rgba(5, 10, 24, 0.8);
+    }
+    to {
+        text-shadow: 
+            0 0 18px rgba(5, 10, 24, 0.7),
+            0 0 30px rgba(126, 200, 227, 0.16);
+    }
+}
+
 @keyframes screen-exit {
     from {
         opacity: 1;
@@ -393,7 +410,8 @@
    settle. Re-triggered by js/back-button.js every time the
    button becomes visible (class removal + reflow + re-add).
    ============================================================ */
-.experience-back-btn.is-visible {
+.experience-back-btn.is-visible,
+.memory-back-intro.is-visible {
     animation: back-btn-in 0.6s var(--ease-out);
 }
 
@@ -445,6 +463,12 @@
     .memory-chapter .memory-shine,
     .memory-next.memory-next-in,
     .memory-prev.memory-prev-in,
+    .memory-back-intro.is-visible,
+    .memory-title-block.title-letter.is-in,
+    .memory-photo-block.photo-letter.is-in,
+    .memory-message-block.message-letter.is-in,
+    .memory-message-block.message-letter .memory-letter-para.is-in,
+    .memory-message-block.message-letter .memory-letter-sign.is-in,
     .memory-final.memory-final-in,
     #birthday-reveal,
     .birthday-reveal-count,
@@ -468,7 +492,9 @@
     .birthday-reveal-balloon,
     .birthday-reveal-fragment,
     .experience-back-btn,
-    .experience-back-btn.is-visible {
+    .experience-back-btn.is-visible,
+    .memory-back-intro,
+    .memory-back-intro.is-visible {
         animation: none !important;
         transition: none !important;
     }
@@ -485,6 +511,8 @@
     .memory-chapter .phase.is-settled,
     .memory-chapter .tw,
     .memory-chapter .tl,
+    .memory-message-block.message-letter .memory-letter-para,
+    .memory-message-block.message-letter .memory-letter-sign,
     .birthday-reveal-count.is-in,
     .birthday-reveal-micro.is-in,
     .birthday-reveal-final.is-in,
@@ -542,19 +570,26 @@
     }
 }
 
-/* The chapter itself arrives like a curtain rising */
+/* The chapter itself arrives like a curtain rising - premium cinematic entrance */
 .memory-chapter.is-active {
-    animation: chapter-scene-in 0.9s var(--ease-out) both;
+    animation: chapter-scene-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes chapter-scene-in {
     from {
         opacity: 0;
-        transform: scale(1.03);
+        transform: scale(1.05) translateY(20px);
+        filter: blur(10px);
+    }
+    60% {
+        opacity: 0.8;
+        transform: scale(1.01) translateY(-4px);
+        filter: blur(2px);
     }
     to {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateY(0);
+        filter: blur(0);
     }
 }
 
@@ -564,61 +599,113 @@
    ------------------------------------------------------------
    When the user moves on, the whole chapter leaves the stage
    cinematically. Each memory uses one of the five below.
+   Premium: smoother, more emotional exits.
    ============================================================ */
 .memory-chapter.chapter-exit-fade {
-    animation: chapter-exit-fade 0.52s var(--ease-out) both;
+    animation: chapter-exit-fade 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes chapter-exit-fade {
+    from {
+        opacity: 1;
+        filter: blur(0);
+    }
+    50% {
+        opacity: 0.6;
+        filter: blur(2px);
+    }
     to {
         opacity: 0;
-        transform: scale(0.97);
+        transform: scale(0.98);
+        filter: blur(8px);
     }
 }
 
 .memory-chapter.chapter-exit-left {
-    animation: chapter-exit-left 0.52s var(--ease-out) both;
+    animation: chapter-exit-left 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes chapter-exit-left {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+        filter: blur(0);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateX(-35px);
+        filter: blur(3px);
+    }
     to {
         opacity: 0;
-        transform: translateX(-70px);
-        filter: blur(6px);
+        transform: translateX(-80px);
+        filter: blur(10px);
     }
 }
 
 .memory-chapter.chapter-exit-zoom {
-    animation: chapter-exit-zoom 0.52s var(--ease-out) both;
+    animation: chapter-exit-zoom 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes chapter-exit-zoom {
+    from {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.95);
+        filter: blur(3px);
+    }
     to {
         opacity: 0;
-        transform: scale(0.9);
+        transform: scale(0.88);
+        filter: blur(12px);
     }
 }
 
 .memory-chapter.chapter-exit-up {
-    animation: chapter-exit-up 0.52s var(--ease-out) both;
+    animation: chapter-exit-up 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes chapter-exit-up {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateY(-28px);
+        filter: blur(3px);
+    }
     to {
         opacity: 0;
-        transform: translateY(-56px);
+        transform: translateY(-64px);
+        filter: blur(10px);
     }
 }
 
 .memory-chapter.chapter-exit-blur {
-    animation: chapter-exit-blur 0.52s var(--ease-out) both;
+    animation: chapter-exit-blur 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes chapter-exit-blur {
+    from {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.01);
+        filter: blur(6px);
+    }
     to {
         opacity: 0;
-        transform: scale(1.02);
-        filter: blur(12px);
+        transform: scale(1.03);
+        filter: blur(18px);
     }
 }
 
@@ -2026,6 +2113,83 @@
 
 
 /* ============================================================
+   MOBILE KEYFRAMES - reduced motion/scale for small viewports
+   ------------------------------------------------------------
+   These keyframes are defined at root level so they can be
+   referenced in responsive.css media queries. Original desktop
+   keyframes remain unchanged.
+   ============================================================ */
+
+/* 05 - film strip slide: smaller travel keeps the photo visible */
+@keyframes p05-film-mobile {
+    0% {
+        opacity: 0;
+        transform: translateX(-11px);
+    }
+    30% {
+        opacity: 1;
+        transform: translateX(4px);
+    }
+    50% {
+        transform: translateX(-3px);
+    }
+    70% {
+        transform: translateX(2px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 19 - fold: soften the perspective so the 3D fold does not
+   magnify the photo wider than the screen */
+@keyframes p19-fold-mobile {
+    from {
+        opacity: 0.2;
+        transform: perspective(3200px) rotateX(88deg);
+    }
+    70% {
+        opacity: 1;
+        transform: perspective(3200px) rotateX(-6deg);
+    }
+    to {
+        opacity: 1;
+        transform: perspective(3200px) rotateX(0);
+    }
+}
+
+/* 23 - blurred merge: smaller zoom stays inside the viewport */
+@keyframes p23-merge-mobile {
+    from {
+        opacity: 0;
+        transform: scale(1.05);
+        filter: blur(18px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+}
+
+/* 30 - final wide reveal: smaller zoom stays inside the viewport */
+@keyframes p30-wide-mobile {
+    0% {
+        opacity: 0;
+        transform: scale(1.08);
+    }
+    60% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
+/* ============================================================
    23. MESSAGE ANIMATIONS - 30 UNIQUE LOVE REVEALS
    ------------------------------------------------------------
    The love message arrives after the photo has settled.
@@ -2675,21 +2839,52 @@
    24. NEXT BUTTON & FINAL CTA ENTRANCE
    ------------------------------------------------------------
    "Next Memory" appears only after the whole chapter has
-   settled; the final CTA floats in over the settled Memory 30.
+   settled; the final CTA floats in over the settled final
+   chapter.
    ============================================================ */
-.memory-next.memory-next-in,
+.memory-next.memory-next-in {
+    animation: next-in 0.7s var(--ease-out) 0.1s backwards;
+}
+
 .memory-prev.memory-prev-in {
-    animation: next-in 0.6s var(--ease-out) both;
+    animation: preview-in 0.7s var(--ease-out) 0.1s backwards;
+}
+
+/* Back-to-landing button (first memory chapter) - matches experience-back-btn */
+.memory-back-intro.is-visible {
+    animation: back-btn-in 0.6s var(--ease-out);
 }
 
 @keyframes next-in {
     from {
         opacity: 0;
-        transform: translateY(14px);
+        transform: translateX(calc(100% + 3vw)) scale(0.96);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes preview-in {
+    from {
+        opacity: 0;
+        transform: translateX(calc(-100% - 3vw)) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes back-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -3544,5 +3739,76 @@
     100% {
         transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.7);
         opacity: 0;
+    }
+}
+
+
+/* ============================================================
+   LETTER CHAPTERS - CINEMATIC ENTRANCES
+   ------------------------------------------------------------
+   Letter chapters reuse the same phase architecture as photo
+   chapters, with three gentle shared entrances: the heading
+   drifts in, the heart settles, then the paragraphs rise.
+   ============================================================ */
+
+.memory-title-block.title-letter.is-in {
+    animation: letter-title-in 0.9s var(--ease-out) 0.1s both;
+}
+
+@keyframes letter-title-in {
+    from {
+        opacity: 0;
+        transform: translateY(-16px);
+        filter: blur(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+.memory-photo-block.photo-letter.is-in {
+    animation: letter-heart-in 0.8s var(--ease-out) 0.15s both;
+}
+
+@keyframes letter-heart-in {
+    from {
+        opacity: 0;
+        transform: scale(0.82);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/*
+ * Cinematic letter reveal: the message block stays still and each
+ * paragraph enters one by one (JS staggers the .is-in class), like
+ * the letter unfolding itself. The block keeps .is-in only so the
+ * phase stays visible - the animation lives on the paragraphs.
+ * Reduced-motion users get the full message instantly (see below).
+ */
+.memory-message-block.message-letter .memory-letter-para,
+.memory-message-block.message-letter .memory-letter-sign {
+    opacity: 0;
+}
+
+.memory-message-block.message-letter .memory-letter-para.is-in,
+.memory-message-block.message-letter .memory-letter-sign.is-in {
+    animation: letter-para-in 1s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes letter-para-in {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+        filter: blur(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
     }
 }

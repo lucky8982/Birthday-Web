@@ -218,7 +218,20 @@ export class OpeningCinematic {
         // Keyboard users can advance with Enter/Space
         this.overlay.focus({ preventScroll: true });
 
-        // STATE 0: a blank, quiet sky waits for the first tap.
+        // ISSUE FIX: the first page must never be a blank waiting
+        // state. Begin the existing music + effects right away
+        // (still inside the unlock gesture's activation chain,
+        // dispatched exactly once) and reveal the first story line
+        // - "Hello meri cute wife" - immediately with its existing
+        // entrance animation. It then stays readable until the
+        // user taps, exactly as before.
+        if (!this.beginFired) {
+            this.beginFired = true;
+            window.dispatchEvent(new CustomEvent(BEGIN_EVENT, {
+                detail: { from: 'opening' },
+            }));
+        }
+        this.showMessage(0);
     }
 
     /* ---- Story progression (user-controlled) ---- */
@@ -796,7 +809,7 @@ export class OpeningCinematic {
         this.selectedAnswer = null;
     }
 
-    destroy() {
+destroy() {
         this.cleanup();
         this.overlay?.removeEventListener('click', this._onTap);
         this.overlay?.removeEventListener('keydown', this._onKey);
@@ -811,8 +824,64 @@ export class OpeningCinematic {
         this.letterPaper = null;
         this.letterInvite = null;
         this.letterMessage = null;
+        this.letterInvite = null;
+        this.letterMessage = null;
         this.questionEl = null;
         this.answersEl = null;
         this.cta = null;
+    }
+
+    /**
+     * Reset the opening cinematic to its initial state so it can be
+     * started again from the beginning. Used when the user chooses
+     * "Return to Beginning" from a later stage.
+     */
+    reset() {
+        this.started = false;
+        this.finished = false;
+        this.busy = false;
+        this.state = 'idle';
+        this.messageIndex = -1;
+        this.letterOpened = false;
+        this.letterUnlocked = false;
+        this.letterReady = false;
+        this.selectedAnswer = null;
+        this.dodge = 0;
+        this.beginFired = false;
+
+        this.clearTimers();
+
+        // Reset DOM state
+        if (this.overlay) {
+            this.overlay.hidden = true;
+            this.overlay.classList.remove('is-visible', 'is-leaving');
+        }
+        if (this.messageEl) {
+            this.messageEl.innerHTML = '';
+        }
+        if (this.letterScene) {
+            this.letterScene.classList.remove('is-visible', 'is-open');
+            this.letterScene.setAttribute('aria-hidden', 'true');
+        }
+        this.letterCard?.classList.remove('is-opening');
+        this.letterInvite?.classList.remove('is-in');
+        this.letterMessage?.classList.remove('is-in');
+        this.questionEl?.classList.remove('is-in', 'is-settled');
+        this.questionEl?.setAttribute('aria-hidden', 'true');
+        this.resetLetterUi();
+
+        // Reset state flags
+        this.started = false;
+        this.finished = false;
+        this.busy = false;
+        this.state = 'idle';
+        this.messageIndex = -1;
+        this.letterOpened = false;
+        this.letterUnlocked = false;
+        this.letterReady = false;
+        this.selectedAnswer = null;
+        this.dodge = 0;
+        this.beginFired = false;
+        this.revealStage = 'none';
     }
 }

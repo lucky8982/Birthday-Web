@@ -9,16 +9,16 @@
     
     <link rel="icon" type="image/svg+xml" href="/assets/favicon-CAZDFZiN.svg">
 
-    <!-- Preload critical assets -->
+    <!-- Preload critical assets -->
     
-    <!-- Stylesheets -->
+    <!-- Stylesheets -->
     
     <!-- Fonts - Using system fonts for performance, with Google Fonts as enhancement -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/index-rt1U8nww.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DZo6_TA8.css">
+  <script type="module" crossorigin src="/assets/index-BFJwjY1C.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DHYcudL8.css">
 </head>
 <div>
     <!-- ============================================
@@ -100,6 +100,121 @@
              ============================================ -->
         <!-- The whole scene is the tap target: one tap advances to
              the next story message; Enter/Space work on desktop -->
+        <!-- ============================================
+         ENTRY LOCK INTRO - Cinematic entry scene
+         Plays after loading completes, BEFORE the
+         existing Opening cinematic. A cinematic
+         entry sequence with premium typography and
+         cinematic dissolves.
+         ============================================ -->
+        <section id="entry-lock" class="scene scene-entry-lock" aria-labelledby="entry-title" hidden>
+            <div class="scene-bg"></div>
+            <div class="scene-content entry-content">
+                <div class="entry-stage" id="entry-stage">
+                    <!-- Scene 1: Main Title -->
+                    <div class="entry-scene entry-scene-1" id="entry-scene-1" aria-hidden="true">
+                        <div class="entry-text-group" id="entry-text-group">
+                            <h1 class="entry-title entry-title-1" id="entry-title-1">Hamari Kahani</h1>
+                            <h2 class="entry-title entry-title-2" id="entry-title-2">Yahin Se</h2>
+                            <h3 class="entry-title entry-title-3" id="entry-title-3">Shuru Hoti Hai... <span aria-hidden="true">??</span></h3>
+                        </div>
+                    </div>
+                    
+                    <!-- Scene 2: Second Message -->
+                    <div class="entry-scene entry-scene-2" id="entry-scene-2" aria-hidden="true">
+                        <div class="entry-text-group entry-text-group-2" id="entry-text-group-2">
+                            <p class="entry-sub entry-sub-1" id="entry-sub-1">Andar jaane se pehle...</p>
+                            <p class="entry-sub entry-sub-2" id="entry-sub-2">Ek chhota sa sawal.</p>
+                            <p class="entry-sub entry-sub-3" id="entry-sub-3">Jiska jawab<br>sirf tum de sakti ho. <span aria-hidden="true">?</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+<!-- Background decorative elements -->
+                <div class="entry-bg" aria-hidden="true"></div>
+                <div class="entry-stars" id="entry-stars" aria-hidden="true"></div>
+                <div class="entry-particles" id="entry-particles" aria-hidden="true"></div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             QUESTION / ENTRY LOCK SCREEN - Phase 2
+             Appears after Entry Lock Intro completes.
+             A cinematic question screen with text input validation.
+             ============================================ -->
+        <section id="question-lock" class="scene scene-question-lock" aria-labelledby="question-title" hidden>
+            <div class="scene-bg"></div>
+            <div class="scene-content question-content">
+                <div class="question-stage" id="question-stage">
+                    <!-- Lock Icon -->
+                    <div class="question-lock-icon" aria-hidden="true">
+                        <svg class="question-lock-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path d="M12 17a5 5 0 0 1-5-5V7a5 5 0 0 1 10 0v5a5 5 0 0 1-5 5z"></path>
+                            <path d="M9 12a3 3 0 0 1-3-3V7a3 3 0 0 1 6 0v5a3 3 0 0 1-3 3z"></path>
+                        </svg>
+                    </div>
+                    
+                    <!-- Question Heading -->
+                    <h2 class="question-heading" id="question-heading">Ek Chhota Sa Sawal <span aria-hidden="true">💙</span></h2>
+                    
+                    <!-- Question Text -->
+                    <p class="question-text" id="question-text">
+                        Haamari Best Memory wali date<br>
+                        jo humne decide ki thi?
+                    </p>
+                    
+                    <!-- Input Field -->
+                    <div class="question-input-wrapper">
+                        <input 
+                            type="text" 
+                            class="question-input" 
+                            id="question-input" 
+                            placeholder="Apna jawab yahan likho..." 
+                            autocomplete="off"
+                            autocorrect="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                            aria-label="Apna jawab yahan likho..."
+                            maxlength="20"
+                            inputmode="text"
+                        >
+                        <span class="input-underline" aria-hidden="true"></span>
+                    </div>
+                    
+                    <!-- Feedback Message -->
+                    <div class="question-feedback" id="question-feedback" aria-live="polite" aria-hidden="true"></div>
+                    
+                    <!-- Unlock Button -->
+                    <button 
+                        type="button" 
+                        class="question-unlock-btn" 
+                        id="question-unlock-btn" 
+                        aria-label="Hamari Kahani Unlock Karo"
+                        disabled
+                        disabled
+                    >
+                        <span class="unlock-btn-text">Hamari Kahani Unlock Karo</span>
+                        <svg class="unlock-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"></path>
+                            <path d="M3 12h6M9 18l-6-6 6-6"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Background decorative elements -->
+                <div class="question-bg" aria-hidden="true"></div>
+                <div class="question-stars" id="question-stars" aria-hidden="true"></div>
+                <div class="question-particles" id="question-particles" aria-hidden="true"></div>
+            </div>
+            <!-- Cinematic Gate - main transition on unlock -->
+            <div class="question-gate" id="question-gate" aria-hidden="true" hidden>
+                <div class="gate-panel gate-left" aria-hidden="true"></div>
+                <div class="gate-panel gate-right" aria-hidden="true"></div>
+                <div class="gate-shine" aria-hidden="true"></div>
+                <div class="gate-lock-glow" aria-hidden="true"></div>
+            </div>
+        </section>
+
         <div id="opening-cinematic" class="opening-cinematic" tabindex="0" hidden>
             <div class="opening-bg" aria-hidden="true"></div>
             <div class="opening-stars" id="opening-stars" aria-hidden="true"></div>
@@ -198,16 +313,16 @@
          ============================================ -->
     <main id="app" class="app" hidden>
 
-        <!-- Birthday reveal: the cinematic film + cosmic heartbeat - a
-             fully opaque full-screen scene right after the love letter.
-             First the Birthday Love Letter (read by the wife, countdown
-             waits for her button) -> 5 -> 4 -> 3 -> 2 -> 1 (each number
-             emerges from blur with a heartbeat wave and one micro line)
-             -> candles ignite, balloons float and burst -> "Happy
-             Birthday, My Love ❤️" -> live age. The title and the live
-             age STAY on screen forever - no automatic exit. The only way
-             forward is the "Aage Badho ❤️" button, which hands off to
-             Memory Lane. -->
+         <!-- Birthday reveal: the cinematic film + cosmic heartbeat - a
+              fully opaque full-screen scene right after the love letter.
+              First the Birthday Love Letter (read by the wife, countdown
+              waits for her button) -> 3 -> 2 -> 1 (each number
+              emerges from blur with a heartbeat wave and one micro line)
+              -> candles ignite, balloons float and burst -> "Happy
+              Birthday, My Love ❤️" -> live age. The title and the live
+              age STAY on screen forever - no automatic exit. The only way
+              forward is the "Aage Badho ❤️" button, which hands off to
+              Memory Lane. -->
         <div id="birthday-reveal" aria-hidden="true" hidden>
             <div class="birthday-reveal-sky" aria-hidden="true"></div>
             <div class="birthday-reveal-glow" aria-hidden="true"></div>
@@ -291,7 +406,7 @@ I love you. ❤️</p>
                 <p class="birthday-reveal-micro" aria-hidden="true">Ek pal aur...</p>
                 <p class="birthday-reveal-final">Happy Birthday, My Love ❤️</p>
                 <!-- Live age: filled by js/birthday-reveal.js from the
-                     real clock (born 21 Sep 2007, 01:30:00 IST) -->
+                     real clock (born 21 Sep 2007, 01:30:00 IST - UTC 2007-09-20T20:00:00Z) -->
                 <div class="birthday-reveal-age">
                     <p class="birthday-reveal-age-row birthday-reveal-age-years">
                         <span class="birthday-reveal-age-value" data-age="years">0</span>
@@ -341,25 +456,38 @@ I love you. ❤️</p>
             <div class="scene-content memory-content">
                 <!-- Hidden surprise state: only a promise + reveal CTA -->
                 <div class="memory-intro" id="memory-intro">
-                    <p class="memory-eyebrow">Our Memories 💙</p>
-                    <h2 id="scene2-title" class="memory-intro-title">There's something waiting for you...</h2>
-                    <p class="memory-subtitle">A few little pieces of us, hidden away just for you.</p>
-                    <button type="button" class="memory-reveal-btn" id="memory-reveal" aria-label="Reveal the first memory">
+                    <div class="memory-intro-copy">
+                        <p class="memory-eyebrow">Our Memories 💙</p>
+                        <h2 id="scene2-title" class="memory-intro-title">There's something waiting for you...</h2>
+                        <p class="memory-subtitle">A few little pieces of us, hidden away just for you.</p>
+                    </div>
+                    <div class="memory-intro-actions">
+                        <button type="button" class="memory-reveal-btn" id="memory-reveal" aria-label="Reveal the first memory">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M12 3v18M5 10l7-7 7 7"></path>
+                            </svg>
+                            <span>Reveal the first memory</span>
+                        </button>
+                        <button type="button" class="memory-continue-btn" id="memory-continue" aria-label="Continue from your last memory" hidden>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M5 12h14M12 5l7 7-7 7"></path>
+                            </svg>
+                            <span id="memory-continue-label">Continue Our Story</span>
+                        </button>
+                    </div>
+                    <!-- Level 1: Return to Beginning (subtle, at intro) -->
+                    <button type="button" class="memory-restart-intro" id="memory-restart-intro" aria-label="Return to the beginning of the experience" hidden>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path d="M12 3v18M5 10l7-7 7 7"></path>
+                            <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"></path>
+                            <path d="M3 12h6M9 18l-6-6 6-6"></path>
                         </svg>
-                        <span>Reveal the first memory</span>
-                    </button>
-                    <button type="button" class="memory-continue-btn" id="memory-continue" aria-label="Continue from your last memory" hidden>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path d="M5 12h14M12 5l7 7-7 7"></path>
-                        </svg>
-                        <span id="memory-continue-label">Continue Our Story</span>
+                        <span>Return to Beginning</span>
                     </button>
                 </div>
                 
                 <!-- Memory chapter: title -> photo -> love message, all stay visible -->
                 <div class="memory-chapter" id="memory-chapter" hidden>
+                    
                     <div class="memory-title-block phase" id="memory-title" role="heading" aria-level="2">
                         <span class="memory-title-text" id="memory-title-text"></span>
                     </div>
@@ -372,7 +500,7 @@ I love you. ❤️</p>
                     </figure>
                     
                     <div class="memory-message-block phase" id="memory-message-block">
-                        <p class="memory-message" id="memory-message"></p>
+                        <div class="memory-message" id="memory-message"></div>
                     </div>
                 </div>
                 
@@ -382,7 +510,7 @@ I love you. ❤️</p>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M19 12H5M12 19l-7-7 7-7"></path>
                         </svg>
-                        <span>Back</span>
+                        <span>Preview</span>
                     </button>
                     <button type="button" class="memory-nav memory-next" id="memory-next" aria-label="Next memory" hidden>
                         <span>Next Memory</span>
@@ -411,6 +539,31 @@ I love you. ❤️</p>
                         </svg>
                     </button>
                 </div>
+                <!-- Back to the Our Memories landing: fixed top-left,
+                     matching experience-back-btn exactly.
+                     Shown only inside the first memory chapter (JS-driven) -->
+                <button type="button" class="memory-back-intro" id="memory-back-intro" aria-label="Back to Our Memories" hidden>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                    </svg>
+                    <span class="experience-back-label" aria-hidden="true">Back</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Post-Memory Message: separate full-screen cinematic state -->
+        <section id="post-memory-message" class="scene scene-post-memory-message" aria-labelledby="post-memory-title" hidden>
+            <div class="scene-bg" aria-hidden="true"></div>
+            <div class="scene-content post-memory-content">
+                <div class="post-memory-glow" aria-hidden="true"></div>
+                <p class="post-memory-eyebrow">After all these memories...</p>
+                <h2 id="post-memory-title" class="post-memory-title">Every moment with you<br>is my favorite memory.</h2>
+                <p class="post-memory-love">Happy Birthday, My Love ❤️</p>
+                <p class="post-memory-subtitle">There's still more to our story... and the best chapters are yet to come.</p>
+                <button type="button" class="post-memory-continue" id="post-memory-continue" aria-label="Continue to Our Timeline">
+                    <span>Continue</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                </button>
             </div>
         </section>
         
@@ -454,14 +607,198 @@ I love you. ❤️</p>
             </div>
         </section>
         
+        <!-- Level 2: Final ending - Experience Again -->
         <section id="scene-8" class="scene scene-epilogue" aria-labelledby="scene8-title" hidden>
             <div class="scene-bg"></div>
             <div class="scene-content">
-                <h2 id="scene8-title" class="scene-title">Epilogue</h2>
-                <p class="scene-placeholder">Coming in Phase 2...</p>
+                <div class="epilogue-content">
+                    <div class="epilogue-glow" aria-hidden="true"></div>
+                    <div class="epilogue-hearts" aria-hidden="true">
+                        <span class="epilogue-heart heart-1">❤</span>
+                        <span class="epilogue-heart heart-2">❤</span>
+                        <span class="epilogue-heart heart-3">❤</span>
+                    </div>
+                    <p class="epilogue-eyebrow">The story never truly ends...</p>
+                    <h2 class="epilogue-title">Every moment with you<br>is a memory I'd live again.</h2>
+                    <p class="epilogue-subtitle">Our story continues... and the best chapters are still being written.</p>
+                    <button type="button" class="epilogue-btn" id="epilogue-restart" aria-label="Experience our story again">
+                        <span>Experience Again</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"></path>
+                            <path d="M3 12h6M9 18l-6-6 6-6"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             OUR TIMELINE - chronological story bridge
+             Placed AFTER Memory Lane / Love Letters / Special Moments
+             but BEFORE THE SECRET OF US game.
+             Rendered from TIMELINE_MOMENTS in secret-game-data.js.
+             ======================================================== -->
+        <section id="our-timeline" class="scene scene-timeline" aria-labelledby="timeline-title" hidden>
+            <div class="scene-bg" aria-hidden="true"></div>
+            <div class="timeline-shell">
+                <p class="timeline-eyebrow" style="font-size:0.72rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--green-300);font-weight:600;">Our Timeline</p>
+                <h2 id="timeline-title" class="timeline-title">Har pal, ek kahani</h2>
+                <p class="timeline-sub">Yeh rahi hamari kahani — shuruaat se ab tak. Har lamha yaad hai, har pal dil mein hai.</p>
+                <div id="timeline-track" class="timeline-track" role="list" aria-label="Our timeline"></div>
+                <button type="button" class="sg-btn" id="timeline-enter-btn" aria-label="Enter The Secret of Us">
+                    <span>THE SECRET OF US →</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                </button>
+                <p style="font-size:0.78rem;color:var(--text-faint);letter-spacing:0.04em;">Ek chhota sa secret tumhara intezaar kar raha hai...</p>
             </div>
         </section>
     </main>
+    
+    <!-- ========================================================
+         THE SECRET OF US - Cinematic Romantic Game
+         Independent full-screen scene, never behind previous bg.
+         State machine: intro → level1 → level2 → level3 → level4
+         → level5 → complete → reward.
+         ======================================================== -->
+    <section id="secret-game" class="scene-secret-game" aria-labelledby="secret-game-title" role="region" aria-label="The Secret of Us game" hidden tabindex="-1">
+        <div class="sg-bg" aria-hidden="true">
+            <div class="sg-bg-aurora"></div>
+            <div class="sg-stars" id="sg-stars"></div>
+            <div class="sg-vignette"></div>
+        </div>
+        <div class="sg-shell">
+            <!-- Progress -->
+            <div class="sg-progress" aria-hidden="true">
+                <span id="sg-progress-current">00 / 05</span>
+                <span class="sg-progress-track"><span id="sg-progress-fill" class="sg-progress-fill"></span></span>
+            </div>
+
+            <!-- INTRO -->
+            <div id="sg-intro" class="sg-intro" aria-live="polite">
+                <div class="sg-lock" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+                        <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                        <circle cx="12" cy="15" r="1.5" fill="currentColor" stroke="none"></circle>
+                    </svg>
+                </div>
+                <p id="sg-intro-line1" class="sg-intro-line">Tamne hamari kahani dekhi...</p>
+                <p id="sg-intro-line2" class="sg-intro-line">Ab ek chhota sa secret hai...</p>
+                <h2 id="secret-game-title" class="sg-title">THE SECRET OF US <span class="sg-title-accent">A little secret hidden inside our story...</span></h2>
+                <p id="sg-ready" class="sg-ready-label">Ready?</p>
+                <button type="button" class="sg-btn" id="sg-begin-btn" aria-label="Begin the secret game">
+                    <span>Begin</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+
+            <!-- LEVEL 1: REMEMBER -->
+            <div id="sg-level-1" class="sg-level" hidden>
+                <p class="sg-level-eyebrow">01 / 05 — Remember</p>
+                <h3 class="sg-level-title">Yaadon ko sahi jagah lagao</h3>
+                <p class="sg-level-subtitle">In lamhon ko sahi chronological order mein lagao — pehle se ab tak.</p>
+                <div id="sg-l1-list" class="sg-timeline-list" role="list" aria-label="Timeline cards, drag or use arrows to reorder"></div>
+                <div id="sg-l1-feedback" class="sg-feedback" aria-live="polite"></div>
+                <div style="display:flex;gap:0.8rem;flex-wrap:wrap;justify-content:center;">
+                    <button type="button" class="sg-btn" id="sg-l1-check" aria-label="Test the order"><span>TEST</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
+                </div>
+            </div>
+
+            <!-- LEVEL 2: FIND -->
+            <div id="sg-level-2" class="sg-level" hidden>
+                <p class="sg-level-eyebrow">02 / 05 — Find</p>
+                <h3 class="sg-level-title">Chhupi hui yaadein dhoondho</h3>
+                <p class="sg-level-subtitle">Is raat mein kuch yaadein chhupi hui hain — unhe dhoondho.</p>
+                <div id="sg-l2-env" class="sg-find-env" aria-label="Hidden memories environment"></div>
+                <div id="sg-l2-counter" class="sg-find-counter" aria-live="polite"></div>
+                <div id="sg-l2-feedback" class="sg-feedback" aria-live="polite"></div>
+                <button type="button" class="sg-btn" id="sg-l2-action" aria-label="Test the memories you found" hidden><span>TEST</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
+            </div>
+
+            <!-- LEVEL 3: FEEL -->
+            <div id="sg-level-3" class="sg-level" hidden>
+                <p class="sg-level-eyebrow">03 / 05 — Feel</p>
+                <h3 class="sg-level-title">Dil se jawab do</h3>
+                <p class="sg-level-subtitle">Koi sahi-galat nahi — bas dil se chunno.</p>
+                <div id="sg-l3-card" class="sg-feel-card">
+                    <p id="sg-l3-question" class="sg-feel-q"></p>
+                    <div id="sg-l3-choices" class="sg-feel-choices" role="group" aria-label="Choose an answer"></div>
+                </div>
+                <div id="sg-l3-feedback" class="sg-feedback" aria-live="polite"></div>
+                <button type="button" class="sg-btn" id="sg-l3-action" aria-label="Test your answer" hidden><span>TEST</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
+            </div>
+
+            <!-- LEVEL 4: CONNECT -->
+            <div id="sg-level-4" class="sg-level" hidden>
+                <p class="sg-level-eyebrow">04 / 05 — Connect</p>
+                <h3 class="sg-level-title">Sitaron ko jodo</h3>
+                <p class="sg-level-subtitle">Sahi sitaron ko tap karo aur dekho kaise dil banta hai.</p>
+                <div id="sg-l4-sky" class="sg-connect-sky" aria-label="Star constellation, tap stars in order">
+                    <svg id="sg-l4-svg" class="sg-connect-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+                </div>
+                <div id="sg-l4-feedback" class="sg-feedback" aria-live="polite"></div>
+                <button type="button" class="sg-btn" id="sg-l4-action" aria-label="Test the constellation" hidden><span>TEST</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
+            </div>
+
+            <!-- LEVEL 5: MY HEART -->
+            <div id="sg-level-5" class="sg-level" hidden>
+                <p class="sg-level-eyebrow">05 / 05 — My Heart</p>
+                <h3 class="sg-level-title">Meri dhadkan pakdo</h3>
+                <p class="sg-level-subtitle">Jab pulse target tak pahunche, tap karo — pyaar se, aaram se.</p>
+                <div class="sg-heart-stage">
+                    <div id="sg-l5-wrap" class="sg-heart-wrap" aria-label="Glowing heart, tap when pulse reaches the dashed ring">
+                        <div class="sg-heart-ring" aria-hidden="true"></div>
+                        <div class="sg-heart-target" aria-hidden="true"></div>
+                        <div id="sg-l5-pulse" class="sg-heart-pulse" aria-hidden="true"></div>
+                        <div id="sg-l5-core" class="sg-heart-core" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        </div>
+                    </div>
+                    <div id="sg-l5-progress" class="sg-heart-progress" aria-live="polite"><strong>0</strong> / 5</div>
+                    <div id="sg-l5-feedback" class="sg-feedback is-visible" aria-live="polite"></div>
+                    <button type="button" class="sg-btn" id="sg-l5-action" aria-label="Test the heart" hidden><span>TEST</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
+                </div>
+            </div>
+
+            <!-- COMPLETE -->
+            <div id="sg-complete" class="sg-complete" hidden>
+                <div id="sg-complete-symbols" style="display:flex;align-items:center;justify-content:center;gap:0.5rem;flex-wrap:wrap;">
+                    <span class="sg-symbol" aria-hidden="true">📜</span><span class="sg-plus">+</span>
+                    <span class="sg-symbol" aria-hidden="true">🔍</span><span class="sg-plus">+</span>
+                    <span class="sg-symbol" aria-hidden="true">💙</span><span class="sg-plus">+</span>
+                    <span class="sg-symbol" aria-hidden="true">⭐</span><span class="sg-plus">+</span>
+                    <span class="sg-symbol" aria-hidden="true">❤️</span>
+                </div>
+                <div class="sg-heart-merge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
+                <h3 class="sg-complete-title">THE SECRET OF US</h3>
+                <p class="sg-complete-sub">COMPLETE</p>
+                <p id="sg-complete-line1" class="sg-complete-line">Game jeet liya...</p>
+                <p id="sg-complete-line2" class="sg-complete-line">ab tumhara reward hai.</p>
+                <button type="button" class="sg-btn" id="sg-complete-unlock"><span>UNLOCK REWARD</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 17a2 2 0 0 0 2-2c0-1.1-.9-2-2-2s-2 .9-2 2a2 2 0 0 0 2 2z"></path><path d="M8 11V7a4 4 0 0 1 8 0v4"></path><rect x="6" y="11" width="12" height="9" rx="2"></rect></svg></button>
+            </div>
+
+            <!-- REWARD -->
+            <div id="sg-reward" class="sg-reward" hidden>
+                <div id="sg-envelope" class="sg-envelope" tabindex="0" role="button" aria-label="Open your reward">
+                    <div class="sg-envelope-body"></div>
+                    <div class="sg-envelope-flap"></div>
+                    <div class="sg-envelope-seal"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
+                    <div class="sg-envelope-paper"><span class="sg-paper-line" style="width:72%"></span></div>
+                </div>
+                <p id="sg-reward-hint" class="sg-reward-hint">Tap the envelope to open it...</p>
+                <div id="sg-reward-card" class="sg-reward-card" hidden>
+                    <p id="sg-reward-eyebrow" class="sg-reward-eyebrow"></p>
+                    <h3 id="sg-reward-title" class="sg-reward-title"></h3>
+                    <div id="sg-reward-body"></div>
+                    <div class="sg-reward-sign">
+                        <p id="sg-reward-from"></p>
+                        <p id="sg-reward-name"></p>
+                    </div>
+                </div>
+                <button type="button" class="sg-btn" id="sg-reward-continue" hidden><span class="sg-btn-label">Aage Badho — Special Message →</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+            </div>
+        </div>
+    </section>
     
     <!-- Audio Element for Background Music -->
     <audio id="bg-music" loop preload="auto">
@@ -482,6 +819,6 @@ I love you. ❤️</p>
     </button>
     
     <!-- JavaScript Modules -->
-    <!-- main.js is the ES module entry point; it imports the other modules -->
+    <!-- main.js is the ES module entry point; it imports the other modules -->
 </body>
 </html>
