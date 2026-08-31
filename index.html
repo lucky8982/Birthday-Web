@@ -227,6 +227,9 @@
 
             <!-- One story message at a time (written by opening.js) -->
             <div class="opening-message" id="opening-message" aria-live="polite" aria-hidden="true"></div>
+            <button type="button" class="opening-skip-btn" id="opening-skip-btn" hidden>
+                Skip to our letter
+            </button>
 
             <!-- The sealed love letter: appears after the story passage.
                  It stays closed until the right answer is picked and the
@@ -321,7 +324,7 @@
          <!-- Birthday reveal: the cinematic film + cosmic heartbeat - a
               fully opaque full-screen scene right after the love letter.
               First the Birthday Love Letter (read by the wife, countdown
-              waits for her button) -> 3 -> 2 -> 1 (each number
+              waits for her button) -> 5 -> 4 -> 3 -> 2 -> 1 (each number
               emerges from blur with a heartbeat wave and one micro line)
               -> candles ignite, balloons float and burst -> "Happy
               Birthday, My Love ❤️" -> live age. The title and the live
@@ -697,52 +700,94 @@ I love you. ❤️</p>
                 </button>
             </div>
 
-            <!-- LEVEL 1: REMEMBER -->
+            <!-- LEVEL 1: PHOTO MEMORY ORDER PUZZLE -->
             <div id="sg-level-1" class="sg-level" hidden>
-                <p class="sg-level-eyebrow">01 / 05 — Remember</p>
-                <h3 class="sg-level-title">Yaadon ko sahi jagah lagao</h3>
-                <p class="sg-level-subtitle">In lamhon ko sahi chronological order mein lagao — pehle se ab tak.</p>
-                <div id="sg-l1-list" class="sg-timeline-list" role="list" aria-label="Timeline cards, drag or use arrows to reorder"></div>
+                <p class="sg-level-eyebrow">01 / 05 — OUR MEMORIES</p>
+                <h3 class="sg-level-title">Put Our Memories In Order ❤️</h3>
+                <p class="sg-level-subtitle">Every photo holds a memory. Arrange them in the order our story unfolded.</p>
+                <div class="sg-memory-frame">
+                    <div id="sg-l1-list" class="sg-memory-grid" role="list" aria-label="Photo memories, drag to rearrange their order"></div>
+                </div>
                 <div id="sg-l1-feedback" class="sg-feedback" aria-live="polite"></div>
-                <div style="display:flex;gap:0.8rem;flex-wrap:wrap;justify-content:center;">
+                <div class="sg-l1-controls">
                     <button type="button" class="sg-btn" id="sg-l1-check" aria-label="Test the order"><span>TEST</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
+                    <!-- Temporary development control: remove once photo order is final. -->
+                    <button type="button" class="sg-btn sg-btn-ghost" id="sg-l1-skip" aria-label="Skip Game 1"><span>SKIP GAME</span></button>
                 </div>
             </div>
 
-            <!-- LEVEL 2: FIND -->
+            <!-- LEVEL 2: OUR MEMORY DETECTOR -->
             <div id="sg-level-2" class="sg-level" hidden>
-                <p class="sg-level-eyebrow">02 / 05 — Find</p>
-                <h3 class="sg-level-title">Chhupi hui yaadein dhoondho</h3>
-                <p class="sg-level-subtitle">Is raat mein kuch yaadein chhupi hui hain — unhe dhoondho.</p>
-                <div id="sg-l2-env" class="sg-find-env" aria-label="Hidden memories environment"></div>
-                <div id="sg-l2-counter" class="sg-find-counter" aria-live="polite"></div>
-                <div id="sg-l2-feedback" class="sg-feedback" aria-live="polite"></div>
-                <button type="button" class="sg-btn" id="sg-l2-action" aria-label="Test the memories you found" hidden><span>TEST</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
+                <header class="sg-game2-header">
+                    <p class="sg-level-eyebrow">02 / 05 — OUR MEMORY DETECTOR</p>
+                    <h3 class="sg-level-title">OUR MEMORY DETECTOR</h3>
+                    <p class="sg-level-subtitle">Some memories are hidden... but you always know where to find us. ❤</p>
+                </header>
+                <p id="sg-l2-progress" class="sg-game2-progress" aria-live="polite">Memory 1 / 3</p>
+                <section id="sg-l2-card" class="sg-game2-card" aria-live="polite">
+                    <div id="sg-l2-stage" class="sg-game2-stage"></div>
+                </section>
             </div>
 
-            <!-- LEVEL 3: FEEL -->
+            <!-- LEVEL 3: READ MY MIND / WHO WOULD DO IT? -->
             <div id="sg-level-3" class="sg-level" hidden>
-                <p class="sg-level-eyebrow">03 / 05 — Feel</p>
-                <h3 class="sg-level-title">Dil se jawab do</h3>
-                <p class="sg-level-subtitle">Koi sahi-galat nahi — bas dil se chunno.</p>
-                <div id="sg-l3-card" class="sg-feel-card">
-                    <p id="sg-l3-question" class="sg-feel-q"></p>
-                    <div id="sg-l3-choices" class="sg-feel-choices" role="group" aria-label="Choose an answer"></div>
+                <header id="sg-l3-header" class="sg-game3-header">
+                    <p id="sg-l3-eyebrow" class="sg-level-eyebrow">03 / 05 — MERE DIL KI BAAT</p>
+                    <h3 id="sg-l3-title" class="sg-level-title">MERE DIL KI BAAT ❤️</h3>
+                    <p id="sg-l3-subtitle" class="sg-level-subtitle">Dekhte hain tum mujhe kitna achhe se samajhti ho...</p>
+                    <p id="sg-l3-progress" class="sg-game3-progress" aria-live="polite">1 / 3 · Batao, main kya choose karta?</p>
+                </header>
+                <div id="sg-l3-quiz" class="sg-game3-quiz">
+                    <div id="sg-l3-card" class="sg-game3-card">
+                        <p id="sg-l3-question" class="sg-game3-question"></p>
+                        <div id="sg-l3-choices" class="sg-game3-choices" role="group" aria-label="Apna jawab chuno"></div>
+                    </div>
+                    <div id="sg-l3-feedback" class="sg-game3-feedback" aria-live="polite"></div>
+                    <button type="button" class="sg-btn sg-game3-test" id="sg-l3-action" aria-label="Dekhte hain" hidden><span>DEKHTE HAIN ❤️</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
                 </div>
-                <div id="sg-l3-feedback" class="sg-feedback" aria-live="polite"></div>
-                <button type="button" class="sg-btn" id="sg-l3-action" aria-label="Test your answer" hidden><span>TEST</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
+                <div id="sg-l3-cinematic" class="sg-game3-cinematic" aria-live="polite" hidden>
+                    <p id="sg-l3-cinematic-line" class="sg-game3-cinematic-line"></p>
+                    <button type="button" class="sg-btn sg-game3-continue" id="sg-l3-continue" aria-label="Aage chalein" hidden><span>Aage Chalein →</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+                </div>
             </div>
 
-            <!-- LEVEL 4: CONNECT -->
-            <div id="sg-level-4" class="sg-level" hidden>
-                <p class="sg-level-eyebrow">04 / 05 — Connect</p>
-                <h3 class="sg-level-title">Sitaron ko jodo</h3>
-                <p class="sg-level-subtitle">Sahi sitaron ko tap karo aur dekho kaise dil banta hai.</p>
-                <div id="sg-l4-sky" class="sg-connect-sky" aria-label="Star constellation, tap stars in order">
-                    <svg id="sg-l4-svg" class="sg-connect-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
-                </div>
-                <div id="sg-l4-feedback" class="sg-feedback" aria-live="polite"></div>
-                <button type="button" class="sg-btn" id="sg-l4-action" aria-label="Test the constellation" hidden><span>TEST</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
+            <!-- LEVEL 4: OUR CHEMISTRY × DATE NIGHT JACKPOT -->
+            <div id="sg-level-4" class="sg-level sg-game4" hidden>
+                <section id="sg-l4-chemistry" class="sg-game4-stage" aria-labelledby="sg-l4-title">
+                    <header class="sg-game4-header">
+                        <p class="sg-level-eyebrow">04 / 05 — OUR CHEMISTRY</p>
+                        <h3 id="sg-l4-title" class="sg-level-title">OUR CHEMISTRY</h3>
+                        <p class="sg-level-subtitle">What do you think we would choose?</p>
+                        <p id="sg-l4-progress" class="sg-game4-progress" aria-live="polite">1 / 3</p>
+                    </header>
+                    <div id="sg-l4-chemistry-card" class="sg-game4-card">
+                        <p id="sg-l4-question" class="sg-game4-question"></p>
+                        <div id="sg-l4-choices" class="sg-game4-choices" role="group" aria-label="Choose what feels like us"></div>
+                    </div>
+                    <button type="button" class="sg-btn sg-game4-action" id="sg-l4-test" aria-label="Test our chemistry" hidden><span>TEST</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
+                    <div id="sg-l4-chemistry-reveal" class="sg-game4-reveal" aria-live="polite" hidden>
+                        <p class="sg-game4-reveal-label">OUR CHEMISTRY</p>
+                        <p id="sg-l4-choice-reveal" class="sg-game4-reveal-line"></p>
+                        <p id="sg-l4-final-reveal" class="sg-game4-final-line"></p>
+                        <button type="button" class="sg-btn sg-game4-action" id="sg-l4-next" hidden><span>NEXT →</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+                    </div>
+                </section>
+                <section id="sg-l4-jackpot" class="sg-game4-stage sg-game4-jackpot" aria-labelledby="sg-l4-jackpot-title" hidden>
+                    <header class="sg-game4-header">
+                        <p class="sg-level-eyebrow">04 / 05 — DATE NIGHT JACKPOT</p>
+                        <h3 id="sg-l4-jackpot-title" class="sg-level-title">DATE NIGHT JACKPOT</h3>
+                        <p class="sg-level-subtitle">Let fate plan a little night for us. ✨</p>
+                    </header>
+                    <div id="sg-l4-jackpot-grid" class="sg-jackpot-grid" aria-live="polite"></div>
+                    <button type="button" class="sg-btn sg-game4-action" id="sg-l4-jackpot-action"><span>Create Our Date Night ✨</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+                    <div id="sg-l4-jackpot-reveal" class="sg-jackpot-reveal" aria-live="polite" hidden>
+                        <h4>OUR DATE NIGHT JACKPOT</h4>
+                        <p class="sg-jackpot-reveal-subtitle">Tonight is for us.</p>
+                        <p>Maybe the date was random…</p>
+                        <p class="sg-jackpot-love-line">but choosing you never was. ❤️</p>
+                        <button type="button" class="sg-btn sg-game4-action" id="sg-l4-continue" hidden><span>Continue →</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+                    </div>
+                </section>
             </div>
 
             <!-- LEVEL 5: MY HEART -->

@@ -478,7 +478,7 @@ h1, h2, h3 {
     position: fixed;
     top: calc(1.4rem + env(safe-area-inset-top));
     left: calc(1.4rem + env(safe-area-inset-left));
-    z-index: 100;
+    z-index: 1100;
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
@@ -2220,6 +2220,15 @@ h1, h2, h3 {
     pointer-events: auto;
     transition-delay: 0s;
 }
+.scene-memory-lane.is-leaving {
+    opacity: 0;
+    transform: scale(0.992);
+    transition: opacity 0.3s var(--ease-soft), transform 0.3s var(--ease-soft);
+    pointer-events: none;
+}
+.scene-post-memory-message.is-restored {
+    transition: none;
+}
 .post-memory-content {
     position: relative;
     z-index: 2;
@@ -2306,6 +2315,52 @@ h1, h2, h3 {
 }
 .post-memory-continue:active { transform: scale(0.97); }
 .post-memory-continue svg { width: 18px; height: 18px; color: var(--green-300); }
+
+/* The post-Memory page keeps its established layout; this class only
+   orchestrates its forward handoff from the final Memory Lane scene. */
+.scene-post-memory-message.is-entered .post-memory-glow {
+    animation: post-memory-glow-in 1.3s var(--ease-soft) 0.08s both;
+}
+.scene-post-memory-message.is-entered .post-memory-eyebrow {
+    animation: post-memory-eyebrow-in 0.72s var(--ease-out) 0.26s both;
+}
+.scene-post-memory-message.is-entered .post-memory-title {
+    animation: post-memory-title-in 1.05s var(--ease-out) 0.52s both;
+}
+.scene-post-memory-message.is-entered .post-memory-love {
+    animation: post-memory-love-in 0.8s var(--ease-out) 1.12s both;
+}
+.scene-post-memory-message.is-entered .post-memory-subtitle {
+    animation: post-memory-copy-in 0.76s var(--ease-out) 1.45s both;
+}
+.scene-post-memory-message.is-entered .post-memory-continue {
+    animation: post-memory-button-in 0.76s var(--ease-out) 1.78s both;
+}
+
+@keyframes post-memory-glow-in {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.82); filter: blur(24px); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(10px); }
+}
+@keyframes post-memory-eyebrow-in {
+    from { opacity: 0; transform: translateY(12px); filter: blur(5px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+@keyframes post-memory-title-in {
+    from { opacity: 0; transform: translateY(20px) scale(0.965); filter: blur(12px); }
+    to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes post-memory-love-in {
+    from { opacity: 0; transform: translateY(14px); filter: blur(7px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+@keyframes post-memory-copy-in {
+    from { opacity: 0; transform: translateY(10px); filter: blur(4px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+@keyframes post-memory-button-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(4px); }
+    to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
 
 /* Soft cinematic halo behind the final message */
 .memory-final-glow {
@@ -3486,10 +3541,64 @@ h1, h2, h3 {
 /* The question fades away like the invitation once the letter
    opens - it belongs to the closed-letter moment only. */
 .letter-scene.is-open .letter-question {
+    display: none;
+}
+
+/* Optional only on the first three post-password messages after the
+   date gate has genuinely been completed. */
+.opening-skip-btn {
+    position: absolute;
+    z-index: 12;
+    left: 50%;
+    bottom: max(1.2rem, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    min-height: 44px;
+    padding: 0.65rem 1.15rem;
+    border: 1px solid rgba(168, 208, 230, 0.22);
+    border-radius: var(--radius-full);
+    color: var(--blue-200);
+    background: rgba(13, 24, 48, 0.52);
+    box-shadow: 0 8px 22px rgba(5, 10, 24, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.opening-skip-btn:hover {
+    color: var(--blue-050);
+    background: rgba(168, 208, 230, 0.12);
+}
+
+.opening-skip-btn:focus-visible {
+    outline: 2px solid var(--blue-200);
+    outline-offset: 3px;
+}
+
+.letter-scene.is-open .letter-caption {
+    min-height: 0;
+}
+
+/* Stable resting state for a resumed post-date-gate message. These
+   values exactly match the final open-letter animation frame. */
+.letter-scene.is-message .letter-paper {
+    opacity: 1;
+    transform: translateY(-14%) scale(1);
+}
+
+.letter-scene.is-message .letter-flap {
+    transform: rotateX(178deg);
+    filter: brightness(1.12);
+}
+
+.letter-scene.is-message .letter-seal {
     opacity: 0;
-    filter: blur(8px);
-    transform: translateY(-8px);
-    pointer-events: none;
+    transform: translateX(-50%) scale(0.5);
 }
 
 .letter-question-text {
@@ -5219,6 +5328,18 @@ h1, h2, h3 {
         max-width: min(92vw, 560px);
         margin-inline: auto;
     }
+
+    /* The opened-letter message is a compact two-part composition.
+       Dynamic viewport sizing plus removing the faded gate from flow
+       prevents it from being centered above the mobile viewport. */
+    .letter-scene {
+        min-height: 100dvh;
+        min-height: 100svh;
+        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+        justify-content: safe center;
+    }
+
 }
 
 @media (max-width: 480px) {

@@ -143,7 +143,7 @@ const COUNT_STEPS = [
    The next number never starts before the previous one has
    finished its dissolve phase. Reduced motion keeps a calm
    readable hold (CSS animations are off, so no in/out wait). */
-const STEP_READ = 1000; // number stays readable after entering (spec: ~2000ms)
+const STEP_READ = 2000; // number stays readable after entering (spec: ~2000ms)
 const STEP_OUT = 250;   // dissolve duration (matches count-dissolve)
 
 export class BirthdayReveal {

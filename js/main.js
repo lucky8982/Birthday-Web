@@ -38,17 +38,82 @@ const app = {
     secretGame: null,     // SecretGame instance (THE SECRET OF US)
     backBtn: null,        // BackButton instance (global UI-only control)
     backState: 'none',    // 'none' | 'love-letter' | 'love-message' |
-                          // 'countdown' | 'birthday-reveal' |
+                          // 'countdown' | 'birthday-letter' | 'birthday-reveal' |
                           // 'memory-landing' | 'memory' | 'post-memory' |
                           // 'timeline' | 'secret-game' | 'reward' | 'post-reward'
     revealStage: 'none',  // last reveal stage reported: 'letter' | 'countdown' | 'final'
     revealRun: 0,         // reveal run id - bumped to invalidate stale callbacks
     memoryOpened: false,  // true once the surprise scene is on screen
+    postMemoryRun: 0,     // invalidates post-memory handoff timers
     revealStarted: false, // true once the birthday reveal has been triggered
     effectsStarted: false,// true once background effects run
     audioInitialized: false, // true once AudioManager is created
     cleaned: false,       // true once cleanup() has run
+    passwordVerifiedThisSession: false, // never persisted; reset whenever #question-lock is shown
 };
+
+const DATE_GATE_STORAGE_KEY = 'hbm.dateGate.v1';
+
+function hasCompletedDateGate() {
+    try {
+        return window.localStorage.getItem(DATE_GATE_STORAGE_KEY) === '1';
+    } catch {
+        return false;
+    }
+}
+
+function markDateGateCompleted() {
+    try {
+        window.localStorage.setItem(DATE_GATE_STORAGE_KEY, '1');
+    } catch {
+        /* Storage unavailable: the current flow remains valid. */
+    }
+}
+
+function syncEarlySkipButton() {
+    const btn = document.querySelector('#opening-skip-btn');
+    if (!btn) return;
+
+    const onEligibleMessage =
+        app.opening?.state === 'message' &&
+        app.opening.messageIndex >= 0 &&
+        app.opening.messageIndex <= 2;
+    btn.hidden = !(
+        app.passwordVerifiedThisSession &&
+        hasCompletedDateGate() &&
+        onEligibleMessage
+    );
+}
+
+function skipCompletedEarlyFlow(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const onEligibleMessage =
+        app.opening?.state === 'message' &&
+        app.opening.messageIndex >= 0 &&
+        app.opening.messageIndex <= 2;
+    if (!app.passwordVerifiedThisSession || !hasCompletedDateGate() || !onEligibleMessage) return;
+
+    app.opening?.resumeAtDateGate();
+}
+
+function showQuestionLock() {
+    // This flag is deliberately memory-only. Returning to the password
+    // page always requires a fresh successful password verification.
+    app.passwordVerifiedThisSession = false;
+    syncEarlySkipButton();
+
+    const question = app.questionLock;
+    if (!question) return;
+
+    question.cleanup();
+    question.started = false;
+    question.finished = false;
+    question.busy = false;
+    question.overlay?.classList.remove('is-visible', 'is-leaving');
+    if (question.overlay) question.overlay.hidden = true;
+    question.start();
+}
 
 
 /* ============================================================
@@ -117,7 +182,7 @@ function initApp() {
     // on its own cinematic screen.
     app.memoryLane.onFinal = () => {
         if (app.cleaned) return true;
-        showPostMemoryMessage();
+        showPostMemoryMessage({ animate: true });
         return true; // handled - prevent default reset
     };
 
@@ -132,9 +197,14 @@ function initApp() {
         const msg = document.querySelector('#post-memory-message');
         if (!msg || msg.hidden || !msg.classList.contains('is-visible')) return;
         e.preventDefault();
+        const handoffRun = app.postMemoryRun;
         // Hide message, then enter the Secret Game intro directly
-        msg.classList.remove('is-visible');
-        setTimeout(() => { if (msg) msg.hidden = true; }, 600);
+        msg.classList.remove('is-visible', 'is-entered', 'is-restored');
+        setTimeout(() => {
+            if (msg && handoffRun === app.postMemoryRun && app.backState === 'secret-game') {
+                msg.hidden = true;
+            }
+        }, 600);
         hideTimelineForGame();
     });
 
@@ -179,7 +249,13 @@ function initApp() {
             } else if (stage === 'none') {
                 setBackState('none');
             }
+            syncEarlySkipButton();
         };
+        app.opening.onDateGateComplete = () => {
+            markDateGateCompleted();
+            syncEarlySkipButton();
+        };
+        app.opening.onMessageChange = () => syncEarlySkipButton();
     } catch (error) {
         console.warn('Opening cinematic unavailable, continuing without it.', error);
     }
@@ -194,7 +270,7 @@ function initApp() {
         // start the Question Lock Screen (Phase 2).
         app.entryLock.onHandover = () => {
             if (app.questionLock) {
-                app.questionLock.start();
+                showQuestionLock();
             } else {
                 // Fallback if QuestionLock is unavailable
                 if (app.opening) {
@@ -206,6 +282,10 @@ function initApp() {
         console.warn('Entry Lock Intro unavailable, continuing without it.', error);
     }
 
+    const earlySkipBtn = document.querySelector('#opening-skip-btn');
+    earlySkipBtn?.addEventListener('click', skipCompletedEarlyFlow);
+    syncEarlySkipButton();
+
     // 7b. Question Lock Screen (Phase 2) - Question/Entry Lock Screen
     //    Appears after Entry Lock Intro completes. A cinematic question
     //    screen with text input validation and cinematic unlock.
@@ -216,6 +296,7 @@ function initApp() {
         // The question lock reports when it's finished so we can
         // start the Opening cinematic.
         app.questionLock.onHandover = () => {
+            app.passwordVerifiedThisSession = true;
             if (app.opening) {
                 app.opening.start();
             }
@@ -285,8 +366,11 @@ function initApp() {
             startReveal();
         };
 
+        const savedPostMemoryStage = loadPostMemoryState();
         const savedScene = loadExperienceState();
-        if (savedScene) {
+        if (savedPostMemoryStage) {
+            restorePostMemoryExperience(savedPostMemoryStage);
+        } else if (savedScene) {
             restoreExperience(savedScene);
         } else {
             // Start the Entry Lock Intro first, which will then
@@ -401,13 +485,22 @@ function openMemoryScene() {
     app.memoryLane?.enter();
 }
 
-function showPostMemoryMessage() {
+function showPostMemoryMessage({ animate = true } = {}) {
     if (app.cleaned) return;
-    // Hide Memory Lane completely
+    const handoffRun = ++app.postMemoryRun;
+    // This is the first stable checkpoint after Memory Lane. It is
+    // intentionally recorded here (and nowhere before this handoff).
+    savePostMemoryState('post-memory-final');
+
+    // Let the settled Memory Lane scene softly leave before it is removed.
     const scene2 = document.querySelector('#scene-2');
     if (scene2) {
-        scene2.hidden = true;
-        scene2.classList.remove('is-visible', 'is-active');
+        scene2.classList.add('is-leaving');
+        window.setTimeout(() => {
+            if (handoffRun !== app.postMemoryRun) return;
+            scene2.hidden = true;
+            scene2.classList.remove('is-visible', 'is-active', 'is-leaving');
+        }, animate ? 300 : 0);
     }
     for (let i = 3; i <= 8; i++) {
         const s = document.querySelector(`#scene-${i}`);
@@ -423,11 +516,13 @@ function showPostMemoryMessage() {
     // Show the separate Every-movement message screen
     const msg = document.querySelector('#post-memory-message');
     if (msg) {
+        msg.classList.remove('is-visible', 'is-entered', 'is-restored');
         msg.hidden = false;
         void msg.offsetWidth;
         msg.classList.add('is-visible');
+        msg.classList.add(animate ? 'is-entered' : 'is-restored');
     }
-    // Cinematic message: no global Back (keep Preview on final memory, not here)
+    // This Back returns to the clean Our Memories start, not a chapter.
     setBackState('post-memory-message');
     window.scrollTo(0, 0);
 }
@@ -545,6 +640,7 @@ function afterSecretGameReward() {
                        reveal letter; never rendered on screen, also
                        a legacy snapshot value
      'countdown'       reveal letter + 5..4..3..2..1 countdown
+     'birthday-letter' long Happy Birthday letter - Back -> date gate
      'birthday-reveal' final: title + live age + continue
      'memory-landing'  Our Memories landing (Preview only, no global Back)
      'memory'          inside a memory chapter (Preview/Next only)
@@ -554,7 +650,8 @@ function afterSecretGameReward() {
      'reward'          Game Reward (envelope) - Back -> secret-game
      'post-reward'     Reward handoff / Special Message - Back -> timeline
 
-    Visibility rule: the Back button is VISIBLE on 'birthday-reveal'
+    Visibility rule: the Back button is VISIBLE on 'love-letter',
+    'birthday-letter', and 'birthday-reveal'
     (Back -> open letter), 'memory-landing' (Our Memory → Back to birthday-reveal),
     'timeline' (Back -> post-memory), 'secret-game' (Back -> timeline),
     'reward' and 'post-reward'.
@@ -567,6 +664,8 @@ function afterSecretGameReward() {
 /** Only these states ever make the Back button visible */
 function backButtonVisible(state) {
     return (
+        state === 'love-letter' ||
+        state === 'birthday-letter' ||
         state === 'birthday-reveal' ||
         state === 'memory-landing' ||
         state === 'post-memory-message' ||
@@ -582,6 +681,7 @@ function setBackState(state) {
     app.backState = state;
     app.backBtn?.setVisible(backButtonVisible(state));
     saveExperienceState();
+    savePostMemoryCheckpointForState(state);
 }
 
 /** Follow the reveal's own stage reporting (see birthday-reveal.js).
@@ -597,11 +697,9 @@ function updateBackState(stage, run) {
     if (app.cleaned || run !== app.revealRun) return;
 
     if (stage === 'letter') {
-        // The reveal letter (long message) is on screen: keep the
-        // Back button hidden (same state as the countdown); it only
-        // appears on the final stage.
+        // The long Happy Birthday letter returns to the date gate.
         app.revealStage = 'letter';
-        setBackState('countdown');
+        setBackState('birthday-letter');
     } else if (stage === 'countdown') {
         if (app.revealStage !== 'letter') return;
         app.revealStage = 'countdown';
@@ -615,6 +713,44 @@ function updateBackState(stage, run) {
 /** One press of the global Back button - restore the previous scene */
 async function handleBack() {
     if (app.cleaned) return;
+
+    if (app.backState === 'love-letter') {
+        // Date gate -> the true first main page (#entry-lock). This only
+        // resets the transient opening/entry scenes; later experience
+        // progress remains untouched.
+        app.opening?.reset();
+        const host = document.querySelector('#loading-screen');
+        if (host) {
+            host.hidden = false;
+            host.classList.add('is-lettering');
+            host.classList.remove('is-leaving');
+        }
+        const entry = app.entryLock;
+        if (entry) {
+            entry.cleanup();
+            entry.started = false;
+            entry.finished = false;
+            entry.busy = false;
+            entry.currentScene = 0;
+            entry.overlay?.classList.remove('is-visible', 'is-leaving');
+            if (entry.overlay) entry.overlay.hidden = true;
+        }
+        setBackState('none');
+        try { window.localStorage.removeItem(STATE_KEY); } catch {}
+        entry?.start();
+        return;
+    }
+
+    if (app.backState === 'birthday-letter') {
+        // Long Happy Birthday letter -> clean, reusable date gate.
+        app.revealRun += 1;
+        app.revealStarted = false;
+        app.revealStage = 'none';
+        await app.birthdayReveal?.cancel();
+        if (app.cleaned) return;
+        app.opening?.restoreLetterGate();
+        return;
+    }
 
     if (app.backState === 'birthday-reveal') {
         // Back -> the OPEN LETTER MESSAGE page: the Birthday Reveal's
@@ -704,16 +840,19 @@ async function handleBack() {
     }
 
     if (app.backState === 'post-memory-message') {
-        // Back from post-memory cinematic page -> Memory Final
+        // Back from the post-memory cinematic page -> clean Our Memories start.
+        // This only changes navigation position; the post-memory checkpoint stays.
         const msg = document.querySelector('#post-memory-message');
-        if (msg) { msg.hidden = true; msg.classList.remove('is-visible'); }
+        app.postMemoryRun += 1;
+        if (msg) { msg.hidden = true; msg.classList.remove('is-visible', 'is-entered', 'is-restored'); }
         const scene2 = document.querySelector('#scene-2');
         if (scene2) {
             scene2.hidden = false;
             scene2.classList.add('is-visible', 'is-active');
         }
-        app.memoryLane?.onState?.('final');
-        setBackState('post-memory');
+        app.memoryOpened = true;
+        app.memoryLane?.enter();
+        setBackState('memory-landing');
         return;
     }
 
@@ -742,7 +881,11 @@ async function handleBack() {
     }
 
     if (app.backState === 'secret-game') {
-        // Back from inside the game -> return to the "After all these
+        // In-game Back is level navigation, not a game reset. Only
+        // Level 1 falls through to the existing timeline destination.
+        if (app.secretGame?.back()) return;
+
+        // Back from Game 1 -> return to the "After all these
         // memories..." page (the step that now leads into the game).
         try { app.secretGame?.destroy(); } catch {}
         app.secretGame = new SecretGame().init();
@@ -787,18 +930,11 @@ async function handleBack() {
 
 const STATE_KEY = 'hbm.experienceState';
 const STATE_VERSION = 1;
-
-/** Scenes that can be restored after a refresh. 'none' (loading /
-     opening story) intentionally restarts fresh, and 'post-memory'
-     (end-of-lane celebration / future sections) restores into the
-     lane intro instead - the snapshot keeps the last restorable
-     state, exactly like a mid-chapter refresh.
-     Timeline and post-reward are also restorable so a refresh
-     inside the game flow never loses the place. */
 const RESTORABLE_SCENES = new Set([
     'love-letter',
     'love-message',
     'countdown',
+    'birthday-letter',
     'birthday-reveal',
     'memory-landing',
     'memory',
@@ -807,8 +943,6 @@ const RESTORABLE_SCENES = new Set([
     'post-reward',
 ]);
 
-/** Persist the current scene. Called from setBackState() on every
-    transition, so the snapshot is always the latest logical scene. */
 function saveExperienceState() {
     if (!RESTORABLE_SCENES.has(app.backState)) return;
     try {
@@ -822,7 +956,6 @@ function saveExperienceState() {
     }
 }
 
-/** Read + validate the saved scene; null means "start fresh". */
 function loadExperienceState() {
     try {
         const raw = window.localStorage.getItem(STATE_KEY);
@@ -837,23 +970,87 @@ function loadExperienceState() {
     }
 }
 
+const POST_MEMORY_STATE_KEY = 'hbm.postMemoryProgress';
+const POST_MEMORY_STATE_VERSION = 1;
+
+/** Scenes that can be restored after a refresh. 'none' (loading /
+     opening story) intentionally restarts fresh, and 'post-memory'
+     (end-of-lane celebration / future sections) restores into the
+     lane intro instead - the snapshot keeps the last restorable
+     state, exactly like a mid-chapter refresh.
+     Timeline and post-reward are also restorable so a refresh
+     inside the game flow never loses the place. */
+const POST_MEMORY_CHECKPOINTS = new Set([
+    'post-memory-final',
+    'timeline',
+    'secret-game',
+    'post-reward',
+]);
+
+/** Persist only stable checkpoints reached after the Memory Lane handoff. */
+function savePostMemoryState(stage) {
+    if (!POST_MEMORY_CHECKPOINTS.has(stage)) return;
+    try {
+        window.localStorage.setItem(POST_MEMORY_STATE_KEY, JSON.stringify({
+            version: POST_MEMORY_STATE_VERSION,
+            enteredPostMemory: true,
+            currentStage: stage,
+            timestamp: Date.now(),
+        }));
+    } catch {
+        /* Storage unavailable (privacy mode) - best effort */
+    }
+}
+
+/** Read + validate the post-memory checkpoint; null preserves original startup. */
+function loadPostMemoryState() {
+    try {
+        const raw = window.localStorage.getItem(POST_MEMORY_STATE_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (!data || data.version !== POST_MEMORY_STATE_VERSION) return null;
+        if (data.enteredPostMemory !== true) return null;
+        if (!Number.isFinite(data.timestamp)) return null;
+        if (!POST_MEMORY_CHECKPOINTS.has(data.currentStage)) return null;
+        return data.currentStage;
+    } catch {
+        return null;
+    }
+}
+
 /** Bring the user back to the scene they were in before the
     refresh, using only existing scene functions. Runs INSTEAD of
     the opening on that visit; the next full visit starts fresh. */
-function restoreExperience(scene) {
+function restorePostMemoryExperience(stage) {
     // The tap-to-begin fallback must never interrupt a restored
     // scene - a refresh is not a first visit.
     const tap = document.querySelector('#tap-to-begin');
     if (tap) tap.hidden = true;
 
+    // Everything in this branch is post-boundary, so the loading scene
+    // must never replay over the restored stable screen.
+    app.loading?.exitToApp(true);
+
+    if (stage === 'post-memory-final') {
+        showPostMemoryMessage({ animate: false });
+    } else if (stage === 'timeline') {
+        showTimelineScene();
+    } else if (stage === 'secret-game') {
+        hideTimelineForGame();
+    } else if (stage === 'post-reward') {
+        afterSecretGameReward();
+    }
+}
+
+/** Existing pre-boundary restore flow. A valid post-memory checkpoint is
+    always checked first, so this never displaces the new boundary state. */
+function restoreExperience(scene) {
+    const tap = document.querySelector('#tap-to-begin');
+    if (tap) tap.hidden = true;
+
     if (scene === 'love-letter') {
-        // The letter-gate re-shows itself (restoreLetterGate also
-        // un-hides its host loading screen and dims its content);
-        // stop the progress simulation, keep the gate interactive.
         if (app.opening) {
             app.loading?.complete();
-            // complete() re-reveals the tap button - hide it again
-            // (a refresh is not a first visit).
             if (tap) tap.hidden = true;
             app.opening.restoreLetterGate();
         } else {
@@ -862,49 +1059,39 @@ function restoreExperience(scene) {
         return;
     }
 
-    // Everything past the gate lives under #app: the loading screen
-    // must never replay its intro over the restored scene.
     app.loading?.exitToApp(true);
 
-    if (scene === 'countdown' || scene === 'love-message') {
-        // Never resume a half-finished old timer sequence: restart
-        // the reveal from its Love Letter entry point. 'love-message'
-        // is a legacy/transitional snapshot value: replaying the
-        // reveal lands on the long-letter page, where the Back
-        // button is hidden (same state as the countdown). It stays
-        // hidden through the countdown and appears on the final.
+    if (scene === 'countdown' || scene === 'love-message' || scene === 'birthday-letter') {
         startReveal();
     } else if (scene === 'birthday-reveal') {
-        // A stable, readable final stage (title + live age +
-        // continue). No old timer sequence is restarted.
         app.revealStarted = true;
         const run = (app.revealRun += 1);
         Promise.resolve(app.birthdayReveal?.showFinal()).then(() => {
-            // Natural completion hands over to Memory Lane - unless
-            // Back was pressed (the run was invalidated).
             if (app.cleaned || run !== app.revealRun) return;
             openMemoryScene();
         });
     } else if (scene === 'memory' || scene === 'memory-landing') {
-        // Memory Lane restores to its landing intro; its own
-        // Continue/Next controls work normally (progress lives
-        // separately). Refreshing inside a chapter or on the end
-        // block lands here too - the snapshot only ever stores
-        // logical scenes, and the lane always re-enters its intro.
         openMemoryScene();
     } else if (scene === 'timeline') {
-        // The "Har pal, ek kahani" / Our Timeline step is removed from
-        // the flow - restore to the "After all these memories..." page,
-        // whose Continue now leads into the game.
         openMemoryScene();
         setTimeout(() => showPostMemoryMessage(), 320);
     } else if (scene === 'secret-game' || scene === 'post-reward') {
-        // Inside the game or post-reward: restore to the
-        // "After all these memories..." page (the game itself restarts
-        // from its intro via Continue, but the flow is preserved).
         openMemoryScene();
         setTimeout(() => showPostMemoryMessage(), 320);
     }
+}
+
+/** Keep navigation position separate from completion: moving Back to
+    Our Memories never overwrites a previously earned post-memory stage. */
+function savePostMemoryCheckpointForState(state) {
+    const stageByState = {
+        'post-memory-message': 'post-memory-final',
+        timeline: 'timeline',
+        'secret-game': 'secret-game',
+        'post-reward': 'post-reward',
+    };
+    const stage = stageByState[state];
+    if (stage) savePostMemoryState(stage);
 }
 
 
@@ -1167,6 +1354,7 @@ async function restartExperience() {
     //     also starts fresh.
     try {
         window.localStorage.removeItem(STATE_KEY);
+        window.localStorage.removeItem(POST_MEMORY_STATE_KEY);
     } catch { /* ignore */ }
 
     // 11. Hide the #app container at the beginning (it will be shown after loading/opening handoff).

@@ -58,6 +58,7 @@ const PETALS = 10;     // coral + jasmine petals drifting down
 
 const WORD_STEP = 95;  // ms between words in the emotional passage
 const WORD_ANIM = 700; // ms each word takes to settle in
+const AUTO_ADVANCE_MS = 10000;
 
 
 /* ============================================================
@@ -131,10 +132,14 @@ export class OpeningCinematic {
         this.selectedAnswer = null; // the picked answer (correct one wins)
         this.dodge = 0;             // CTA dodge direction counter
         this.timers = [];
+        this.autoAdvanceTimer = null;
+        this._letterRun = 0;
 
         // Wired by main.js: called when the intro is complete so
         // the loading screen can hand over to the hero scene.
         this.onHandover = null;
+        this.onDateGateComplete = null;
+        this.onMessageChange = null;
 
         // Stage hook for main.js (global Back button state machine):
         // called with 'love-letter' (the letter-gate is on screen)
@@ -160,7 +165,7 @@ export class OpeningCinematic {
         this.messageEl = $('#opening-message');
         this.letterScene = $('#letter-scene');
         this.letterCard = $('#letter-card');
-        this.letterPaper = $('#letter-paper');
+        this.letterPaper = $('.letter-paper');
         this.letterInvite = $('#letter-invite');
         this.letterMessage = $('#letter-message');
         this.questionEl = $('#letter-question');
@@ -246,6 +251,8 @@ export class OpeningCinematic {
     advance() {
         if (this.busy || this.finished || !this.started) return;
 
+        this.clearAutoAdvance();
+
         if (this.state === 'idle') {
             // First touch: begin the existing music + background
             // effects inside this user gesture, exactly once.
@@ -283,6 +290,7 @@ export class OpeningCinematic {
         this.messageIndex = index;
         this.state = 'message';
         this.busy = true;
+        this.onMessageChange?.(index);
 
         const line = document.createElement('p');
         line.className = 'opening-message-text ' + msg.cls;
@@ -303,6 +311,7 @@ export class OpeningCinematic {
 
         this.settle(line, this.reduced ? 0 : DURATIONS.messageIn, () => {
             this.busy = false;
+            this.scheduleAutoAdvance();
         });
     }
 
@@ -320,6 +329,7 @@ export class OpeningCinematic {
         this.messageIndex = index;
         this.state = 'message';
         this.busy = true;
+        this.onMessageChange?.(index);
 
         const line = document.createElement('p');
         line.className = 'opening-message-text opening-passage';
@@ -356,6 +366,7 @@ export class OpeningCinematic {
         // itself). Reduced motion: everything appears instantly.
         this.settle(lastWord, this.reduced ? 0 : wordCount * WORD_STEP + WORD_ANIM, () => {
             this.busy = false;
+            this.scheduleAutoAdvance();
         });
     }
 
@@ -365,6 +376,8 @@ export class OpeningCinematic {
         if (!line) return;
 
         this.busy = true;
+        this.onMessageChange?.(-1);
+        this.clearAutoAdvance();
         line.classList.remove('is-in');
         line.classList.add('is-out');
         this.messageEl?.setAttribute('aria-hidden', 'true');
@@ -401,6 +414,7 @@ export class OpeningCinematic {
         }
 
         this.state = 'letter';
+        this.clearAutoAdvance();
         this.letterOpened = false;
         this.letterUnlocked = false;
         this.letterReady = false;
@@ -444,15 +458,29 @@ export class OpeningCinematic {
         if (this.state !== 'letter' || this.letterOpened || this.busy || !this.letterUnlocked) return;
         this.letterOpened = true;
         this.busy = true;
+        // The Back control belongs to the date-question gate only.
+        // Once KHOLO is accepted, the original letter-opening scene
+        // owns the screen without global navigation controls.
+        this._fireStage('none');
+        const run = this._letterRun;
 
         this.letterCard?.classList.add('is-opening');
         this.letterScene?.classList.add('is-open');
 
-        this.settle(this.letterPaper, this.reduced ? 0 : DURATIONS.letterOpen, () => {
+        // Wait for the actual paper animation before entering the
+        // message stage. The markup uses .letter-paper, so this must
+        // never be allowed to fall through as a missing transition.
+        this.settle(this.letterPaper || this.letterCard, this.reduced ? 0 : DURATIONS.letterOpen, () => {
+            if (run !== this._letterRun || !this.letterOpened || this.state !== 'letter') return;
+            // The closed gate no longer participates in the message
+            // composition, so the letter starts its opening centered.
+            this.letterScene?.classList.add('is-message');
             this.letterMessage?.classList.add('is-in');
             this.settle(this.letterMessage, this.reduced ? 0 : DURATIONS.letterMessageIn, () => {
+                if (run !== this._letterRun || !this.letterOpened || this.state !== 'letter') return;
                 this.busy = false;
                 this.overlay?.focus({ preventScroll: true });
+                this.onDateGateComplete?.();
             });
         });
     }
@@ -564,6 +592,8 @@ export class OpeningCinematic {
 
     /** Every letter-scene visit starts with a clean slate */
     resetLetterUi() {
+        this._letterRun += 1;
+        this.letterScene?.classList.remove('is-message');
         if (this.answersEl) {
             this.answersEl.querySelectorAll('.letter-answer').forEach((btn) => {
                 btn.classList.remove('is-selected', 'is-correct', 'is-wrong');
@@ -577,6 +607,36 @@ export class OpeningCinematic {
             this.cta.tabIndex = -1;
         }
         this.dodge = 0;
+    }
+
+    scheduleAutoAdvance() {
+        this.clearAutoAdvance();
+        if (this.state !== 'message' || this.busy || this.finished || !this.started) return;
+        this.autoAdvanceTimer = setTimeout(() => {
+            this.autoAdvanceTimer = null;
+            if (this.state === 'message' && !this.busy && !this.finished && this.started) {
+                this.advance();
+            }
+        }, AUTO_ADVANCE_MS);
+    }
+
+    clearAutoAdvance() {
+        if (this.autoAdvanceTimer !== null) {
+            clearTimeout(this.autoAdvanceTimer);
+            this.autoAdvanceTimer = null;
+        }
+    }
+
+    /** Fast-forward only the early messages to the existing date gate. */
+    resumeAtDateGate() {
+        if (!this.overlay || !this.letterScene) return;
+
+        this.clearTimers();
+        this.busy = false;
+        this.messageIndex = -1;
+        this.messageEl?.replaceChildren();
+        this.messageEl?.setAttribute('aria-hidden', 'true');
+        this.showLetter();
     }
 
     /* ---- Restore (global Back button) ---- */
@@ -663,6 +723,7 @@ export class OpeningCinematic {
         if (this.finished || !this.overlay) return;
         this.finished = true;
         this.state = 'exiting';
+        this.clearAutoAdvance();
 
         // The gate is leaving: the reveal takes over next and reports
         // its own stages from here on.
@@ -777,11 +838,16 @@ export class OpeningCinematic {
         return id;
     }
 
-    cleanup() {
+    clearTimers() {
+        this.clearAutoAdvance();
         for (const id of this.timers) {
             clearTimeout(id);
         }
         this.timers = [];
+    }
+
+    cleanup() {
+        this.clearTimers();
 
         // The intro is done - the loading screen may return to its
         // normal state (it is hidden by the loading manager anyway).

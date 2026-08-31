@@ -17,17 +17,22 @@
    no Next button and no second progression path.
 
    Data:    Reads entirely from js/secret-game-data.js
-            (TIMELINE_MOMENTS, FIND_OBJECTS, FEEL_QUESTIONS,
-             CONNECT_STARS, HEART_CONFIG, SECRET_REWARD, GAME_META).
+            (TIMELINE_MOMENTS, GAME2_MEMORY_DATA, MIND_READING_DATA,
+             CHEMISTRY_QUESTIONS, JACKPOT_CATEGORIES, HEART_CONFIG,
+             SECRET_REWARD, GAME_META).
    ============================================================ */
 
 import { sleep, prefersReducedMotion } from './utils.js';
 import {
     TIMELINE_MOMENTS,
-    FIND_OBJECTS,
-    FEEL_QUESTIONS,
-    CONNECT_STARS,
+    GAME2_MEMORY_DATA,
+    MIND_READING_DATA,
+    WHO_WOULD_DATA,
+    WHO_CHOICE_META,
+    CHEMISTRY_QUESTIONS,
+    JACKPOT_CATEGORIES,
     HEART_CONFIG,
+    PHOTO_MEMORY_PUZZLE,
     SECRET_REWARD,
     GAME_META,
 } from './secret-game-data.js';
@@ -43,18 +48,6 @@ function shuffle(arr) {
     }
     return a;
 }
-function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
-
-const ICON_MAP = {
-    photo: '🖼️',
-    letter: '✉️',
-    star: '⭐',
-    clock: '🕰️',
-    flower: '🌸',
-    heart: '💙',
-    shell: '🐚',
-    feather: '🪶',
-};
 
 /* ------------------------------------------------------------
    TEST validation feedback - romantic message pools.
@@ -78,6 +71,30 @@ const TEST_RETRY_MESSAGES = [
     'Phir se koshish karo... kuch yaadein dobara mehsoos karne ke liye hoti hain. 🌙',
 ];
 
+// Game 3 uses one paced cinematic sequence. Durations include the
+// ~400 ms entrance and exit so the visible reading hold is 2–3 seconds.
+const GAME3_TIMING = Object.freeze({
+    successFeedback: 1900,
+    retryFeedback: 1900,
+    cinematic: {
+        short: 2800,
+        normal: 3300,
+        emotional: 3700,
+    },
+    climaxBeforeContinue: 3900,
+});
+
+const L1_ARRIVAL_VECTORS = [
+    { x: '-54vw', y: '-6vh', rotate: '-3deg' },
+    { x: '54vw', y: '-8vh', rotate: '3deg' },
+    { x: '-34vw', y: '-24vh', rotate: '-2deg' },
+    { x: '42vw', y: '-22vh', rotate: '4deg' },
+    { x: '-60vw', y: '8vh', rotate: '-4deg' },
+    { x: '58vw', y: '7vh', rotate: '3deg' },
+    { x: '-23vw', y: '24vh', rotate: '-2deg' },
+    { x: '35vw', y: '22vh', rotate: '3deg' },
+];
+
 /** Pick a message from a pool without repeating the last one shown. */
 function pickMessage(pool, lastMessage) {
     if (!pool.length) return '';
@@ -90,18 +107,6 @@ function pickMessage(pool, lastMessage) {
     }
     return msg;
 }
-
-/* 8 preset positions for FIND objects (percent inside env) */
-const FIND_POSITIONS = [
-    { x: 18, y: 28 },
-    { x: 74, y: 22 },
-    { x: 42, y: 38 },
-    { x: 82, y: 48 },
-    { x: 14, y: 62 },
-    { x: 58, y: 72 },
-    { x: 30, y: 78 },
-    { x: 88, y: 78 },
-];
 
 /* ============================================================
    Class: SecretGame
@@ -130,34 +135,71 @@ export class SecretGame {
         this.l1List = null;
         this.l1Feedback = null;
         this.l1CheckBtn = null;       // dedicated TEST button
-        this.l1Order = [];            // current order of moment ids
+        this.l1SkipBtn = null;        // temporary development-only control
+        this.l1Order = [];            // current visible order of photo ids
         this.l1Shuffled = [];
+        this.l1Drag = null;
+        this.l1EntranceToken = 0;
 
-        // Level 2 refs
-        this.l2Env = null;
-        this.l2Counter = null;
+        // Level 2 refs and isolated session state
+        this.l2Card = null;
+        this.l2StageEl = null;
+        this.l2ProgressEl = null;
         this.l2Feedback = null;
-        this.l2TestBtn = null;        // dedicated TEST button
-        this.l2Found = new Set();
-        this.l2RequiredCount = 0;
+        this.l2MainSlot = 0;
+        this.l2Stage = 'original';
+        this.l2Attempts = 0;
+        this.l2SelectedIndex = -1;
+        this.l2TotalWrongAnswers = 0;
+        this.l2Locked = false;
+        this.l2RoundToken = 0;
 
-        // Level 3 refs
+        // Game 3 refs and isolated two-part session state
+        this.l3Header = null;
+        this.l3Eyebrow = null;
+        this.l3Title = null;
+        this.l3Subtitle = null;
+        this.l3Progress = null;
+        this.l3Quiz = null;
         this.l3Card = null;
         this.l3QuestionEl = null;
         this.l3ChoicesEl = null;
         this.l3Feedback = null;
-        this.l3TestBtn = null;        // dedicated TEST button
-        this.l3Index = 0;
-        this.l3Pick = -1;             // selected choice index for the current question
+        this.l3TestBtn = null;
+        this.l3Cinematic = null;
+        this.l3CinematicLine = null;
+        this.l3ContinueBtn = null;
+        this.l3Phase = 'mind';
+        this.l3MindIndex = 0;
+        this.l3WhoIndex = 0;
+        this.l3Pick = -1;
+        this.l3Locked = false;
+        this.l3SequenceToken = 0;
+        this.l3LastPassMessage = null;
+        this.l3LastRetryMessage = null;
 
-        // Level 4 refs
-        this.l4Sky = null;
-        this.l4Svg = null;
-        this.l4Feedback = null;
-        this.l4TestBtn = null;        // dedicated TEST button
-        this.l4NextExpected = 1; // order
-        this.l4Connected = [];
-        this.l4Lines = [];
+        // Game 4 refs and isolated chemistry / jackpot state
+        this.l4Chemistry = null;
+        this.l4Jackpot = null;
+        this.l4Progress = null;
+        this.l4Card = null;
+        this.l4Question = null;
+        this.l4Choices = null;
+        this.l4TestBtn = null;
+        this.l4Reveal = null;
+        this.l4ChoiceReveal = null;
+        this.l4FinalReveal = null;
+        this.l4NextBtn = null;
+        this.l4JackpotGrid = null;
+        this.l4JackpotAction = null;
+        this.l4JackpotReveal = null;
+        this.l4ContinueBtn = null;
+        this.l4Phase = 'chemistry';
+        this.l4QuestionIndex = 0;
+        this.l4SelectedChoice = -1;
+        this.l4Results = {};
+        this.l4JackpotRunning = false;
+        this.l4SequenceToken = 0;
 
         // Level 5 refs
         this.l5Wrap = null;
@@ -171,6 +213,14 @@ export class SecretGame {
         this.l5PulseStart = 0;
         this.l5Raf = null;
         this.l5PulseTimer = null;
+
+        // Completion survives in-game Back/forward navigation for this
+        // session. It is intentionally reset only with the full game.
+        this.completedLevels = { level1: false, level2: false, level3: false, level4: false, level5: false };
+        this.backLocked = false;
+        this.l1Restored = false;
+        this.l4Restored = false;
+        this.l5Started = false;
 
         // Complete / Reward refs
         this.completeSymbols = null;
@@ -232,25 +282,45 @@ export class SecretGame {
         this.l1List = this.root.querySelector('#sg-l1-list');
         this.l1Feedback = this.root.querySelector('#sg-l1-feedback');
         this.l1CheckBtn = this.root.querySelector('#sg-l1-check');
+        this.l1SkipBtn = this.root.querySelector('#sg-l1-skip');
 
         // L2
-        this.l2Env = this.root.querySelector('#sg-l2-env');
-        this.l2Counter = this.root.querySelector('#sg-l2-counter');
-        this.l2Feedback = this.root.querySelector('#sg-l2-feedback');
-        this.l2TestBtn = this.root.querySelector('#sg-l2-action');
+        this.l2Card = this.root.querySelector('#sg-l2-card');
+        this.l2StageEl = this.root.querySelector('#sg-l2-stage');
+        this.l2ProgressEl = this.root.querySelector('#sg-l2-progress');
 
         // L3
+        this.l3Header = this.root.querySelector('#sg-l3-header');
+        this.l3Eyebrow = this.root.querySelector('#sg-l3-eyebrow');
+        this.l3Title = this.root.querySelector('#sg-l3-title');
+        this.l3Subtitle = this.root.querySelector('#sg-l3-subtitle');
+        this.l3Progress = this.root.querySelector('#sg-l3-progress');
+        this.l3Quiz = this.root.querySelector('#sg-l3-quiz');
         this.l3Card = this.root.querySelector('#sg-l3-card');
         this.l3QuestionEl = this.root.querySelector('#sg-l3-question');
         this.l3ChoicesEl = this.root.querySelector('#sg-l3-choices');
         this.l3Feedback = this.root.querySelector('#sg-l3-feedback');
         this.l3TestBtn = this.root.querySelector('#sg-l3-action');
+        this.l3Cinematic = this.root.querySelector('#sg-l3-cinematic');
+        this.l3CinematicLine = this.root.querySelector('#sg-l3-cinematic-line');
+        this.l3ContinueBtn = this.root.querySelector('#sg-l3-continue');
 
         // L4
-        this.l4Sky = this.root.querySelector('#sg-l4-sky');
-        this.l4Svg = this.root.querySelector('#sg-l4-svg');
-        this.l4Feedback = this.root.querySelector('#sg-l4-feedback');
-        this.l4TestBtn = this.root.querySelector('#sg-l4-action');
+        this.l4Chemistry = this.root.querySelector('#sg-l4-chemistry');
+        this.l4Jackpot = this.root.querySelector('#sg-l4-jackpot');
+        this.l4Progress = this.root.querySelector('#sg-l4-progress');
+        this.l4Card = this.root.querySelector('#sg-l4-chemistry-card');
+        this.l4Question = this.root.querySelector('#sg-l4-question');
+        this.l4Choices = this.root.querySelector('#sg-l4-choices');
+        this.l4TestBtn = this.root.querySelector('#sg-l4-test');
+        this.l4Reveal = this.root.querySelector('#sg-l4-chemistry-reveal');
+        this.l4ChoiceReveal = this.root.querySelector('#sg-l4-choice-reveal');
+        this.l4FinalReveal = this.root.querySelector('#sg-l4-final-reveal');
+        this.l4NextBtn = this.root.querySelector('#sg-l4-next');
+        this.l4JackpotGrid = this.root.querySelector('#sg-l4-jackpot-grid');
+        this.l4JackpotAction = this.root.querySelector('#sg-l4-jackpot-action');
+        this.l4JackpotReveal = this.root.querySelector('#sg-l4-jackpot-reveal');
+        this.l4ContinueBtn = this.root.querySelector('#sg-l4-continue');
 
         // L5
         this.l5Wrap = this.root.querySelector('#sg-l5-wrap');
@@ -307,9 +377,13 @@ export class SecretGame {
         // solve puzzle -> dedicated TEST button validates exactly once
         // -> PASS advances via _queueLevelTransition / FAIL stays.
         on(this.l1CheckBtn, 'click', () => this._validateLevel1());
-        on(this.l2TestBtn, 'click', () => this._validateLevel2());
+        on(this.l1SkipBtn, 'click', () => this._skipLevel1());
         on(this.l3TestBtn, 'click', () => this._confirmLevel3());
-        on(this.l4TestBtn, 'click', () => this._validateLevel4());
+        on(this.l3ContinueBtn, 'click', () => this._continueFromLevel3());
+        on(this.l4TestBtn, 'click', () => this._revealChemistry());
+        on(this.l4NextBtn, 'click', () => this._advanceChemistry());
+        on(this.l4JackpotAction, 'click', () => this._handleJackpotAction());
+        on(this.l4ContinueBtn, 'click', () => this._continueFromLevel4());
         on(this.l5TestBtn, 'click', () => this._validateLevel5());
 
         // L5 heart taps (the level's own interaction - never advances by itself)
@@ -320,9 +394,9 @@ export class SecretGame {
 
         // L2 objects are delegated via _renderLevel2 per object
 
-        on(this.l4Sky, 'click', (e) => {
-            // ignore clicks on stars themselves (they stopPropagation)
-            if (e.target.closest('.sg-star-btn')) return;
+        on(this.l4Choices, 'click', (e) => {
+            const choice = e.target.closest('.sg-game4-choice');
+            if (choice) this._selectChemistryChoice(Number(choice.dataset.choice));
         });
 
         // Complete -> reward
@@ -404,6 +478,7 @@ export class SecretGame {
 
     // Clean teardown (called on destroy / restart)
     destroy() {
+        this._cleanupL1Drag();
         this._clearAllTimers();
         for (const [el, evt, fn] of this.boundHandlers) {
             try { el.removeEventListener(evt, fn); } catch {}
@@ -430,6 +505,32 @@ export class SecretGame {
 
     /* Allow main.js to hook reward continuation */
     set onRewardContinue(fn) { this._onRewardContinue = fn; }
+
+    /**
+     * Navigate one game backwards without destroying this session.
+     * Returns false only when Level 1 should use main.js's existing
+     * scene-level Back destination.
+     */
+    back() {
+        if (!this.started || this.destroyed || this.backLocked) return true;
+        const state = this.state;
+        if (state === 'intro' || state === 'level1') return false;
+
+        this.backLocked = true;
+        this._clearAllTimers();
+        this.transitioning = false;
+        this.l3SequenceToken += 1;
+        this.root?.classList.remove('is-leaving');
+
+        if (state === 'level2') this._restoreCompletedLevel1();
+        else if (state === 'level3') this._restoreCompletedLevel2();
+        else if (state === 'level4') this._restoreCompletedLevel3();
+        else if (state === 'level5' || state === 'complete' || state === 'reward') this._restoreCompletedLevel4();
+        else { this.backLocked = false; return false; }
+
+        this.later(this.reduced ? 0 : 420, () => { this.backLocked = false; });
+        return true;
+    }
 
     /* --------------------------------------------------------
        Background stars
@@ -514,6 +615,10 @@ export class SecretGame {
     }
 
     _hideAllLevels() {
+        this._cleanupL1Drag();
+        this.l1EntranceToken += 1;
+        this.l3SequenceToken += 1;
+        this.root?.classList.remove('sg-game1-entering', 'sg-game1-entered');
         for (const key of Object.keys(this.levels)) {
             const el = this.levels[key];
             if (!el) continue;
@@ -529,6 +634,8 @@ export class SecretGame {
     _showLevel(key, progressNum) {
         this._hideAllLevels();
         this.transitioning = false;
+        if (this.completeEl) { this.completeEl.classList.remove('is-active'); this.completeEl.hidden = true; }
+        if (this.rewardEl) { this.rewardEl.classList.remove('is-active'); this.rewardEl.hidden = true; }
         const el = this.levels[key];
         if (!el) return;
         el.hidden = false;
@@ -538,6 +645,78 @@ export class SecretGame {
         this.state = key;
         // ensure shell scrolls to top for new level
         if (this.shell) this.shell.scrollTop = 0;
+    }
+
+    _setButtonLabel(button, label) {
+        const text = button?.querySelector('span');
+        if (text) text.textContent = label;
+    }
+
+    _restoreCompletedLevel1() {
+        this._showLevel('level1', 1);
+        this.l1Restored = true;
+        this.l1List?.querySelectorAll('.sg-memory-photo').forEach(card => {
+            card.classList.remove('is-wrong');
+            card.classList.add('is-correct');
+            card.style.pointerEvents = 'none';
+        });
+        if (this.l1Feedback) {
+            this.l1Feedback.textContent = 'Hamari yaadein bilkul sahi jagah par hain. ❤️';
+            this.l1Feedback.className = 'sg-feedback is-visible is-success';
+        }
+        this._setButtonLabel(this.l1CheckBtn, 'Aage Chalein →');
+        this._showTestBtn(this.l1CheckBtn);
+        if (this.l1SkipBtn) this.l1SkipBtn.hidden = true;
+    }
+
+    _restoreCompletedLevel2() {
+        this._showLevel('level2', 2);
+        ++this.l2RoundToken;
+        this.l2Locked = true;
+        if (this.l2ProgressEl) this.l2ProgressEl.textContent = 'Memory 3 / 3';
+        const wrap = this.l2StageEl?.querySelector('.sg-game2-complete');
+        if (!wrap || !this.l2Card) return;
+        this.l2Card.className = 'sg-game2-card is-complete';
+        wrap.querySelector('#sg-l2-resume')?.remove();
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.id = 'sg-l2-resume';
+        button.className = 'sg-btn is-in';
+        button.setAttribute('aria-label', 'Aage chalein');
+        button.textContent = 'Aage Chalein →';
+        button.addEventListener('click', () => {
+            if (this.transitioning || this.state !== 'level2') return;
+            button.disabled = true;
+            this._queueLevelTransition('level2', () => {
+                if (this.completedLevels.level3) this._restoreCompletedLevel3();
+                else this._enterLevel3();
+            }, this.reduced ? 0 : 420);
+        }, { once: true });
+        wrap.appendChild(button);
+    }
+
+    _restoreCompletedLevel3() {
+        this._showLevel('level3', 3);
+        this.l3Phase = 'final';
+        this.l3Locked = true;
+        if (this.l3Quiz) this.l3Quiz.hidden = true;
+        if (this.l3Cinematic) this.l3Cinematic.hidden = false;
+        this.l3Header?.classList.add('is-cinematic');
+        if (this.l3CinematicLine) {
+            this.l3CinematicLine.classList.remove('is-in');
+            this.l3CinematicLine.classList.add('is-climax');
+            this.l3CinematicLine.textContent = 'TUM HUMEIN JAANTI HO. ❤️';
+        }
+        this._showTestBtn(this.l3ContinueBtn);
+    }
+
+    _restoreCompletedLevel4() {
+        this._showLevel('level4', 4);
+        this.l4Restored = true;
+        this.l4Phase = 'complete';
+        this._showJackpotStage();
+        this._renderJackpotCards();
+        this._showJackpotFinal(true);
     }
 
     /* --------------------------------------------------------
@@ -634,165 +813,131 @@ export class SecretGame {
 
     _renderLevel1() {
         if (!this.l1List) return;
+        this.l1Restored = false;
+        this._cleanupL1Drag();
+        const level = this.levels.level1;
+        level?.querySelector('.sg-level-eyebrow')?.replaceChildren('01 / 05 — OUR MEMORIES');
+        level?.querySelector('.sg-level-title')?.replaceChildren('Put Our Memories In Order ❤️');
+        level?.querySelector('.sg-level-subtitle')?.replaceChildren('Every photo holds a memory. Arrange them in the order our story unfolded.');
         this.l1List.innerHTML = '';
         this.l1Feedback.textContent = '';
         this.l1Feedback.className = 'sg-feedback';
-        // Dedicated TEST button: visible and available while solving
+        this._setButtonLabel(this.l1CheckBtn, 'TEST');
         this._showTestBtn(this.l1CheckBtn);
+        if (this.l1SkipBtn) { this.l1SkipBtn.hidden = false; this.l1SkipBtn.disabled = false; }
 
-        // Shuffle the timeline moments
-        this.l1Shuffled = shuffle(TIMELINE_MOMENTS);
-        this.l1Order = this.l1Shuffled.map(m => m.id);
+        // The source data remains untouched. A solved random shuffle is retried.
+        const correctIds = this._l1CorrectIds();
+        do {
+            this.l1Shuffled = shuffle(PHOTO_MEMORY_PUZZLE);
+            this.l1Order = this.l1Shuffled.map(memory => memory.id);
+        } while (this.l1Order.every((id, index) => id === correctIds[index]));
 
-        this.l1Shuffled.forEach((m, idx) => {
+        const fragment = document.createDocumentFragment();
+        this.l1Shuffled.forEach((memory, idx) => {
             const card = document.createElement('div');
-            card.className = 'sg-card';
-            card.setAttribute('data-id', m.id);
-            card.setAttribute('draggable', 'true');
+            card.className = 'sg-memory-photo';
+            card.setAttribute('data-id', memory.id);
             card.setAttribute('role', 'listitem');
-            card.setAttribute('aria-label', m.title);
+            card.setAttribute('aria-label', `Memory photo ${idx + 1}. Drag to reorder.`);
+            const arrival = L1_ARRIVAL_VECTORS[idx % L1_ARRIVAL_VECTORS.length];
+            card.style.setProperty('--memory-entry-x', arrival.x);
+            card.style.setProperty('--memory-entry-y', arrival.y);
+            card.style.setProperty('--memory-entry-rotate', arrival.rotate);
+            card.style.setProperty('--memory-entry-delay', `${760 + idx * 70}ms`);
             card.innerHTML = `
-                <span class="sg-card-num">${idx + 1}</span>
-                <div class="sg-card-body">
-                    <div class="sg-card-title">${m.title}</div>
-                    <div class="sg-card-sub">${m.subtitle}</div>
-                    <div class="sg-card-hint">${m.detail}</div>
-                </div>
-                <div class="sg-card-actions" aria-hidden="true">
-                    <button type="button" class="sg-card-move sg-card-up" aria-label="Move up">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
-                    </button>
-                    <button type="button" class="sg-card-move sg-card-down" aria-label="Move down">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-                    </button>
-                </div>
+                <img src="${memory.src}" alt="" draggable="false" decoding="async">
             `;
-            // up/down handlers (no duplicate - per card, cleaned on re-render)
-            const upBtn = card.querySelector('.sg-card-up');
-            const downBtn = card.querySelector('.sg-card-down');
-            upBtn?.addEventListener('click', (e) => { e.stopPropagation(); this._moveCard(m.id, -1); });
-            downBtn?.addEventListener('click', (e) => { e.stopPropagation(); this._moveCard(m.id, 1); });
-
-            // drag handlers
-            card.addEventListener('pointerdown', (e) => this._l1PointerDown(e, m.id));
-            // keyboard: allow selecting via Enter? keep simple
-            this.l1List.appendChild(card);
+            card.addEventListener('pointerdown', (event) => this._l1PointerDown(event, memory.id));
+            fragment.appendChild(card);
         });
-        this._refreshL1Numbers();
-        this._refreshL1MoveButtons();
+        this.l1List.appendChild(fragment);
+        this.l1SkipBtn?.classList.add('is-in');
+        this._startLevel1Entrance();
     }
 
-    _refreshL1Numbers() {
-        if (!this.l1List) return;
-        const cards = [...this.l1List.querySelectorAll('.sg-card')];
-        cards.forEach((c, i) => {
-            const num = c.querySelector('.sg-card-num');
-            if (num) num.textContent = String(i + 1);
+    _startLevel1Entrance() {
+        const token = ++this.l1EntranceToken;
+        this.root?.classList.remove('sg-game1-entering', 'sg-game1-entered');
+        void this.root?.offsetWidth;
+        this.root?.classList.add('sg-game1-entering');
+        // CSS handles the complete stagger; this single timer only restores input.
+        this.later(this.reduced ? 0 : 3400, () => {
+            if (token !== this.l1EntranceToken || this.state !== 'level1') return;
+            this.root?.classList.remove('sg-game1-entering');
+            this.root?.classList.add('sg-game1-entered');
         });
-    }
-    _refreshL1MoveButtons() {
-        if (!this.l1List) return;
-        const cards = [...this.l1List.querySelectorAll('.sg-card')];
-        cards.forEach((c, i) => {
-            const up = c.querySelector('.sg-card-up');
-            const down = c.querySelector('.sg-card-down');
-            if (up) up.disabled = i === 0;
-            if (down) down.disabled = i === cards.length - 1;
-        });
-    }
-    _moveCard(id, dir) {
-        const idx = this.l1Order.indexOf(id);
-        if (idx === -1) return;
-        const next = idx + dir;
-        if (next < 0 || next >= this.l1Order.length) return;
-        // swap order
-        [this.l1Order[idx], this.l1Order[next]] = [this.l1Order[next], this.l1Order[idx]];
-        // swap DOM nodes
-        const cards = [...this.l1List.querySelectorAll('.sg-card')];
-        const card = cards[idx];
-        const target = cards[next];
-        if (!card || !target) return;
-        if (dir === -1) {
-            this.l1List.insertBefore(card, target);
-        } else {
-            this.l1List.insertBefore(target, card);
-        }
-        this._refreshL1Numbers();
-        this._refreshL1MoveButtons();
-        // subtle feedback
-        card.animate?.(
-            [{ transform: 'scale(0.98)' }, { transform: 'scale(1)' }],
-            { duration: 180, easing: 'ease-out' }
-        );
     }
 
-    // --- drag via PointerEvents ---
+    _l1CorrectIds() {
+        return [...PHOTO_MEMORY_PUZZLE].sort((a, b) => a.order - b.order).map(memory => memory.id);
+    }
+
+    _clearL1IncorrectState() {
+        this.l1List?.querySelectorAll('.sg-memory-photo.is-wrong, .sg-memory-photo.is-correct')
+            .forEach(card => card.classList.remove('is-wrong', 'is-correct'));
+    }
+
+    // Pointer Events keep mouse, touch, and pen in one reorder system.
     _l1PointerDown(e, id) {
-        // Only primary button / touch, ignore if clicking move buttons
-        if (e.target.closest('.sg-card-move')) return;
         if (e.button !== undefined && e.button !== 0) return;
         const card = e.currentTarget;
         if (!card) return;
-        // Prevent text selection / scroll
-        e.preventDefault();
-        const startY = e.clientY;
-        let dragging = false;
-        let startIdx = this.l1Order.indexOf(id);
+        this._cleanupL1Drag();
+        const drag = { card, id, pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, index: this.l1Order.indexOf(id), active: false, lastTargetId: null, frameId: null, x: e.clientX, y: e.clientY };
+        this.l1Drag = drag;
         const onMove = (ev) => {
-            const dy = ev.clientY - startY;
-            if (!dragging && Math.abs(dy) < 8) return;
-            if (!dragging) {
-                dragging = true;
+            if (ev.pointerId !== drag.pointerId) return;
+            if (!drag.active && Math.hypot(ev.clientX - drag.startX, ev.clientY - drag.startY) < 7) return;
+            if (!drag.active) {
+                drag.active = true;
+                this._clearL1IncorrectState();
                 card.classList.add('is-dragging');
+                card.style.pointerEvents = 'none';
                 card.setPointerCapture?.(ev.pointerId);
             }
-            // find card under pointer
-            const cards = [...this.l1List.querySelectorAll('.sg-card')];
-            const y = ev.clientY;
-            let overIdx = -1;
-            for (let i = 0; i < cards.length; i++) {
-                const rect = cards[i].getBoundingClientRect();
-                const mid = rect.top + rect.height / 2;
-                if (y < mid) { overIdx = i; break; }
-            }
-            if (overIdx === -1) overIdx = cards.length - 1;
-            // clamp around current
-            if (overIdx !== startIdx && overIdx !== -1) {
-                // reorder array
-                this.l1Order.splice(startIdx, 1);
-                // adjust overIdx if removal shifted
-                if (overIdx > startIdx) overIdx -= 1;
-                // insert: if pointer is below mid, insert after
-                const targetRect = cards[overIdx]?.getBoundingClientRect();
-                if (targetRect && y > targetRect.top + targetRect.height / 2 && overIdx < cards.length - 1) {
-                    overIdx += 1;
-                }
-                // final clamp
-                overIdx = clamp(overIdx, 0, this.l1Order.length);
-                this.l1Order.splice(overIdx, 0, id);
-                // reorder DOM to match array
-                const idToCard = new Map(cards.map(c => [c.getAttribute('data-id'), c]));
-                // also include dragging card itself (already in map)
-                // Re-append in order
-                this.l1Order.forEach(cid => {
-                    const c = idToCard.get(cid);
-                    if (c) this.l1List.appendChild(c);
+            ev.preventDefault();
+            drag.x = ev.clientX;
+            drag.y = ev.clientY;
+            if (drag.frameId === null) {
+                drag.frameId = requestAnimationFrame(() => {
+                    drag.frameId = null;
+                    this._reorderL1AtPoint(drag);
                 });
-                startIdx = overIdx;
-                this._refreshL1Numbers();
-                this._refreshL1MoveButtons();
             }
         };
-        const onUp = (ev) => {
-            card.classList.remove('is-dragging');
-            window.removeEventListener('pointermove', onMove);
-            window.removeEventListener('pointerup', onUp);
-            window.removeEventListener('pointercancel', onUp);
-            try { card.releasePointerCapture?.(ev.pointerId); } catch {}
-        };
-        window.addEventListener('pointermove', onMove);
+        const onUp = (ev) => { if (ev.pointerId === drag.pointerId) this._cleanupL1Drag(); };
+        drag.onMove = onMove;
+        drag.onUp = onUp;
+        window.addEventListener('pointermove', onMove, { passive: false });
         window.addEventListener('pointerup', onUp);
         window.addEventListener('pointercancel', onUp);
+    }
+
+    _reorderL1AtPoint(drag) {
+        const target = document.elementFromPoint(drag.x, drag.y)?.closest('.sg-memory-photo');
+        if (!target || target.dataset.id === drag.id || target.dataset.id === drag.lastTargetId) return;
+        const targetIndex = this.l1Order.indexOf(target.dataset.id);
+        if (targetIndex === -1 || targetIndex === drag.index) return;
+        drag.lastTargetId = target.dataset.id;
+        this.l1Order.splice(drag.index, 1);
+        this.l1Order.splice(targetIndex, 0, drag.id);
+        if (drag.index < targetIndex) this.l1List.insertBefore(drag.card, target.nextSibling);
+        else this.l1List.insertBefore(drag.card, target);
+        drag.index = targetIndex;
+    }
+
+    _cleanupL1Drag() {
+        const drag = this.l1Drag;
+        if (!drag) return;
+        if (drag.frameId !== null) cancelAnimationFrame(drag.frameId);
+        drag.card.classList.remove('is-dragging');
+        drag.card.style.pointerEvents = '';
+        window.removeEventListener('pointermove', drag.onMove);
+        window.removeEventListener('pointerup', drag.onUp);
+        window.removeEventListener('pointercancel', drag.onUp);
+        try { drag.card.releasePointerCapture?.(drag.pointerId); } catch {}
+        this.l1Drag = null;
     }
 
     /* --------------------------------------------------------
@@ -803,13 +948,22 @@ export class SecretGame {
     _validateLevel1() {
         if (this.transitioning || this.state !== 'level1') return;
 
-        // Validate order matches chronological order
-        const correctIds = [...TIMELINE_MOMENTS].sort((a,b)=>a.order-b.order).map(m=>m.id);
+        if (this.l1Restored && this.completedLevels.level1) {
+            this.l1Restored = false;
+            this._hideTestBtn(this.l1CheckBtn);
+            this._queueLevelTransition('level1', () => {
+                if (this.completedLevels.level2) this._restoreCompletedLevel2();
+                else this._enterLevel2();
+            }, this.reduced ? 0 : 420);
+            return;
+        }
+
+        const correctIds = this._l1CorrectIds();
         const isCorrect = this.l1Order.length === correctIds.length &&
                           this.l1Order.every((id, i) => id === correctIds[i]);
 
         // mark each card right/wrong (soft visual feedback)
-        const cards = [...this.l1List.querySelectorAll('.sg-card')];
+        const cards = [...this.l1List.querySelectorAll('.sg-memory-photo')];
         cards.forEach((c, i) => {
             c.classList.remove('is-correct', 'is-wrong');
             if (isCorrect) {
@@ -824,9 +978,10 @@ export class SecretGame {
 
         if (isCorrect) {
             // PASS - lock the puzzle and commit exactly one transition
+            this.completedLevels.level1 = true;
             this._showPassFeedback(this.l1Feedback, GAME_META.successMessages.level1);
             this._hideTestBtn(this.l1CheckBtn);
-            this.l1List.querySelectorAll('.sg-card').forEach(c => c.style.pointerEvents = 'none');
+            this.l1List.querySelectorAll('.sg-memory-photo').forEach(c => c.style.pointerEvents = 'none');
             this.l1List.animate?.(
                 [{ transform: 'scale(1)' }, { transform: 'scale(1.015)' }, { transform: 'scale(1)' }],
                 { duration: 520, easing: 'ease-out' }
@@ -838,8 +993,18 @@ export class SecretGame {
         }
     }
 
+    // TEMP: Remove Game 1 skip after final memory photos/order are added.
+    _skipLevel1() {
+        if (this.transitioning || this.state !== 'level1') return;
+        this.completedLevels.level1 = true;
+        this._hideTestBtn(this.l1CheckBtn);
+        if (this.l1SkipBtn) this.l1SkipBtn.disabled = true;
+        this._showPassFeedback(this.l1Feedback, 'Game skipped for development.');
+        this._queueLevelTransition('level1', () => this._enterLevel2(), this.reduced ? 0 : 550);
+    }
+
     /* --------------------------------------------------------
-       LEVEL 2 - FIND
+       LEVEL 2 - OUR MEMORY DETECTOR
        -------------------------------------------------------- */
     _enterLevel2() {
         const cur = this.levels.level1;
@@ -856,407 +1021,584 @@ export class SecretGame {
     }
 
     _renderLevel2() {
-        if (!this.l2Env) return;
-        this.l2Env.innerHTML = '';
-        this.l2Found.clear();
-        this.l2RequiredCount = FIND_OBJECTS.filter(o=>o.required).length;
-        if (this.l2Counter) {
-            this.l2Counter.innerHTML = `<strong>0</strong> / ${this.l2RequiredCount} found`;
-        }
-        if (this.l2Feedback) { this.l2Feedback.textContent = ''; this.l2Feedback.className = 'sg-feedback'; }
-        // TEST appears only after every required memory has been found
-        this._hideTestBtn(this.l2TestBtn);
+        if (!this.l2StageEl || !this.l2Card) return;
+        this.l2MainSlot = 0;
+        this.l2Stage = 'original';
+        this.l2Attempts = 0;
+        this.l2SelectedIndex = -1;
+        this.l2TotalWrongAnswers = 0;
+        this.l2Locked = false;
+        this.l2RoundToken += 1;
+        this._renderLevel2Round();
+    }
 
-        FIND_OBJECTS.forEach((obj, idx) => {
-            const pos = FIND_POSITIONS[idx % FIND_POSITIONS.length];
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'sg-find-object';
-            btn.setAttribute('aria-label', obj.label);
-            btn.setAttribute('data-id', obj.id);
-            btn.style.left = pos.x + '%';
-            btn.style.top = pos.y + '%';
-            btn.style.setProperty('--delay', (idx * 0.18).toFixed(2) + 's');
-            btn.innerHTML = `
-                <span class="sg-find-icon" aria-hidden="true">${ICON_MAP[obj.icon] || '✦'}</span>
-                <span class="sg-find-label" aria-hidden="true">${obj.label}</span>
-            `;
-            btn.addEventListener('click', () => this._findObject(obj, btn), { once: false });
-            // touch handled via click (synthesized) - keep explicit for iOS
-            btn.addEventListener('touchend', (e) => { e.preventDefault(); this._findObject(obj, btn); }, { passive: false });
-            this.l2Env.appendChild(btn);
+    _getLevel2Memory() { return GAME2_MEMORY_DATA[this.l2MainSlot]?.[this.l2Stage] || null; }
+
+    _renderLevel2Round() {
+        const memory = this._getLevel2Memory();
+        if (!memory || !this.l2StageEl || !this.l2Card) return;
+        this.l2Attempts = 0;
+        this.l2SelectedIndex = -1;
+        this.l2Locked = false;
+        const token = ++this.l2RoundToken;
+        this.l2Card.className = 'sg-game2-card';
+        if (this.l2ProgressEl) this.l2ProgressEl.textContent = `Memory ${this.l2MainSlot + 1} / 3`;
+        this.l2StageEl.replaceChildren();
+
+        const heading = document.createElement('div');
+        heading.className = 'sg-game2-memory-copy';
+        const title = document.createElement('h4');
+        title.className = 'sg-game2-memory-title'; title.textContent = memory.title;
+        const question = document.createElement('p');
+        question.className = 'sg-game2-question'; question.textContent = memory.question;
+        heading.append(title, question);
+
+        const frame = document.createElement('div');
+        frame.className = 'sg-game2-image-frame is-loading';
+        const image = document.createElement('img');
+        image.className = 'sg-game2-image is-obscured'; image.src = memory.image; image.alt = memory.title; image.decoding = 'async';
+        const fallback = document.createElement('div');
+        fallback.className = 'sg-game2-image-fallback'; fallback.setAttribute('aria-hidden', 'true'); fallback.textContent = 'A memory waiting to be revealed';
+        const settleImage = () => {
+            if (token !== this.l2RoundToken || this.state !== 'level2') return;
+            frame.classList.remove('is-loading'); frame.classList.add('is-loaded');
+        };
+        image.addEventListener('load', settleImage, { once: true });
+        image.addEventListener('error', () => {
+            if (token !== this.l2RoundToken || this.state !== 'level2') return;
+            frame.classList.remove('is-loading'); frame.classList.add('is-missing');
+        }, { once: true });
+        frame.append(image, fallback);
+
+        const chances = document.createElement('p');
+        chances.className = 'sg-game2-chances'; chances.setAttribute('aria-live', 'polite'); chances.textContent = '2 Chances ❤';
+        const kisses = document.createElement('p');
+        kisses.className = 'sg-game2-kisses'; kisses.setAttribute('aria-live', 'polite'); kisses.textContent = `Kisses: ${this.l2TotalWrongAnswers * 5} 😘`;
+        const status = document.createElement('div');
+        status.className = 'sg-game2-status'; status.append(chances, kisses);
+        const options = document.createElement('div');
+        options.className = 'sg-game2-options'; options.setAttribute('role', 'group'); options.setAttribute('aria-label', `Answers for ${memory.title}`);
+        memory.options.forEach((label, index) => {
+            const button = document.createElement('button');
+            button.type = 'button'; button.className = 'sg-game2-option'; button.textContent = label;
+            button.style.setProperty('--option-delay', `${this.reduced ? 0 : index * 70}ms`);
+            button.addEventListener('click', () => this._handleLevel2Choice(index, button));
+            options.appendChild(button);
+        });
+        const feedback = document.createElement('p');
+        feedback.className = 'sg-game2-feedback'; feedback.setAttribute('aria-live', 'polite'); this.l2Feedback = feedback;
+        this.l2StageEl.append(heading, frame, status, options, feedback);
+        if (image.complete && image.naturalWidth > 0) settleImage();
+    }
+
+    _handleLevel2Choice(index, button) {
+        const memory = this._getLevel2Memory();
+        if (!memory || this.l2Locked || this.transitioning || this.state !== 'level2' || button.disabled) return;
+        this.l2Locked = true; this.l2SelectedIndex = index;
+        if (index === memory.correctIndex) { this._resolveLevel2Correct(button, memory); return; }
+        this.l2TotalWrongAnswers += 1; this.l2Attempts += 1;
+        this._updateLevel2Kisses();
+        button.disabled = true; button.classList.add('is-wrong');
+        const chances = this.l2StageEl?.querySelector('.sg-game2-chances');
+        if (chances) chances.textContent = this.l2Attempts === 1 ? '1 Chance Left ❤' : '0 Chances';
+        this.l2Card?.classList.remove('is-penalty'); void this.l2Card?.offsetWidth; this.l2Card?.classList.add('is-penalty');
+        if (this.l2Attempts === 1) { this._setLevel2Feedback('Hmm... ek baar aur socho. ❤', 'is-wrong'); this.l2Locked = false; return; }
+        this._setLevel2Feedback('Oops... dono chances chale gaye. ❤ Penalty: 10 kisses 😘', 'is-penalty');
+        const token = this.l2RoundToken;
+        this.later(this.reduced ? 650 : 2000, () => {
+            if (this.state !== 'level2' || token !== this.l2RoundToken) return;
+            if (this.l2Stage === 'original') this._transitionLevel2Content('recovery'); else this._advanceLevel2Slot();
         });
     }
 
-    _findObject(obj, btn) {
-        if (this.transitioning) return;
-        if (this.l2Found.has(obj.id)) return;
-        if (btn.classList.contains('is-found') || btn.classList.contains('is-decoy-found')) return;
+    _resolveLevel2Correct(button, memory) {
+        this.l2Card?.classList.remove('is-penalty'); this.l2Card?.classList.add('is-success');
+        button.classList.add('is-correct');
+        this.l2StageEl?.querySelectorAll('.sg-game2-option').forEach(option => { option.disabled = true; });
+        this.l2StageEl?.querySelector('.sg-game2-image')?.classList.remove('is-obscured');
+        this._setLevel2Feedback(memory.revealText, 'is-success');
+        const token = this.l2RoundToken;
+        this.later(this.reduced ? 650 : 1900, () => {
+            if (this.state !== 'level2' || token !== this.l2RoundToken) return;
+            this._advanceLevel2Slot();
+        });
+    }
 
-        this.l2Found.add(obj.id);
+    _setLevel2Feedback(text, modifier = '') { if (this.l2Feedback) { this.l2Feedback.textContent = text; this.l2Feedback.className = `sg-game2-feedback is-visible ${modifier}`.trim(); } }
 
-        if (obj.required) {
-            btn.classList.add('is-found');
-            // haptic-like scale
-            btn.animate?.([{ transform: 'translate(-50%, -50%) scale(1.15)' }, { transform: 'translate(-50%, -50%) scale(1)' }], { duration: 340, easing: 'ease-out' });
-            if (this.l2Feedback) {
-                this.l2Feedback.textContent = obj.revealText;
-                this.l2Feedback.className = 'sg-feedback is-visible is-success';
-                this.later(2200, () => {
-                    if (this.state !== 'level2') return;
-                    // only clear if no new message replaced it
-                    if (this.l2Feedback.textContent === obj.revealText) {
-                        this.l2Feedback.className = 'sg-feedback';
-                        this.l2Feedback.textContent = '';
-                    }
-                });
-            }
-        } else {
-            btn.classList.add('is-decoy-found');
-            if (this.l2Feedback) {
-                this.l2Feedback.textContent = obj.revealText;
-                this.l2Feedback.className = 'sg-feedback is-visible';
-                this.later(1600, () => {
-                    if (this.state !== 'level2') return;
-                    if (this.l2Feedback.textContent === obj.revealText) {
-                        this.l2Feedback.className = 'sg-feedback';
-                        this.l2Feedback.textContent = '';
-                    }
-                });
-            }
-        }
+    _updateLevel2Kisses() {
+        const kisses = this.l2StageEl?.querySelector('.sg-game2-kisses');
+        if (!kisses) return;
+        kisses.textContent = `Kisses: ${this.l2TotalWrongAnswers * 5} 😘`;
+        kisses.classList.remove('is-updating');
+        void kisses.offsetWidth;
+        kisses.classList.add('is-updating');
+    }
 
-        // update counter (only required count)
-        const requiredFound = [...this.l2Found].filter(id => {
-            const o = FIND_OBJECTS.find(x=>x.id===id);
-            return o?.required;
-        }).length;
-        if (this.l2Counter) {
-            this.l2Counter.innerHTML = `<strong>${requiredFound}</strong> / ${this.l2RequiredCount} found`;
-        }
+    _transitionLevel2Content(stage) {
+        if (!this.l2Card) return;
+        this.l2Locked = true; this.l2Card.classList.add('is-transitioning');
+        const token = this.l2RoundToken;
+        this.later(this.reduced ? 0 : 320, () => {
+            if (this.state !== 'level2' || token !== this.l2RoundToken) return;
+            this.l2Stage = stage; this._renderLevel2Round();
+        });
+    }
 
-        if (requiredFound >= this.l2RequiredCount) {
-            // All required memories found - puzzle SOLVED, ready for TEST.
-            // Never auto-advance here: only TEST validation can advance.
-            if (this.l2Feedback) {
-                this.l2Feedback.textContent = GAME_META.successMessages.level2;
-                this.l2Feedback.className = 'sg-feedback is-visible is-success';
-            }
-            this._showTestBtn(this.l2TestBtn, true);
-            // disable further object interaction
-            this.l2Env.querySelectorAll('.sg-find-object').forEach(btn => btn.disabled = true);
-            // soft glow on env
-            this.l2Env.animate?.(
-                [{ boxShadow: '0 18px 50px rgba(5,10,24,0.45)' }, { boxShadow: '0 18px 50px rgba(5,10,24,0.45), 0 0 40px rgba(94,201,142,0.22)' }, { boxShadow: '0 18px 50px rgba(5,10,24,0.45)' }],
-                { duration: 900, easing: 'ease-out' }
-            );
-        }
+    _advanceLevel2Slot() {
+        this.l2MainSlot += 1; this.l2Stage = 'original';
+        if (this.l2MainSlot >= 3) { this._completeLevel2(); return; }
+        this._transitionLevel2Content('original');
+    }
+
+    _completeLevel2() {
+        if (!this.l2Card || !this.l2StageEl) return;
+        this.completedLevels.level2 = true;
+        ++this.l2RoundToken; this.l2Locked = true;
+        if (this.l2ProgressEl) this.l2ProgressEl.textContent = 'Memory 3 / 3';
+        this.l2Card.className = 'sg-game2-card is-complete'; this.l2StageEl.replaceChildren();
+        const wrap = document.createElement('div'); wrap.className = 'sg-game2-complete';
+        const title = document.createElement('h4'); title.textContent = 'Memory Detector Complete ❤';
+        const copy = document.createElement('p'); copy.textContent = 'You may miss a few answers... but you never miss what matters to us. ❤';
+        const summary = document.createElement('p'); summary.className = 'sg-game2-complete-summary'; summary.textContent = `Wrong Answers: ${this.l2TotalWrongAnswers}`;
+        const kissTotal = document.createElement('p'); kissTotal.className = 'sg-game2-complete-kisses'; kissTotal.textContent = `${this.l2TotalWrongAnswers} × 5 = ${this.l2TotalWrongAnswers * 5} Kisses 😘`;
+        wrap.append(title, copy, summary, kissTotal); this.l2StageEl.append(wrap);
+        this.later(this.reduced ? 800 : 2600, () => {
+            if (this.state === 'level2') this._queueLevelTransition('level2', () => this._enterLevel3(), 0);
+        });
     }
 
     /* --------------------------------------------------------
-       LEVEL 2 validation - dedicated TEST button.
-       All required memories found -> TEST PASS -> exactly one
-       queued transition to Level 3. Otherwise -> TEST FAIL, stay.
-       -------------------------------------------------------- */
-    _validateLevel2() {
-        if (this.transitioning || this.state !== 'level2') return;
-
-        const requiredFound = [...this.l2Found].filter(id => {
-            const o = FIND_OBJECTS.find(x=>x.id===id);
-            return o?.required;
-        }).length;
-
-        if (requiredFound >= this.l2RequiredCount) {
-            // PASS
-            this._showPassFeedback(this.l2Feedback, GAME_META.successMessages.level2);
-            this._hideTestBtn(this.l2TestBtn);
-            this._queueLevelTransition('level2', () => this._enterLevel3(), this.reduced ? 500 : 1100);
-        } else {
-            // FAIL - stay on the level, keep searching
-            this._showFailFeedback(this.l2Feedback, this.l2Env);
-        }
-    }
-
-    /* --------------------------------------------------------
-       LEVEL 3 - FEEL
+       GAME 3 - READ MY MIND / WHO WOULD DO IT?
        -------------------------------------------------------- */
     _enterLevel3() {
         const cur = this.levels.level2;
         if (cur) {
             cur.classList.add('is-exiting');
-            this.later(this.reduced ? 0 : 420, () => {
-                this._showLevel('level3', 3);
-                this.l3Index = 0;
-                this._renderLevel3();
-            });
-        } else {
-            this._showLevel('level3', 3);
-            this.l3Index = 0;
-            this._renderLevel3();
-        }
+            this.later(this.reduced ? 0 : 420, () => this._startLevel3());
+        } else this._startLevel3();
     }
 
-    _renderLevel3() {
-        const q = FEEL_QUESTIONS[this.l3Index];
-        if (!q || !this.l3Card) return;
-
-        if (this.l3Feedback) { this.l3Feedback.textContent = ''; this.l3Feedback.className = 'sg-feedback'; }
-        // TEST appears only after an answer has been selected
-        this._hideTestBtn(this.l3TestBtn);
+    _startLevel3() {
+        this._showLevel('level3', 3);
+        this.l3Phase = 'mind';
+        this.l3MindIndex = 0;
+        this.l3WhoIndex = 0;
         this.l3Pick = -1;
+        this.l3Locked = false;
+        this.l3LastPassMessage = null;
+        this.l3LastRetryMessage = null;
+        this._renderLevel3Question();
+    }
 
-        if (this.l3QuestionEl) this.l3QuestionEl.textContent = q.question;
-        if (this.l3ChoicesEl) {
-            this.l3ChoicesEl.innerHTML = '';
-            q.choices.forEach((choice, idx) => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'sg-feel-choice';
-                btn.textContent = choice.text;
-                btn.setAttribute('aria-label', choice.text);
-                btn.addEventListener('click', () => this._pickFeelChoice(idx, btn));
-                this.l3ChoicesEl.appendChild(btn);
-            });
-        }
-        // subtle entrance
+    _renderLevel3Question() {
+        const isMind = this.l3Phase === 'mind';
+        const index = isMind ? this.l3MindIndex : this.l3WhoIndex;
+        const data = isMind ? MIND_READING_DATA : WHO_WOULD_DATA;
+        const question = data[index];
+        if (!question || !this.l3Card || !this.l3ChoicesEl) return;
+
+        this.l3Locked = false;
+        this.l3Pick = -1;
+        if (this.l3Quiz) this.l3Quiz.hidden = false;
+        if (this.l3Cinematic) this.l3Cinematic.hidden = true;
+        this.l3Header?.classList.remove('is-cinematic');
+        this._hideTestBtn(this.l3TestBtn);
+        if (this.l3Feedback) { this.l3Feedback.textContent = ''; this.l3Feedback.className = 'sg-game3-feedback'; }
+
+        if (this.l3Eyebrow) this.l3Eyebrow.textContent = `03 / 05 — ${isMind ? 'MERE DIL KI BAAT' : 'YE KARTA KAUN?'}`;
+        if (this.l3Title) this.l3Title.textContent = isMind ? 'MERE DIL KI BAAT ❤️' : 'YE KARTA KAUN? 😌';
+        if (this.l3Subtitle) this.l3Subtitle.textContent = isMind ? 'Dekhte hain tum mujhe kitna achhe se samajhti ho...' : 'Sach sach batana… ye actually hum dono me se kaun karega?';
+        if (this.l3Progress) this.l3Progress.textContent = `${index + 1} / 3 · ${isMind ? 'Batao, main kya choose karta?' : 'Batao kaun?'}`;
+        this.l3QuestionEl.textContent = question.question;
+        this.l3ChoicesEl.replaceChildren();
+
+        const choices = isMind ? question.options.map((text, idx) => ({ id: String(idx), label: text, number: String(idx + 1).padStart(2, '0') })) : WHO_CHOICE_META;
+        choices.forEach((choice, idx) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `sg-game3-choice${isMind ? '' : ' is-who-choice'}`;
+            btn.style.setProperty('--option-delay', `${idx * 95}ms`);
+            btn.dataset.choice = choice.id;
+            btn.setAttribute('aria-label', choice.label);
+            if (isMind) {
+                const number = document.createElement('span'); number.className = 'sg-game3-choice-number'; number.textContent = choice.number;
+                const label = document.createElement('span'); label.className = 'sg-game3-choice-label'; label.textContent = choice.label;
+                btn.append(number, label);
+            } else {
+                const label = document.createElement('span'); label.className = 'sg-game3-who-label'; label.textContent = choice.label;
+                const note = document.createElement('span'); note.className = 'sg-game3-who-note'; note.textContent = choice.note;
+                btn.append(label, note);
+            }
+            btn.addEventListener('click', () => this._pickLevel3Choice(isMind ? idx : choice.id, btn));
+            this.l3ChoicesEl.appendChild(btn);
+        });
+
         this.l3Card.animate?.(
-            [{ opacity: '0', transform: 'translateY(10px)' }, { opacity: '1', transform: 'translateY(0)' }],
-            { duration: 420, easing: 'ease-out' }
+            [{ opacity: '0', transform: 'translateY(10px)', filter: 'blur(3px)' }, { opacity: '1', transform: 'translateY(0)', filter: 'blur(0)' }],
+            { duration: this.reduced ? 1 : 460, easing: 'cubic-bezier(.22,1,.36,1)' }
         );
     }
 
-    /* Step 1 of Level 3: SELECT. Selection alone never validates and
-       never advances - it only arms the dedicated TEST button. */
-    _pickFeelChoice(idx, btn) {
-        if (this.transitioning || this.state !== 'level3') return;
-        const q = FEEL_QUESTIONS[this.l3Index];
-        if (!q || this.l3Pick !== -1) return;
-
-        this.l3Pick = idx;
-        // lock the choice until TEST runs
-        const all = [...this.l3ChoicesEl.querySelectorAll('.sg-feel-choice')];
-        all.forEach(b => { b.disabled = true; b.classList.remove('is-selected'); });
-        btn.classList.add('is-selected');
-
-        const choice = q.choices[idx];
-        if (this.l3Feedback && choice) {
-            this.l3Feedback.textContent = choice.feedback;
-            this.l3Feedback.className = 'sg-feedback is-visible';
-        }
-        this._showTestBtn(this.l3TestBtn, true);
+    _pickLevel3Choice(value, btn) {
+        if (this.transitioning || this.state !== 'level3' || this.l3Locked || !btn) return;
+        this.l3Pick = value;
+        this.l3ChoicesEl?.querySelectorAll('.sg-game3-choice').forEach(choice => choice.classList.toggle('is-selected', choice === btn));
+        if (this.l3Feedback) { this.l3Feedback.textContent = ''; this.l3Feedback.className = 'sg-game3-feedback'; }
+        this._showTestBtn(this.l3TestBtn);
     }
 
-    /* --------------------------------------------------------
-       LEVEL 3 validation - dedicated TEST button (Step 2).
-       Correct -> TEST PASS -> next question, or on the final
-       question exactly one queued transition to Level 4.
-       Wrong   -> TEST FAIL -> same question, retry allowed.
-       -------------------------------------------------------- */
     _confirmLevel3() {
-        if (this.transitioning || this.state !== 'level3') return;
-        const q = FEEL_QUESTIONS[this.l3Index];
-        if (!q || this.l3Pick === -1) return;
+        if (this.transitioning || this.state !== 'level3' || this.l3Locked || this.l3Pick === -1) return;
+        const isMind = this.l3Phase === 'mind';
+        const index = isMind ? this.l3MindIndex : this.l3WhoIndex;
+        const question = (isMind ? MIND_READING_DATA : WHO_WOULD_DATA)[index];
+        const isCorrect = isMind ? this.l3Pick === question?.correctIndex : this.l3Pick === question?.correctChoice;
+        if (!question) return;
 
-        if (this.l3Pick === q.correctIndex) {
-            // PASS for this question
-            const isLast = this.l3Index >= FEEL_QUESTIONS.length - 1;
-            const extra = isLast ? GAME_META.successMessages.level3 : '';
-            this.l3Pick = -1;
-            this._showPassFeedback(this.l3Feedback, extra);
-            this._hideTestBtn(this.l3TestBtn);
-
-            if (isLast) {
-                // final question passed - exactly one transition to Level 4
-                this.l3ChoicesEl?.querySelectorAll('.sg-feel-choice').forEach(btn => btn.disabled = true);
-                this._queueLevelTransition('level3', () => this._enterLevel4(), this.reduced ? 500 : 1100);
-                return;
-            }
-            // brief cinematic pause, then the next question
-            this.later(this.reduced ? 500 : 1500, () => {
-                if (this.state !== 'level3' || this.transitioning) return;
-                this.l3Index += 1;
-                this.l3Card.animate?.(
-                    [{ opacity: '1', transform: 'translateY(0)' }, { opacity: '0', transform: 'translateY(-8px)' }],
-                    { duration: 300, easing: 'ease-in' }
-                );
-                this.later(320, () => {
-                    if (this.state !== 'level3' || this.transitioning) return;
-                    this._renderLevel3();
-                });
+        this.l3Locked = true;
+        this._hideTestBtn(this.l3TestBtn);
+        const selected = this.l3ChoicesEl?.querySelector('.sg-game3-choice.is-selected');
+        this.l3ChoicesEl?.querySelectorAll('.sg-game3-choice').forEach(choice => { choice.disabled = true; });
+        if (!isCorrect) {
+            selected?.classList.add('is-wrong');
+            const retry = pickMessage(isMind ? [
+                'Hmm… ye nahi. Thoda aur mujhe samajhne ki koshish karo. ❤️',
+                'Achha try tha… par mera dil kuch aur keh raha tha. 😌',
+                'Almost… lekin ye wala nahi. ❤️',
+                'Tum mujhe jaanti ho… ek baar aur socho. 🌙',
+            ] : [
+                'Sach sach batao… tumhe bhi pata hai ye answer nahi hai. 😏',
+                'Hmm… ek baar hum dono ke baare me fir se socho. ❤️',
+                'Nice try. 😌 Ek baar aur.',
+                'Are you sure? Mujhe lagta hai tum answer jaanti ho. ❤️',
+            ], this.l3LastRetryMessage);
+            this._setLevel3Feedback(retry, 'is-error');
+            this.l3LastRetryMessage = retry;
+            this.l3Card?.animate?.([{ transform: 'translateX(0)' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }], { duration: this.reduced ? 1 : 340, easing: 'ease-out' });
+            this.later(GAME3_TIMING.retryFeedback, () => {
+                if (this.state === 'level3' && !this.transitioning) this._renderLevel3Question();
             });
-        } else {
-            // FAIL - stay on the same question, allow another attempt
-            this._showFailFeedback(this.l3Feedback, this.l3Card);
-            this.l3Pick = -1;
-            this._hideTestBtn(this.l3TestBtn);
-            this.l3ChoicesEl?.querySelectorAll('.sg-feel-choice').forEach(btn => {
-                btn.disabled = false;
-                btn.classList.remove('is-selected');
-            });
+            return;
         }
+
+        selected?.classList.add('is-correct');
+        const passPool = isMind ? ['Haan! Bilkul yahi. ❤️', 'Tumne sach me mere dil ki baat pakad li. ✨', 'Exactly… main bhi yahi choose karta. ❤️', 'Tum mujhe kuch zyada hi achhe se jaanti ho. 😌❤️'] : ['Haan… bilkul. 😂❤️', 'Exactly! Ye to bilkul hum hain. ❤️', 'Tum hum dono ko kuch zyada hi achhe se jaanti ho. ✨', 'Haha… ye answer to obvious tha. 😌❤️'];
+        const pass = pickMessage(passPool, this.l3LastPassMessage);
+        this.l3LastPassMessage = pass;
+        this._setLevel3Feedback(pass, 'is-success');
+        const isLast = index === 2;
+        this.later(GAME3_TIMING.successFeedback, () => {
+            if (this.state !== 'level3' || this.transitioning) return;
+            if (!isLast) {
+                if (isMind) this.l3MindIndex += 1; else this.l3WhoIndex += 1;
+                this._renderLevel3Question();
+            } else if (isMind) this._playLevel3Bridge();
+            else this._playLevel3Finale();
+        });
+    }
+
+    _setLevel3Feedback(message, modifier = '') {
+        if (!this.l3Feedback) return;
+        this.l3Feedback.textContent = message;
+        this.l3Feedback.className = `sg-game3-feedback is-visible ${modifier}`.trim();
+    }
+
+    _playLevel3Bridge() {
+        this.l3Phase = 'bridge';
+        this._playLevel3Cinematic([
+            { text: 'Achha…', duration: GAME3_TIMING.cinematic.short },
+            { text: 'Tum sach me mujhe kaafi achhe se jaanti ho. ❤️', duration: GAME3_TIMING.cinematic.normal },
+            { text: 'Lekin ab ek aur cheez dekhte hain…', duration: GAME3_TIMING.cinematic.normal },
+            { text: 'Mere dil ki baat samajhna to easy tha…', duration: GAME3_TIMING.cinematic.normal },
+            { text: 'Lekin actually ye karta kaun? 😌', duration: GAME3_TIMING.cinematic.normal },
+        ], () => {
+            this.l3Phase = 'who';
+            this.l3WhoIndex = 0;
+            this._renderLevel3Question();
+        });
+    }
+
+    _playLevel3Finale() {
+        this.completedLevels.level3 = true;
+        this.l3Phase = 'final';
+        this._playLevel3Cinematic([
+            { text: 'Achha…', duration: GAME3_TIMING.cinematic.short },
+            { text: 'To shayad tum sach me mujhe kaafi achhe se jaanti ho…', duration: GAME3_TIMING.cinematic.normal },
+            { text: 'Aur shayad…', duration: GAME3_TIMING.cinematic.short },
+            { text: 'hum dono sach me ek dusre ke liye hi bane hain. ❤️', duration: GAME3_TIMING.cinematic.emotional },
+        ], () => {
+            if (this.state !== 'level3' || this.l3Phase !== 'final') return;
+            this.l3CinematicLine?.classList.add('is-climax');
+            if (this.l3CinematicLine) this.l3CinematicLine.textContent = 'TUM HUMEIN JAANTI HO. ❤️';
+            this.later(GAME3_TIMING.climaxBeforeContinue, () => {
+                if (this.state === 'level3' && this.l3Phase === 'final') this._showTestBtn(this.l3ContinueBtn);
+            });
+        });
+    }
+
+    _playLevel3Cinematic(lines, done) {
+        const token = ++this.l3SequenceToken;
+        if (this.l3Quiz) this.l3Quiz.hidden = true;
+        if (this.l3Cinematic) this.l3Cinematic.hidden = false;
+        this.l3Header?.classList.add('is-cinematic');
+        this._hideTestBtn(this.l3ContinueBtn);
+        if (this.l3CinematicLine) this.l3CinematicLine.classList.remove('is-climax');
+        let offset = 0;
+        lines.forEach(({ text, duration }) => {
+            this.later(offset, () => {
+                if (token !== this.l3SequenceToken || this.state !== 'level3') return;
+                if (this.l3CinematicLine) {
+                    this.l3CinematicLine.classList.remove('is-in');
+                    void this.l3CinematicLine.offsetWidth;
+                    this.l3CinematicLine.style.setProperty('--cinematic-duration', `${duration}ms`);
+                    this.l3CinematicLine.textContent = text;
+                    this.l3CinematicLine.classList.add('is-in');
+                }
+            });
+            offset += duration;
+        });
+        this.later(offset, () => {
+            if (token === this.l3SequenceToken && this.state === 'level3') done();
+        });
+    }
+
+    _continueFromLevel3() {
+        if (this.transitioning || this.state !== 'level3' || this.l3Phase !== 'final') return;
+        this.l3ContinueBtn.disabled = true;
+        this.levels.level3?.classList.add('is-exiting');
+        this._queueLevelTransition('level3', () => {
+            if (this.completedLevels.level4) this._restoreCompletedLevel4();
+            else this._enterLevel4();
+        }, this.reduced ? 0 : 420);
     }
 
     /* --------------------------------------------------------
-       LEVEL 4 - CONNECT
+       LEVEL 4 - OUR CHEMISTRY × DATE NIGHT JACKPOT
        -------------------------------------------------------- */
     _enterLevel4() {
+        this.l4Restored = false;
         this._showLevel('level4', 4);
-        this._renderLevel4();
+        this.l4Phase = 'chemistry';
+        this.l4QuestionIndex = 0;
+        this.l4SelectedChoice = -1;
+        this.l4Results = {};
+        this.l4JackpotRunning = false;
+        this.l4SequenceToken += 1;
+        this._showChemistryStage();
+        this._renderChemistryQuestion();
     }
 
-    _renderLevel4() {
-        if (!this.l4Sky || !this.l4Svg) return;
-        this.l4Svg.innerHTML = '';
-        this.l4Sky.querySelectorAll('.sg-star-btn').forEach(el => el.remove());
-        this.l4Connected = [];
-        this.l4Lines = [];
-        this.l4NextExpected = 1;
-        if (this.l4Feedback) { this.l4Feedback.textContent = ''; this.l4Feedback.className = 'sg-feedback'; }
-        // TEST appears only after the heart constellation is complete
-        this._hideTestBtn(this.l4TestBtn);
+    _showChemistryStage() {
+        if (this.l4Chemistry) this.l4Chemistry.hidden = false;
+        if (this.l4Jackpot) this.l4Jackpot.hidden = true;
+    }
 
-        // Create star buttons
-        for (const star of CONNECT_STARS) {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'sg-star-btn';
-            btn.setAttribute('data-id', star.id);
-            btn.setAttribute('data-order', String(star.order));
-            btn.setAttribute('aria-label', star.isCorrect ? `Star ${star.order}` : 'Stardust');
-            btn.style.left = star.x + '%';
-            btn.style.top = star.y + '%';
-            btn.innerHTML = `<span class="sg-star-dot" aria-hidden="true"></span>`;
-            if (star.isCorrect && star.order === 1) {
-                btn.classList.add('is-next');
-            }
-            if (!star.isCorrect) {
-                btn.style.opacity = '0.55';
-                btn.style.width = '28px';
-                btn.style.height = '28px';
-            }
-            const handler = (e) => {
-                e.stopPropagation();
-                this._tapStar(star, btn);
-            };
-            btn.addEventListener('click', handler);
-            btn.addEventListener('touchend', (e) => { e.preventDefault(); handler(e); }, { passive: false });
-            this.l4Sky.appendChild(btn);
+    _showJackpotStage() {
+        if (this.l4Chemistry) this.l4Chemistry.hidden = true;
+        if (this.l4Jackpot) {
+            this.l4Jackpot.hidden = false;
+            void this.l4Jackpot.offsetWidth;
+            this.l4Jackpot.classList.add('is-entered');
         }
     }
 
-    _tapStar(star, btn) {
-        if (this.transitioning) return;
-        if (this.state !== 'level4') return;
+    _renderChemistryQuestion() {
+        const item = CHEMISTRY_QUESTIONS[this.l4QuestionIndex];
+        if (!item || !this.l4Question || !this.l4Choices) return;
+        this.l4Phase = 'chemistry';
+        this.l4SelectedChoice = -1;
+        if (this.l4Progress) this.l4Progress.textContent = `${this.l4QuestionIndex + 1} / ${CHEMISTRY_QUESTIONS.length}`;
+        this.l4Question.textContent = item.question;
+        this.l4Choices.replaceChildren();
+        this.l4Card?.classList.remove('is-leaving');
+        this.l4Reveal?.classList.remove('is-visible');
+        this.l4Reveal.hidden = true;
+        this._hideTestBtn(this.l4TestBtn);
+        this._hideTestBtn(this.l4NextBtn);
+        item.choices.forEach((choice, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'sg-game4-choice';
+            button.dataset.choice = String(index);
+            button.setAttribute('aria-pressed', 'false');
+            button.style.setProperty('--option-delay', `${index * 100}ms`);
+            const number = document.createElement('span');
+            number.className = 'sg-game4-choice-check';
+            number.setAttribute('aria-hidden', 'true');
+            number.textContent = '✓';
+            const label = document.createElement('span');
+            label.textContent = choice.label;
+            button.append(number, label);
+            this.l4Choices.append(button);
+        });
+    }
 
-        if (!star.isCorrect) {
-            // decoy - soft shake, no penalty
-            btn.classList.remove('is-wrong');
-            void btn.offsetWidth;
-            btn.classList.add('is-wrong');
-            this.later(460, () => btn.classList.remove('is-wrong'));
+    _selectChemistryChoice(index) {
+        if (this.state !== 'level4' || this.l4Phase !== 'chemistry' || this.l4SelectedChoice !== -1) return;
+        const question = CHEMISTRY_QUESTIONS[this.l4QuestionIndex];
+        if (!question?.choices[index]) return;
+        this.l4SelectedChoice = index;
+        this.l4Choices?.querySelectorAll('.sg-game4-choice').forEach((button, choiceIndex) => {
+            const selected = choiceIndex === index;
+            button.classList.toggle('is-selected', selected);
+            button.classList.toggle('is-dimmed', !selected);
+            button.setAttribute('aria-pressed', String(selected));
+            button.disabled = true;
+        });
+        this._showTestBtn(this.l4TestBtn);
+    }
+
+    _revealChemistry() {
+        if (this.state !== 'level4' || this.l4Phase !== 'chemistry' || this.l4SelectedChoice < 0) return;
+        const question = CHEMISTRY_QUESTIONS[this.l4QuestionIndex];
+        const selected = question?.choices[this.l4SelectedChoice];
+        if (!selected) return;
+        this.l4Phase = 'chemistry-reveal';
+        this._hideTestBtn(this.l4TestBtn);
+        this.l4Choices?.querySelector('.is-selected')?.classList.add('is-glowing');
+        if (this.l4ChoiceReveal) this.l4ChoiceReveal.textContent = selected.reveal;
+        if (this.l4FinalReveal) this.l4FinalReveal.textContent = question.finalLine;
+        if (this.l4Reveal) {
+            this.l4Reveal.hidden = false;
+            void this.l4Reveal.offsetWidth;
+            this.l4Reveal.classList.add('is-visible');
+        }
+        const token = ++this.l4SequenceToken;
+        this.later(this.reduced ? 0 : 1050, () => {
+            if (token !== this.l4SequenceToken || this.state !== 'level4' || this.l4Phase !== 'chemistry-reveal') return;
+            this._setButtonLabel(this.l4NextBtn, this.l4QuestionIndex === CHEMISTRY_QUESTIONS.length - 1 ? 'Continue to Jackpot ✨' : 'NEXT →');
+            this._showTestBtn(this.l4NextBtn);
+        });
+    }
+
+    _advanceChemistry() {
+        if (this.state !== 'level4' || this.l4Phase !== 'chemistry-reveal') return;
+        this._hideTestBtn(this.l4NextBtn);
+        if (this.l4QuestionIndex < CHEMISTRY_QUESTIONS.length - 1) {
+            this.l4Card?.classList.add('is-leaving');
+            this.l4Reveal?.classList.remove('is-visible');
+            this.later(this.reduced ? 0 : 360, () => {
+                if (this.state !== 'level4') return;
+                this.l4QuestionIndex += 1;
+                this._renderChemistryQuestion();
+            });
             return;
         }
+        this._enterJackpot();
+    }
 
-        // correct star must be tapped in order
-        if (star.order !== this.l4NextExpected) {
-            btn.classList.remove('is-wrong');
-            void btn.offsetWidth;
-            btn.classList.add('is-wrong');
-            this.later(460, () => btn.classList.remove('is-wrong'));
-            // gentle hint
-            if (this.l4Feedback) {
-                this.l4Feedback.textContent = 'Thoda sa aur paas... sahi sitara dhoondho.';
-                this.l4Feedback.className = 'sg-feedback is-visible';
-                this.later(1400, () => {
-                    if (this.l4Feedback.textContent.includes('sahi sitara')) {
-                        this.l4Feedback.className = 'sg-feedback';
-                        this.l4Feedback.textContent = '';
-                    }
+    _enterJackpot() {
+        if (this.state !== 'level4') return;
+        this.l4Phase = 'jackpot';
+        this.l4Chemistry?.classList.add('is-leaving');
+        this.later(this.reduced ? 0 : 420, () => {
+            if (this.state !== 'level4' || this.l4Phase !== 'jackpot') return;
+            this._showJackpotStage();
+            this._renderJackpotCards();
+        });
+    }
+
+    _renderJackpotCards() {
+        if (!this.l4JackpotGrid) return;
+        this.l4JackpotGrid.replaceChildren();
+        JACKPOT_CATEGORIES.forEach((category, index) => {
+            const card = document.createElement('article');
+            card.className = 'sg-jackpot-card';
+            card.dataset.category = category.key;
+            card.style.setProperty('--card-delay', `${index * 95}ms`);
+            const label = document.createElement('p');
+            label.className = 'sg-jackpot-label';
+            label.textContent = category.label;
+            const value = document.createElement('p');
+            value.className = 'sg-jackpot-value';
+            value.textContent = this.l4Results[category.key] || '—';
+            card.append(label, value);
+            this.l4JackpotGrid.append(card);
+        });
+        if (this.l4JackpotReveal) {
+            this.l4JackpotReveal.classList.remove('is-visible');
+            this.l4JackpotReveal.hidden = true;
+        }
+        this._hideTestBtn(this.l4ContinueBtn);
+        this._setButtonLabel(this.l4JackpotAction, 'Create Our Date Night ✨');
+        this.l4JackpotAction.disabled = false;
+        this._showTestBtn(this.l4JackpotAction);
+    }
+
+    _handleJackpotAction() {
+        if (this.state !== 'level4' || this.l4JackpotRunning) return;
+        if (this.l4Phase === 'jackpot-ready') {
+            this._showJackpotFinal();
+            return;
+        }
+        if (this.l4Phase !== 'jackpot') return;
+        this._runJackpot();
+    }
+
+    _runJackpot() {
+        this.l4JackpotRunning = true;
+        this.l4JackpotAction.disabled = true;
+        this.l4Phase = 'jackpot-spinning';
+        const token = ++this.l4SequenceToken;
+        let offset = 0;
+        JACKPOT_CATEGORIES.forEach((category, categoryIndex) => {
+            const result = category.options[Math.floor(Math.random() * category.options.length)];
+            this.l4Results[category.key] = result;
+            const card = this.l4JackpotGrid?.querySelector(`[data-category="${category.key}"]`);
+            const value = card?.querySelector('.sg-jackpot-value');
+            const cycles = this.reduced ? 1 : 5;
+            for (let cycle = 0; cycle < cycles; cycle += 1) {
+                this.later(offset + cycle * (this.reduced ? 0 : 95), () => {
+                    if (token !== this.l4SequenceToken || this.state !== 'level4' || this.l4Phase !== 'jackpot-spinning') return;
+                    if (value) value.textContent = category.options[(cycle + categoryIndex + 1) % category.options.length];
+                    card?.classList.add('is-cycling');
                 });
             }
-            return;
-        }
-
-        // Correct next star
-        btn.classList.remove('is-next');
-        btn.classList.add('is-connected');
-        this.l4Connected.push(star);
-
-        // Draw line from previous to this
-        if (this.l4Connected.length > 1) {
-            const prev = this.l4Connected[this.l4Connected.length - 2];
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('class', 'sg-connect-line');
-            // use percent as viewBox 0 0 100 100, so x/y map directly
-            line.setAttribute('x1', String(prev.x));
-            line.setAttribute('y1', String(prev.y));
-            line.setAttribute('x2', String(star.x));
-            line.setAttribute('y2', String(star.y));
-            // if closing the heart, use heart style
-            if (this.l4Connected.length === 7) line.classList.add('is-heart');
-            this.l4Svg.appendChild(line);
-            this.l4Lines.push(line);
-        }
-
-        // Advance expected
-        this.l4NextExpected += 1;
-
-        // Highlight next star
-        if (this.l4NextExpected <= 7) {
-            const nextId = CONNECT_STARS.find(s => s.isCorrect && s.order === this.l4NextExpected)?.id;
-            if (nextId) {
-                const nextBtn = this.l4Sky.querySelector(`[data-id="${nextId}"]`);
-                nextBtn?.classList.add('is-next');
-            }
-        }
-
-        // Progress feedback after half
-        if (this.l4Connected.length === 3 && this.l4Feedback) {
-            this.l4Feedback.textContent = 'Beautiful... bas thoda aur.';
-            this.l4Feedback.className = 'sg-feedback is-visible is-success';
-        }
-
-        // Completion: 7 points (including closing duplicate).
-        // Puzzle SOLVED, ready for TEST - never auto-advance here.
-        if (this.l4Connected.length >= 7) {
-            // Ensure heart is fully drawn
-            this.l4Sky.querySelectorAll('.sg-star-btn').forEach(b => b.classList.remove('is-next'));
-            // glow the constellation
-            this.l4Sky.animate?.(
-                [{ filter: 'brightness(1)' }, { filter: 'brightness(1.12)' }, { filter: 'brightness(1)' }],
-                { duration: 900, easing: 'ease-out' }
-            );
-            if (this.l4Feedback) {
-                this.l4Feedback.textContent = GAME_META.successMessages.level4a;
-                this.l4Feedback.className = 'sg-feedback is-visible is-success';
-            }
-            // disable stars so the solved constellation stays intact
-            this.l4Sky?.querySelectorAll('.sg-star-btn').forEach(btn => btn.disabled = true);
-            this._showTestBtn(this.l4TestBtn, true);
-        }
+            const lockAt = offset + (this.reduced ? 0 : 580);
+            this.later(lockAt, () => {
+                if (token !== this.l4SequenceToken || this.state !== 'level4' || this.l4Phase !== 'jackpot-spinning') return;
+                if (value) value.textContent = result;
+                card?.classList.remove('is-cycling');
+                card?.classList.add('is-locked');
+            });
+            offset = lockAt + (this.reduced ? 0 : 140);
+        });
+        this.later(offset + (this.reduced ? 0 : 180), () => {
+            if (token !== this.l4SequenceToken || this.state !== 'level4' || this.l4Phase !== 'jackpot-spinning') return;
+            this.l4JackpotRunning = false;
+            this.l4Phase = 'jackpot-ready';
+            this._setButtonLabel(this.l4JackpotAction, 'Reveal Our Jackpot ❤️');
+            this.l4JackpotAction.disabled = false;
+        });
     }
 
-    /* --------------------------------------------------------
-       LEVEL 4 validation - dedicated TEST button.
-       Constellation complete -> TEST PASS -> exactly one queued
-       transition to Level 5. Otherwise -> TEST FAIL, stay, retry.
-       -------------------------------------------------------- */
-    _validateLevel4() {
-        if (this.transitioning || this.state !== 'level4') return;
-
-        const complete = this.l4Connected.length >= 7;
-        if (complete) {
-            // PASS
-            this._showPassFeedback(this.l4Feedback, GAME_META.successMessages.level4b);
-            this._hideTestBtn(this.l4TestBtn);
-            this._queueLevelTransition('level4', () => this._enterLevel5(), this.reduced ? 400 : 1100);
-        } else {
-            // FAIL - stay on the level, keep connecting
-            this._showFailFeedback(this.l4Feedback, this.l4Sky);
-            // re-enable stars for another attempt (defensive; the TEST
-            // button is normally only reachable when complete)
-            this.l4Sky?.querySelectorAll('.sg-star-btn:not([data-order="0"])').forEach(btn => btn.disabled = false);
+    _showJackpotFinal(restored = false) {
+        this.l4Phase = 'complete';
+        this.l4JackpotAction?.classList.remove('is-in');
+        if (this.l4JackpotAction) this.l4JackpotAction.hidden = true;
+        if (this.l4JackpotReveal) {
+            this.l4JackpotReveal.hidden = false;
+            void this.l4JackpotReveal.offsetWidth;
+            this.l4JackpotReveal.classList.add('is-visible');
         }
+        this.l4JackpotGrid?.querySelectorAll('.sg-jackpot-card').forEach(card => card.classList.add('is-emphasized'));
+        const token = ++this.l4SequenceToken;
+        this.later(restored || this.reduced ? 0 : 1100, () => {
+            if (token !== this.l4SequenceToken || this.state !== 'level4' || this.l4Phase !== 'complete') return;
+            this._showTestBtn(this.l4ContinueBtn);
+        });
+    }
+
+    _continueFromLevel4() {
+        if (this.transitioning || this.state !== 'level4' || this.l4Phase !== 'complete') return;
+        this.completedLevels.level4 = true;
+        this.l4ContinueBtn.disabled = true;
+        this.levels.level4?.classList.add('is-exiting');
+        this._queueLevelTransition('level4', () => {
+            if (this.completedLevels.level5) this._restoreCompletedLevel5();
+            else this._enterLevel5();
+        }, this.reduced ? 0 : 420);
     }
 
     _enterLevel5() {
@@ -1265,11 +1607,13 @@ export class SecretGame {
             cur.classList.add('is-exiting');
             this.later(this.reduced ? 0 : 420, () => {
                 this._showLevel('level5', 5);
-                this._renderLevel5();
+                if (this.l5Started && !this.completedLevels.level5) this._resumeLevel5();
+                else this._renderLevel5();
             });
         } else {
             this._showLevel('level5', 5);
-            this._renderLevel5();
+            if (this.l5Started && !this.completedLevels.level5) this._resumeLevel5();
+            else this._renderLevel5();
         }
     }
 
@@ -1281,6 +1625,7 @@ export class SecretGame {
        -------------------------------------------------------- */
     _renderLevel5() {
         if (!this.l5Pulse || !this.l5Wrap) return;
+        this.l5Started = true;
         this.l5Hits = 0;
         this.l5Misses = 0;
         if (this.l5Progress) this.l5Progress.innerHTML = `<strong>${this.l5Hits}</strong> / ${HEART_CONFIG.requiredHits}`;
@@ -1312,6 +1657,28 @@ export class SecretGame {
         }
         // focus for keyboard
         this.later(300, () => this.l5Wrap?.focus({ preventScroll: true }));
+    }
+
+    _resumeLevel5() {
+        if (!this.l5Pulse || !this.l5Wrap) return this._renderLevel5();
+        this.l5PulseStart = Date.now();
+        this.l5Wrap.style.pointerEvents = '';
+        this.l5Pulse.classList.add('is-beating');
+        if (this.l5Progress) this.l5Progress.innerHTML = `<strong>${this.l5Hits}</strong> / ${HEART_CONFIG.requiredHits}`;
+        if (this.l5Hits >= HEART_CONFIG.requiredHits) {
+            if (this.l5Feedback) {
+                this.l5Feedback.textContent = GAME_META.successMessages.level5a;
+                this.l5Feedback.className = 'sg-feedback is-visible is-success';
+            }
+            this.l5Wrap.style.pointerEvents = 'none';
+            this._showTestBtn(this.l5TestBtn);
+        } else {
+            if (this.l5Feedback) {
+                this.l5Feedback.textContent = this.l5Hits ? `Bohot khoob — ${this.l5Hits} / ${HEART_CONFIG.requiredHits}` : 'Jab dil tez dhadke, tab tap karo...';
+                this.l5Feedback.className = 'sg-feedback is-visible';
+            }
+            this._hideTestBtn(this.l5TestBtn);
+        }
     }
 
     _hitHeart() {
@@ -1399,6 +1766,7 @@ export class SecretGame {
 
         if (this.l5Hits >= HEART_CONFIG.requiredHits) {
             // PASS
+            this.completedLevels.level5 = true;
             this._showPassFeedback(this.l5Feedback, `${GAME_META.successMessages.level5b} ${GAME_META.successMessages.level5c}`);
             this._hideTestBtn(this.l5TestBtn);
             this._queueLevelTransition('level5', () => this._enterComplete(), this.reduced ? 400 : 1100);
@@ -1419,6 +1787,10 @@ export class SecretGame {
         } else {
             this._showComplete();
         }
+    }
+
+    _restoreCompletedLevel5() {
+        this._showComplete();
     }
 
     /* --------------------------------------------------------
