@@ -237,20 +237,6 @@ export const JACKPOT_CATEGORIES = [
 ];
 
 /* ------------------------------------------------------------
-   LEVEL 5 - MY HEART
-   Pulse timing game configuration.
-   `requiredHits` is forgiving (small number).
-   `hitWindow` is the success zone as fraction of the pulse
-   cycle (0..1). 0.75 means last 25% of the ring is the sweet spot.
-   ------------------------------------------------------------ */
-export const HEART_CONFIG = {
-    requiredHits: 5,
-    maxMisses: 12,            // very forgiving - no hard fail
-    hitWindow: 0.78,          // sweet spot starts at 78% scale
-    pulseDurationMs: 1400,    // one heartbeat
-};
-
-/* ------------------------------------------------------------
    REWARD - The secret gift.
    Edit freely. Shown as a mysterious locked envelope/card
    first, then opens to this content. The handoff button
@@ -288,7 +274,7 @@ export const GAME_META = {
         { id: '02', name: 'FIND', subtitle: 'Chhupi hui yaadein dhoondho' },
         { id: '03', name: 'MERE DIL KI BAAT', subtitle: 'Dekhte hain tum mujhe kitna achhe se samajhti ho...' },
         { id: '04', name: 'CONNECT', subtitle: 'Sitaron ko jodo' },
-        { id: '05', name: 'MY HEART', subtitle: 'Meri dhadkan pakdo' },
+        { id: '05', name: 'UNLOCK MY HEART', subtitle: 'Bas ek last secret baaki hai...' },
     ],
     successMessages: {
         level1: 'Tumhe hamari kahani yaad hai... ❤️',
@@ -296,9 +282,6 @@ export const GAME_META = {
         level3: 'Tum mujhe kitna jaanti ho...',
         level4a: 'Har moment alag tha...',
         level4b: '...par sab milkar hum bane.',
-        level5a: 'YOU FOUND MY HEART',
-        level5b: 'Actually...',
-        level5c: 'tumne toh ise pehle hi jeet liya tha. ❤️',
     },
     retryMessages: {
         level1: 'Thoda sa aur yaad karo...',

@@ -18,7 +18,7 @@
 
    Data:    Reads entirely from js/secret-game-data.js
             (TIMELINE_MOMENTS, GAME2_MEMORY_DATA, MIND_READING_DATA,
-             CHEMISTRY_QUESTIONS, JACKPOT_CATEGORIES, HEART_CONFIG,
+             CHEMISTRY_QUESTIONS, JACKPOT_CATEGORIES,
              SECRET_REWARD, GAME_META).
    ============================================================ */
 
@@ -31,7 +31,6 @@ import {
     WHO_CHOICE_META,
     CHEMISTRY_QUESTIONS,
     JACKPOT_CATEGORIES,
-    HEART_CONFIG,
     PHOTO_MEMORY_PUZZLE,
     SECRET_REWARD,
     GAME_META,
@@ -84,6 +83,50 @@ const GAME3_TIMING = Object.freeze({
     climaxBeforeContinue: 3900,
 });
 
+const SECRET_GAME_PROGRESS_KEY = 'hbm.secretGameProgress';
+const SECRET_GAME_PROGRESS_VERSION = 1;
+
+function loadSecretGameProgress() {
+    try {
+        const raw = window.localStorage.getItem(SECRET_GAME_PROGRESS_KEY);
+        if (!raw) return { highestCompletedGame: 0, currentGame: null, game5Completed: false };
+        const data = JSON.parse(raw);
+        const highestCompletedGame = data?.highestCompletedGame;
+        if (data?.version !== SECRET_GAME_PROGRESS_VERSION ||
+            !Number.isInteger(highestCompletedGame) ||
+            highestCompletedGame < 0 || highestCompletedGame > 5 ||
+            !(data.currentGame == null || (Number.isInteger(data.currentGame) && data.currentGame >= 1 && data.currentGame <= 5)) ||
+            typeof data.game5Completed !== 'boolean' ||
+            data.game5Completed !== (highestCompletedGame === 5)) {
+            return { highestCompletedGame: 0, currentGame: null, game5Completed: false };
+        }
+        return { highestCompletedGame, currentGame: data.currentGame ?? null, game5Completed: data.game5Completed };
+    } catch {
+        return { highestCompletedGame: 0, currentGame: null, game5Completed: false };
+    }
+}
+
+function saveSecretGameProgress(highestCompletedGame, currentGame = null) {
+    try {
+        window.localStorage.setItem(SECRET_GAME_PROGRESS_KEY, JSON.stringify({
+            version: SECRET_GAME_PROGRESS_VERSION,
+            highestCompletedGame,
+            currentGame,
+            game5Completed: highestCompletedGame === 5,
+        }));
+    } catch {
+        /* Storage unavailable: the in-memory game flow remains valid. */
+    }
+}
+
+function clearSecretGameProgress() {
+    try {
+        window.localStorage.removeItem(SECRET_GAME_PROGRESS_KEY);
+    } catch {
+        /* Storage unavailable: the in-memory reset remains valid. */
+    }
+}
+
 const L1_ARRIVAL_VECTORS = [
     { x: '-54vw', y: '-6vh', rotate: '-3deg' },
     { x: '54vw', y: '-8vh', rotate: '3deg' },
@@ -119,6 +162,7 @@ export class SecretGame {
         this.bgStars = null;
         this.progressCurrent = null;
         this.progressFill = null;
+        this.progressEl = null;
 
         this.introEl = null;
         this.introLine1 = null;
@@ -201,36 +245,57 @@ export class SecretGame {
         this.l4JackpotRunning = false;
         this.l4SequenceToken = 0;
 
-        // Level 5 refs
-        this.l5Wrap = null;
-        this.l5Pulse = null;
-        this.l5Core = null;
-        this.l5Progress = null;
-        this.l5Feedback = null;
-        this.l5TestBtn = null;        // dedicated TEST button
-        this.l5Hits = 0;
-        this.l5Misses = 0;
-        this.l5PulseStart = 0;
+        // Level 5: self-contained four-stage "Unlock My Heart" experience
+        this.l5Panels = null;
+        this.l5Steps = null;
+        this.l5StartBtn = null;
+        this.l5FindField = null;
+        this.l5HoldHeart = null;
+        this.l5HoldFill = null;
+        this.l5HoldLabel = null;
+        this.l5StoryField = null;
+        this.l5StorySvg = null;
+        this.l5StoryPath = null;
+        this.l5StoryProgress = null;
+        this.l5StoryStatus = null;
+        this.l5Choices = null;
+        this.l5FinishBtn = null;
+        this.l5Stage = 'intro';
+        this.l5StageDone = 0;
+        this.l5Token = 0;
+        this.l5HoldProgress = 0;
+        this.l5Holding = false;
+        this.l5HoldPointer = null;
+        this.l5HoldLastFrame = 0;
         this.l5Raf = null;
-        this.l5PulseTimer = null;
+        this.l5StoryPoints = [];
+        this.l5StoryTracing = false;
+        this.l5StoryPointer = null;
+        this.l5StoryProgressValue = 0;
+        this.l5FindMisses = 0;
+        this.l5HoldReleaseCount = 0;
 
-        // Completion survives in-game Back/forward navigation for this
-        // session. It is intentionally reset only with the full game.
+        // Completion survives in-game Back/forward navigation and refreshes.
+        // It is intentionally reset only with the explicit replay action.
         this.completedLevels = { level1: false, level2: false, level3: false, level4: false, level5: false };
+        this.persistedProgress = { highestCompletedGame: 0, currentGame: null, game5Completed: false };
         this.backLocked = false;
         this.l1Restored = false;
         this.l4Restored = false;
-        this.l5Started = false;
 
         // Complete / Reward refs
         this.completeSymbols = null;
         this.completeLine1 = null;
         this.completeLine2 = null;
         this.completeUnlockBtn = null;
+        this.completeReplayBtn = null;
         this.envelope = null;
         this.envelopePaper = null;
         this.rewardCard = null;
         this.rewardContinueBtn = null;
+        this.rewardRun = 0;
+        this.rewardReady = false;
+        this.rewardPhase = 'idle';
 
         // Timeline refs
         this.timelineTrack = null;
@@ -243,11 +308,14 @@ export class SecretGame {
         this.boundHandlers = [];
         this.started = false;
         this.transitioning = false; // lock to prevent double progression
+        this.pendingTransition = null;
+        this.transitionToken = 0;
         this.destroyed = false;
         this._lastPassMsg = null;     // avoid repeating the same TEST PASS message
         this._lastRetryMsg = null;    // avoid repeating the same TEST FAIL message
         this._failToken = 0;          // only the latest TEST FAIL message auto-clears
         this._onRewardContinue = null; // wired by main.js
+        this._onRewardShown = null;    // wired by main.js
     }
 
     /* --------------------------------------------------------
@@ -262,6 +330,7 @@ export class SecretGame {
         this.bgStars = this.root.querySelector('#sg-stars');
         this.progressCurrent = this.root.querySelector('#sg-progress-current');
         this.progressFill = this.root.querySelector('#sg-progress-fill');
+        this.progressEl = this.root.querySelector('.sg-progress');
 
         this.introEl = this.root.querySelector('#sg-intro');
         this.introLine1 = this.root.querySelector('#sg-intro-line1');
@@ -323,18 +392,27 @@ export class SecretGame {
         this.l4ContinueBtn = this.root.querySelector('#sg-l4-continue');
 
         // L5
-        this.l5Wrap = this.root.querySelector('#sg-l5-wrap');
-        this.l5Pulse = this.root.querySelector('#sg-l5-pulse');
-        this.l5Core = this.root.querySelector('#sg-l5-core');
-        this.l5Progress = this.root.querySelector('#sg-l5-progress');
-        this.l5Feedback = this.root.querySelector('#sg-l5-feedback');
-        this.l5TestBtn = this.root.querySelector('#sg-l5-action');
+        this.l5Panels = this.root.querySelectorAll('[data-l5-panel]');
+        this.l5Steps = this.root.querySelectorAll('.sg-l5-steps span');
+        this.l5StartBtn = this.root.querySelector('#sg-l5-start');
+        this.l5FindField = this.root.querySelector('#sg-l5-find-field');
+        this.l5HoldHeart = this.root.querySelector('#sg-l5-hold-heart');
+        this.l5HoldFill = this.root.querySelector('.sg-l5-hold-fill');
+        this.l5HoldLabel = this.root.querySelector('#sg-l5-hold-label');
+        this.l5StoryField = this.root.querySelector('#sg-l5-story-field');
+        this.l5StorySvg = this.root.querySelector('#sg-l5-story-svg');
+        this.l5StoryPath = this.root.querySelector('#sg-l5-story-track');
+        this.l5StoryProgress = this.root.querySelector('#sg-l5-story-progress');
+        this.l5StoryStatus = this.root.querySelector('#sg-l5-story-status');
+        this.l5Choices = this.root.querySelector('#sg-l5-choices');
+        this.l5FinishBtn = this.root.querySelector('#sg-l5-finish');
 
         // Complete
         this.completeSymbols = this.root.querySelector('#sg-complete-symbols');
         this.completeLine1 = this.root.querySelector('#sg-complete-line1');
         this.completeLine2 = this.root.querySelector('#sg-complete-line2');
         this.completeUnlockBtn = this.root.querySelector('#sg-complete-unlock');
+        this.completeReplayBtn = this.root.querySelector('#sg-complete-replay');
 
         // Reward
         this.envelope = this.root.querySelector('#sg-envelope');
@@ -348,6 +426,7 @@ export class SecretGame {
         }
 
         this.reduced = prefersReducedMotion();
+        this._hydratePersistedProgress();
         this.destroyed = false;
         this.transitioning = false;
         this._spawnBgStars();
@@ -367,6 +446,9 @@ export class SecretGame {
 
         // Intro begin
         on(this.beginBtn, 'click', () => this._enterLevel1());
+        on(document, 'visibilitychange', () => {
+            if (!document.hidden) this._recoverAfterVisibilityChange();
+        });
 
         // Timeline -> game is wired by main.js (showTimelineScene /
         // hideTimelineForGame) so the game does not double-start when
@@ -384,13 +466,21 @@ export class SecretGame {
         on(this.l4NextBtn, 'click', () => this._advanceChemistry());
         on(this.l4JackpotAction, 'click', () => this._handleJackpotAction());
         on(this.l4ContinueBtn, 'click', () => this._continueFromLevel4());
-        on(this.l5TestBtn, 'click', () => this._validateLevel5());
-
-        // L5 heart taps (the level's own interaction - never advances by itself)
-        const l5Hit = () => this._hitHeart();
-        on(this.l5Wrap, 'click', l5Hit);
-        on(this.l5Wrap, 'touchstart', (e) => { e.preventDefault(); l5Hit(); }, { passive: false });
-        on(this.l5Wrap, 'keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); l5Hit(); }});
+        // L5 is deliberately user-paced. Each listener is scoped to its
+        // current stage; no global touch or scrolling behavior is changed.
+        on(this.l5StartBtn, 'click', () => this._startL5FromIntro());
+        on(this.l5FindField, 'click', (e) => this._handleL5Find(e));
+        on(this.l5HoldHeart, 'pointerdown', (e) => this._startL5Hold(e));
+        on(this.l5HoldHeart, 'pointerup', (e) => this._stopL5Hold(e));
+        on(this.l5HoldHeart, 'pointercancel', (e) => this._stopL5Hold(e));
+        on(this.l5HoldHeart, 'lostpointercapture', () => this._stopL5Hold());
+        on(this.l5StoryField, 'pointerdown', (e) => this._startL5Story(e));
+        on(this.l5StoryField, 'pointermove', (e) => this._traceL5Story(e));
+        on(this.l5StoryField, 'pointerup', (e) => this._stopL5Story(e));
+        on(this.l5StoryField, 'pointercancel', (e) => this._stopL5Story(e));
+        on(this.l5Choices, 'click', (e) => this._chooseL5Choice(e));
+        on(this.root, 'click', (e) => { if (e.target.closest('[data-l5-next]')) this._advanceL5Stage(); });
+        on(this.l5FinishBtn, 'click', () => this._finishLevel5());
 
         // L2 objects are delegated via _renderLevel2 per object
 
@@ -401,6 +491,7 @@ export class SecretGame {
 
         // Complete -> reward
         on(this.completeUnlockBtn, 'click', () => this._enterReward());
+        on(this.completeReplayBtn, 'click', () => this._playAgain());
 
         // Envelope open
         on(this.envelope, 'click', () => this._openEnvelope());
@@ -470,8 +561,11 @@ export class SecretGame {
         if (this.completeEl) { this.completeEl.classList.remove('is-active'); this.completeEl.hidden = true; }
         if (this.rewardEl) { this.rewardEl.classList.remove('is-active'); this.rewardEl.hidden = true; }
 
-        this._setProgress(0);
-        this._playIntro();
+        this._setGameProgressVisible(true);
+        if (!this._restorePersistedProgress()) {
+            this._setProgress(0);
+            this._playIntro();
+        }
         // Focus for keyboard
         this.root?.focus?.({ preventScroll: true });
     }
@@ -505,6 +599,33 @@ export class SecretGame {
 
     /* Allow main.js to hook reward continuation */
     set onRewardContinue(fn) { this._onRewardContinue = fn; }
+    set onRewardShown(fn) { this._onRewardShown = fn; }
+
+    // Used only when Back returns from the final letter. It restores the
+    // already-earned reward; no level, score, or game progress is replayed.
+    restoreReward() {
+        if (this.destroyed || !this.root) return false;
+        this._clearAllTimers();
+        this.started = true;
+        this._hideAllLevels();
+        this._hideCompleteUI();
+        this.rewardReady = true;
+        this.rewardPhase = 'opened';
+        this.state = 'reward';
+        this._setGameProgressVisible(false);
+        this.root.hidden = false;
+        this.root.classList.remove('is-leaving');
+        this.root.classList.add('is-visible', 'sg-reward-active');
+        if (this.rewardEl) { this.rewardEl.hidden = false; this.rewardEl.classList.add('is-active'); }
+        if (this.envelope) this.envelope.classList.add('is-open');
+        if (this.rewardCard) { this.rewardCard.hidden = false; this.rewardCard.classList.add('is-in'); }
+        if (this.rewardContinueBtn) { this.rewardContinueBtn.hidden = false; this.rewardContinueBtn.classList.add('is-in'); }
+        const hint = this.rewardEl?.querySelector('#sg-reward-hint');
+        if (hint) hint.hidden = true;
+        if (this.shell) this.shell.scrollTop = 0;
+        this._onRewardShown?.();
+        return true;
+    }
 
     /**
      * Navigate one game backwards without destroying this session.
@@ -525,10 +646,11 @@ export class SecretGame {
         if (state === 'level2') this._restoreCompletedLevel1();
         else if (state === 'level3') this._restoreCompletedLevel2();
         else if (state === 'level4') this._restoreCompletedLevel3();
-        else if (state === 'level5' || state === 'complete' || state === 'reward') this._restoreCompletedLevel4();
+        else if (state === 'level5' || state === 'complete') this._restoreCompletedLevel4();
+        else if (state === 'reward') this._restoreCompletedLevel5();
         else { this.backLocked = false; return false; }
 
-        this.later(this.reduced ? 0 : 420, () => { this.backLocked = false; });
+        this.backLocked = false;
         return true;
     }
 
@@ -600,8 +722,118 @@ export class SecretGame {
     }
 
     /* --------------------------------------------------------
+       Persistent completed-game checkpoints
+       -------------------------------------------------------- */
+    _hydratePersistedProgress() {
+        this.persistedProgress = loadSecretGameProgress();
+        const highest = this.persistedProgress.highestCompletedGame;
+        Object.keys(this.completedLevels).forEach((key, index) => {
+            this.completedLevels[key] = index < highest;
+        });
+    }
+
+    _markLevelCompleted(gameNumber) {
+        const highestCompletedGame = Math.max(this.persistedProgress.highestCompletedGame, gameNumber);
+        this.persistedProgress = {
+            highestCompletedGame,
+            currentGame: this.persistedProgress.currentGame,
+            game5Completed: highestCompletedGame === 5,
+        };
+        Object.keys(this.completedLevels).forEach((key, index) => {
+            if (index < highestCompletedGame) this.completedLevels[key] = true;
+        });
+        saveSecretGameProgress(highestCompletedGame, this.persistedProgress.currentGame);
+    }
+
+    _recordCurrentGame(gameNumber) {
+        this.persistedProgress = { ...this.persistedProgress, currentGame: gameNumber };
+        saveSecretGameProgress(this.persistedProgress.highestCompletedGame, gameNumber);
+    }
+
+    _restorePersistedProgress() {
+        const highest = this.persistedProgress.highestCompletedGame;
+        if (!highest) {
+            if (this.persistedProgress.currentGame === 1) {
+                this._showLevel('level1', 1);
+                this._renderLevel1();
+                return true;
+            }
+            return false;
+        }
+
+        if (this.persistedProgress.game5Completed) {
+            this._showComplete(true);
+            return true;
+        }
+
+        if (highest === 1) {
+            this._showLevel('level2', 2);
+            this._renderLevel2();
+        } else if (highest === 2) {
+            this._startLevel3();
+        } else if (highest === 3) {
+            this._enterLevel4();
+        } else if (highest === 4) {
+            this._showLevel('level5', 5);
+            this._renderLevel5();
+        }
+        return true;
+    }
+
+    _playAgain() {
+        if (this.state !== 'complete' || this.transitioning) return;
+        this.transitioning = true;
+        this.completeReplayBtn && (this.completeReplayBtn.disabled = true);
+        clearSecretGameProgress();
+        this.persistedProgress = { highestCompletedGame: 0, currentGame: null, game5Completed: false };
+        this.completedLevels = { level1: false, level2: false, level3: false, level4: false, level5: false };
+        this._clearAllTimers();
+        this._cleanupL1Drag();
+        this.l1Restored = false;
+        this.l4Restored = false;
+        this.l3SequenceToken += 1;
+        this.l4SequenceToken += 1;
+        this._hideAllLevels();
+        if (this.completeEl) { this.completeEl.classList.remove('is-active'); this.completeEl.hidden = true; }
+        if (this.rewardEl) { this.rewardEl.classList.remove('is-active'); this.rewardEl.hidden = true; }
+        this._setProgress(0);
+        this.state = 'intro';
+        this.transitioning = false;
+        this._enterLevel1();
+    }
+
+    _recoverAfterVisibilityChange() {
+        if (!this.started || this.destroyed) return;
+
+        if (this.pendingTransition) this._finishPendingTransition(this.pendingTransition.token);
+        this.backLocked = false;
+
+        if (this.state === 'level1' && this.root?.classList.contains('sg-game1-entering')) {
+            this.l1EntranceToken += 1;
+            this.root.classList.remove('sg-game1-entering');
+            this.root.classList.add('sg-game1-entered');
+        }
+
+        if (this.state === 'level4') {
+            if (this.l4Phase === 'jackpot-spinning') this._finishJackpotSpin();
+            else if (this.l4Phase === 'complete') this._showTestBtn(this.l4ContinueBtn);
+        }
+
+        if (this.state === 'complete') {
+            this._showTestBtn(this.completeUnlockBtn);
+            this._showTestBtn(this.completeReplayBtn);
+        }
+    }
+
+    /* --------------------------------------------------------
        Progress
        -------------------------------------------------------- */
+    _setGameProgressVisible(visible) {
+        if (!this.progressEl) return;
+        this.progressEl.hidden = !visible;
+        this.progressEl.setAttribute('aria-hidden', visible ? 'true' : 'true');
+    }
+
     _setProgress(n) {
         // n is 0..5 intuitive, show as fraction
         if (this.progressCurrent) {
@@ -615,7 +847,9 @@ export class SecretGame {
     }
 
     _hideAllLevels() {
+        this._resetRewardUI();
         this._cleanupL1Drag();
+        this._cleanupLevel5();
         this.l1EntranceToken += 1;
         this.l3SequenceToken += 1;
         this.root?.classList.remove('sg-game1-entering', 'sg-game1-entered');
@@ -634,6 +868,7 @@ export class SecretGame {
     _showLevel(key, progressNum) {
         this._hideAllLevels();
         this.transitioning = false;
+        this._setGameProgressVisible(true);
         if (this.completeEl) { this.completeEl.classList.remove('is-active'); this.completeEl.hidden = true; }
         if (this.rewardEl) { this.rewardEl.classList.remove('is-active'); this.rewardEl.hidden = true; }
         const el = this.levels[key];
@@ -643,6 +878,7 @@ export class SecretGame {
         el.classList.add('is-active');
         this._setProgress(progressNum);
         this.state = key;
+        this._recordCurrentGame(progressNum);
         // ensure shell scrolls to top for new level
         if (this.shell) this.shell.scrollTop = 0;
     }
@@ -654,6 +890,12 @@ export class SecretGame {
 
     _restoreCompletedLevel1() {
         this._showLevel('level1', 1);
+        if (!this.l1List?.children.length) {
+            this._renderLevel1(true);
+            const correctIds = this._l1CorrectIds();
+            this.l1Order = correctIds;
+            correctIds.forEach(id => this.l1List?.appendChild(this.l1List.querySelector(`[data-id="${id}"]`)));
+        }
         this.l1Restored = true;
         this.l1List?.querySelectorAll('.sg-memory-photo').forEach(card => {
             card.classList.remove('is-wrong');
@@ -673,7 +915,7 @@ export class SecretGame {
         this._showLevel('level2', 2);
         ++this.l2RoundToken;
         this.l2Locked = true;
-        if (this.l2ProgressEl) this.l2ProgressEl.textContent = 'Memory 3 / 3';
+        this._renderCompletedLevel2();
         const wrap = this.l2StageEl?.querySelector('.sg-game2-complete');
         if (!wrap || !this.l2Card) return;
         this.l2Card.className = 'sg-game2-card is-complete';
@@ -800,18 +1042,16 @@ export class SecretGame {
        -------------------------------------------------------- */
     _enterLevel1() {
         if (this.transitioning || this.state === 'level1') return;
-        this.transitioning = true;
-        // Tracked timer so destroy()/Back can safely cancel the entrance
         const wait = this.introEl ? (this.reduced ? 0 : 420) : 0;
         if (this.introEl) this.introEl.classList.remove('is-in');
-        this.later(wait, () => {
+        this._queueLevelTransition('intro', () => {
             if (this.introEl) this.introEl.hidden = true;
             this._showLevel('level1', 1);
             this._renderLevel1();
-        });
+        }, wait);
     }
 
-    _renderLevel1() {
+    _renderLevel1(restored = false) {
         if (!this.l1List) return;
         this.l1Restored = false;
         this._cleanupL1Drag();
@@ -853,7 +1093,7 @@ export class SecretGame {
         });
         this.l1List.appendChild(fragment);
         this.l1SkipBtn?.classList.add('is-in');
-        this._startLevel1Entrance();
+        if (!restored) this._startLevel1Entrance();
     }
 
     _startLevel1Entrance() {
@@ -978,7 +1218,7 @@ export class SecretGame {
 
         if (isCorrect) {
             // PASS - lock the puzzle and commit exactly one transition
-            this.completedLevels.level1 = true;
+            this._markLevelCompleted(1);
             this._showPassFeedback(this.l1Feedback, GAME_META.successMessages.level1);
             this._hideTestBtn(this.l1CheckBtn);
             this.l1List.querySelectorAll('.sg-memory-photo').forEach(c => c.style.pointerEvents = 'none');
@@ -996,7 +1236,7 @@ export class SecretGame {
     // TEMP: Remove Game 1 skip after final memory photos/order are added.
     _skipLevel1() {
         if (this.transitioning || this.state !== 'level1') return;
-        this.completedLevels.level1 = true;
+        this._markLevelCompleted(1);
         this._hideTestBtn(this.l1CheckBtn);
         if (this.l1SkipBtn) this.l1SkipBtn.disabled = true;
         this._showPassFeedback(this.l1Feedback, 'Game skipped for development.');
@@ -1151,9 +1391,23 @@ export class SecretGame {
         this._transitionLevel2Content('original');
     }
 
+    _renderCompletedLevel2() {
+        if (!this.l2Card || !this.l2StageEl) return;
+        if (this.l2ProgressEl) this.l2ProgressEl.textContent = 'Memory 3 / 3';
+        this.l2Card.className = 'sg-game2-card is-complete';
+        this.l2StageEl.replaceChildren();
+        const wrap = document.createElement('div'); wrap.className = 'sg-game2-complete';
+        const title = document.createElement('h4'); title.textContent = 'Memory Detector Complete â¤';
+        const copy = document.createElement('p'); copy.textContent = 'You may miss a few answers... but you never miss what matters to us. â¤';
+        const summary = document.createElement('p'); summary.className = 'sg-game2-complete-summary'; summary.textContent = `Wrong Answers: ${this.l2TotalWrongAnswers}`;
+        const kissTotal = document.createElement('p'); kissTotal.className = 'sg-game2-complete-kisses'; kissTotal.textContent = `${this.l2TotalWrongAnswers} Ã— 5 = ${this.l2TotalWrongAnswers * 5} Kisses ðŸ˜˜`;
+        wrap.append(title, copy, summary, kissTotal);
+        this.l2StageEl.append(wrap);
+    }
+
     _completeLevel2() {
         if (!this.l2Card || !this.l2StageEl) return;
-        this.completedLevels.level2 = true;
+        this._markLevelCompleted(2);
         ++this.l2RoundToken; this.l2Locked = true;
         if (this.l2ProgressEl) this.l2ProgressEl.textContent = 'Memory 3 / 3';
         this.l2Card.className = 'sg-game2-card is-complete'; this.l2StageEl.replaceChildren();
@@ -1320,7 +1574,7 @@ export class SecretGame {
     }
 
     _playLevel3Finale() {
-        this.completedLevels.level3 = true;
+        this._markLevelCompleted(3);
         this.l3Phase = 'final';
         this._playLevel3Cinematic([
             { text: 'Achha…', duration: GAME3_TIMING.cinematic.short },
@@ -1400,6 +1654,50 @@ export class SecretGame {
             this.l4Jackpot.hidden = false;
             void this.l4Jackpot.offsetWidth;
             this.l4Jackpot.classList.add('is-entered');
+        }
+    }
+
+    // Completion and reward are sibling screens, so every route out of the
+    // reward must fully reset it before another screen is allowed to show.
+    _resetRewardUI() {
+        this.rewardRun += 1;
+        this.rewardReady = false;
+        this.rewardPhase = 'idle';
+        this.root?.classList.remove('sg-reward-active');
+        if (this.rewardEl) {
+            this.rewardEl.classList.remove('is-active');
+            this.rewardEl.hidden = true;
+        }
+        if (this.envelope) {
+            this.envelope.classList.remove('is-open');
+            this.envelope.setAttribute('tabindex', '0');
+            this.envelope.setAttribute('role', 'button');
+            this.envelope.setAttribute('aria-label', 'Open your reward');
+        }
+        if (this.rewardCard) {
+            this.rewardCard.classList.remove('is-in');
+            this.rewardCard.hidden = true;
+        }
+        if (this.rewardContinueBtn) {
+            this.rewardContinueBtn.classList.remove('is-in');
+            this.rewardContinueBtn.hidden = true;
+        }
+        const hint = this.rewardEl?.querySelector('#sg-reward-hint');
+        if (hint) hint.hidden = true;
+    }
+
+    _hideCompleteUI() {
+        if (this.completeEl) {
+            this.completeEl.classList.remove('is-active');
+            this.completeEl.hidden = true;
+        }
+        if (this.completeUnlockBtn) {
+            this.completeUnlockBtn.classList.remove('is-in');
+            this.completeUnlockBtn.hidden = true;
+        }
+        if (this.completeReplayBtn) {
+            this.completeReplayBtn.classList.remove('is-in');
+            this.completeReplayBtn.hidden = true;
         }
     }
 
@@ -1565,12 +1863,23 @@ export class SecretGame {
             offset = lockAt + (this.reduced ? 0 : 140);
         });
         this.later(offset + (this.reduced ? 0 : 180), () => {
-            if (token !== this.l4SequenceToken || this.state !== 'level4' || this.l4Phase !== 'jackpot-spinning') return;
-            this.l4JackpotRunning = false;
-            this.l4Phase = 'jackpot-ready';
-            this._setButtonLabel(this.l4JackpotAction, 'Reveal Our Jackpot ❤️');
-            this.l4JackpotAction.disabled = false;
+            if (token !== this.l4SequenceToken) return;
+            this._finishJackpotSpin();
         });
+    }
+
+    _finishJackpotSpin() {
+        if (this.state !== 'level4' || this.l4Phase !== 'jackpot-spinning') return;
+        this.l4JackpotGrid?.querySelectorAll('.sg-jackpot-card').forEach(card => {
+            const value = card.querySelector('.sg-jackpot-value');
+            if (value) value.textContent = this.l4Results[card.dataset.category] || value.textContent;
+            card.classList.remove('is-cycling');
+            card.classList.add('is-locked');
+        });
+        this.l4JackpotRunning = false;
+        this.l4Phase = 'jackpot-ready';
+        this._setButtonLabel(this.l4JackpotAction, 'Reveal Our Jackpot ❤️');
+        if (this.l4JackpotAction) this.l4JackpotAction.disabled = false;
     }
 
     _showJackpotFinal(restored = false) {
@@ -1592,7 +1901,7 @@ export class SecretGame {
 
     _continueFromLevel4() {
         if (this.transitioning || this.state !== 'level4' || this.l4Phase !== 'complete') return;
-        this.completedLevels.level4 = true;
+        this._markLevelCompleted(4);
         this.l4ContinueBtn.disabled = true;
         this.levels.level4?.classList.add('is-exiting');
         this._queueLevelTransition('level4', () => {
@@ -1607,176 +1916,401 @@ export class SecretGame {
             cur.classList.add('is-exiting');
             this.later(this.reduced ? 0 : 420, () => {
                 this._showLevel('level5', 5);
-                if (this.l5Started && !this.completedLevels.level5) this._resumeLevel5();
-                else this._renderLevel5();
+                this._renderLevel5();
             });
         } else {
             this._showLevel('level5', 5);
-            if (this.l5Started && !this.completedLevels.level5) this._resumeLevel5();
-            else this._renderLevel5();
+            this._renderLevel5();
         }
     }
 
     /* --------------------------------------------------------
-       LEVEL 5 - MY HEART
-       Pulse timing: ring scales 0.35 -> 1 over pulseDurationMs.
-       Sweet spot is last (1 - hitWindow) fraction.
-       Hits increment brightness.
+       LEVEL 5 - UNLOCK MY HEART
+       The internal stages intentionally remain transient. Only the
+       final Continue commits Game 5 to the shared completion store.
        -------------------------------------------------------- */
     _renderLevel5() {
-        if (!this.l5Pulse || !this.l5Wrap) return;
-        this.l5Started = true;
-        this.l5Hits = 0;
-        this.l5Misses = 0;
-        if (this.l5Progress) this.l5Progress.innerHTML = `<strong>${this.l5Hits}</strong> / ${HEART_CONFIG.requiredHits}`;
-        if (this.l5Feedback) { this.l5Feedback.textContent = 'Jab dil tez dhadke, tab tap karo...'; this.l5Feedback.className = 'sg-feedback is-visible'; }
-        // TEST appears only after every required heartbeat has been caught
-        this._hideTestBtn(this.l5TestBtn);
-        if (this.l5Core) {
-            this.l5Core.style.filter = '';
-            this.l5Core.style.transform = '';
-        }
-
-        // reset pulse animation
-        this.l5Pulse.classList.remove('is-beating');
-        void this.l5Pulse.offsetWidth;
-        this.l5Pulse.style.setProperty('--dur', HEART_CONFIG.pulseDurationMs + 'ms');
-        // reduced motion: still beat but slower
-        if (!this.reduced) {
-            this.l5Pulse.classList.add('is-beating');
-        } else {
-            // reduced: keep a gentle opacity pulse only
-            this.l5Pulse.classList.add('is-beating');
-        }
-
-        this.l5PulseStart = Date.now();
-        if (this.l5Wrap) {
-            this.l5Wrap.setAttribute('tabindex', '0');
-            this.l5Wrap.setAttribute('role', 'button');
-            this.l5Wrap.setAttribute('aria-label', 'Tap the heart when it glows');
-        }
-        // focus for keyboard
-        this.later(300, () => this.l5Wrap?.focus({ preventScroll: true }));
+        this._cleanupLevel5();
+        this.l5StageDone = 0;
+        this.l5HoldProgress = 0;
+        this.l5StoryProgressValue = 0;
+        this.l5FindMisses = 0;
+        this.l5HoldReleaseCount = 0;
+        this.l5Panels?.forEach(panel => {
+            panel.querySelectorAll('[data-l5-next]').forEach(btn => { btn.hidden = true; btn.disabled = false; btn.classList.remove('is-in'); });
+            panel.querySelectorAll('.sg-l5-status').forEach(status => { status.textContent = ''; status.className = 'sg-l5-status'; });
+        });
+        this.l5FindField?.querySelectorAll('.sg-l5-find-object').forEach(btn => { btn.disabled = false; btn.classList.remove('is-missed', 'is-found'); });
+        this.l5StoryField?.classList.remove('is-complete');
+        this.l5Choices?.querySelectorAll('button').forEach(btn => { btn.disabled = false; btn.classList.remove('is-chosen'); });
+        this.l5Choices?.classList.remove('is-visible');
+        this.l5FinishBtn && (this.l5FinishBtn.hidden = true);
+        this.l5FinishBtn?.classList.remove('is-in');
+        this.l5FinishBtn && (this.l5FinishBtn.disabled = false);
+        this.root?.querySelector('#sg-l5-unlock-heart')?.classList.remove('is-unlocked');
+        this.root?.querySelector('#sg-l5-heart-thread')?.classList.remove('is-unlocking');
+        this.root?.classList.remove('sg-l5-final-calm');
+        this.l5StartBtn && (this.l5StartBtn.disabled = false);
+        this.l5StartBtn?.classList.remove('is-in', 'is-pressed');
+        this.l5Choices && (this.l5Choices.hidden = false);
+        this._randomizeL5Find();
+        this._setL5Stage('intro', true);
     }
 
-    _resumeLevel5() {
-        if (!this.l5Pulse || !this.l5Wrap) return this._renderLevel5();
-        this.l5PulseStart = Date.now();
-        this.l5Wrap.style.pointerEvents = '';
-        this.l5Pulse.classList.add('is-beating');
-        if (this.l5Progress) this.l5Progress.innerHTML = `<strong>${this.l5Hits}</strong> / ${HEART_CONFIG.requiredHits}`;
-        if (this.l5Hits >= HEART_CONFIG.requiredHits) {
-            if (this.l5Feedback) {
-                this.l5Feedback.textContent = GAME_META.successMessages.level5a;
-                this.l5Feedback.className = 'sg-feedback is-visible is-success';
-            }
-            this.l5Wrap.style.pointerEvents = 'none';
-            this._showTestBtn(this.l5TestBtn);
-        } else {
-            if (this.l5Feedback) {
-                this.l5Feedback.textContent = this.l5Hits ? `Bohot khoob — ${this.l5Hits} / ${HEART_CONFIG.requiredHits}` : 'Jab dil tez dhadke, tab tap karo...';
-                this.l5Feedback.className = 'sg-feedback is-visible';
-            }
-            this._hideTestBtn(this.l5TestBtn);
-        }
+    _cleanupLevel5() {
+        this.l5Token += 1;
+        this.l5Holding = false;
+        this.l5HoldPointer = null;
+        this.l5StoryTracing = false;
+        this.l5StoryPointer = null;
+        if (this.l5Raf) cancelAnimationFrame(this.l5Raf);
+        this.l5Raf = null;
+        this.l5HoldHeart?.classList.remove('is-holding', 'is-safe');
     }
 
-    _hitHeart() {
-        if (this.transitioning) return;
+    _randomizeL5Find() {
+        const positions = [['12%','20%'],['39%','15%'],['74%','21%'],['21%','50%'],['57%','47%'],['87%','55%'],['12%','80%'],['42%','79%'],['73%','77%']];
+        const shuffled = shuffle(positions);
+        this.l5FindField?.querySelectorAll('.sg-l5-find-object').forEach((object, index) => {
+            const [x, y] = shuffled[index]; object.style.setProperty('--x', x); object.style.setProperty('--y', y);
+        });
+    }
+
+    _startL5FromIntro() {
+        if (this.state !== 'level5' || this.l5Stage !== 'intro' || this.l5StartBtn?.disabled) return;
+        this.l5StartBtn.disabled = true;
+        this.l5StartBtn.classList.add('is-pressed');
+        const token = this.l5Token;
+        this.later(this.reduced ? 0 : 280, () => {
+            if (token === this.l5Token && this.l5Stage === 'intro') this._setL5Stage('find');
+        });
+    }
+
+    _revealL5Intro() {
+        const panel = this._activeL5Panel();
+        const lines = panel?.querySelectorAll('.sg-l5-intro-line');
+        const heart = panel?.querySelector('.sg-l5-lock-heart');
+        const token = this.l5Token;
+        lines?.forEach(line => line.classList.remove('is-visible'));
+        heart?.classList.remove('is-visible');
+        this.l5StartBtn?.classList.remove('is-in');
+        const reveal = (index) => {
+            if (token !== this.l5Token || this.l5Stage !== 'intro') return;
+            lines?.[index]?.classList.add('is-visible');
+        };
+        this.later(this.reduced ? 0 : 180, () => reveal(0));
+        this.later(this.reduced ? 0 : 700, () => reveal(1));
+        this.later(this.reduced ? 0 : 1050, () => { if (token === this.l5Token && this.l5Stage === 'intro') heart?.classList.add('is-visible'); });
+        this.later(this.reduced ? 0 : 1250, () => reveal(2));
+        this.later(this.reduced ? 0 : 1750, () => reveal(3));
+        this.later(this.reduced ? 0 : 2150, () => {
+            if (token === this.l5Token && this.l5Stage === 'intro') this.l5StartBtn?.classList.add('is-in');
+        });
+    }
+
+    _setL5Stage(stage, immediate = false) {
         if (this.state !== 'level5') return;
-        // compute pulse fraction
-        const now = Date.now();
-        const elapsed = (now - this.l5PulseStart) % HEART_CONFIG.pulseDurationMs;
-        const fraction = elapsed / HEART_CONFIG.pulseDurationMs; // 0..1
+        this._cleanupLevel5();
+        this.l5Stage = stage;
+        this.l5Panels?.forEach(panel => {
+            const active = panel.dataset.l5Panel === stage;
+            panel.hidden = !active;
+            panel.classList.toggle('is-active', active);
+        });
+        this._updateL5Steps();
+        this.levels.level5?.classList.toggle('is-intro', stage === 'intro');
+        if (stage === 'intro') this._revealL5Intro();
+        if (stage === 'hold') this._resetL5Hold();
+        if (stage === 'story') this._resetL5Story();
+        if (stage === 'choice') this._prepareL5Choice();
+        if (stage === 'unlock') this._revealL5Unlock(immediate);
+    }
 
-        const inWindow = fraction >= HEART_CONFIG.hitWindow;
+    _updateL5Steps() {
+        this.l5Steps?.forEach((step, index) => step.classList.toggle('is-done', index < this.l5StageDone));
+        this.root?.querySelectorAll('#sg-l5-heart-thread i').forEach((ring, index) => ring.classList.toggle('is-done', index < this.l5StageDone));
+    }
 
-        if (inWindow) {
-            this.l5Hits += 1;
-            if (this.l5Progress) this.l5Progress.innerHTML = `<strong>${this.l5Hits}</strong> / ${HEART_CONFIG.requiredHits}`;
-            // hit feedback
-            if (this.l5Core) {
-                this.l5Core.classList.remove('is-hit');
-                void this.l5Core.offsetWidth;
-                this.l5Core.classList.add('is-hit');
-                // brighten with hits
-                const bright = 1 + this.l5Hits * 0.06;
-                this.l5Core.style.filter = `brightness(${bright})`;
-                this.l5Core.style.boxShadow = `0 0 ${22 + this.l5Hits * 6}px rgba(201,74,107,${0.45 + this.l5Hits * 0.08}), 0 6px 18px rgba(5,10,24,0.35)`;
-                this.later(460, () => this.l5Core?.classList.remove('is-hit'));
-            }
-            if (this.l5Feedback) {
-                this.l5Feedback.textContent = this.l5Hits === 1 ? 'Perfect... 💙' : `Bohot khoob — ${this.l5Hits} / ${HEART_CONFIG.requiredHits}`;
-                this.l5Feedback.className = 'sg-feedback is-visible is-success';
-            }
-            // subtle wrap pulse
-            this.l5Wrap.animate?.(
-                [{ transform: 'scale(1)' }, { transform: 'scale(1.04)' }, { transform: 'scale(1)' }],
-                { duration: 300, easing: 'ease-out' }
-            );
+    _activeL5Panel() {
+        return this.root?.querySelector(`[data-l5-panel="${this.l5Stage}"]`);
+    }
 
-            if (this.l5Hits >= HEART_CONFIG.requiredHits) {
-                // Puzzle SOLVED, ready for TEST - never auto-advance here.
-                if (this.l5Feedback) {
-                    this.l5Feedback.textContent = GAME_META.successMessages.level5a;
-                    this.l5Feedback.className = 'sg-feedback is-visible is-success';
-                }
-                // bright full heart
-                if (this.l5Core) {
-                    this.l5Core.style.filter = 'brightness(1.35)';
-                    this.l5Core.style.boxShadow = '0 0 44px rgba(232,122,154,0.75), 0 0 70px rgba(126,200,227,0.35)';
-                }
-                // stop further taps so the solved heart stays locked
-                if (this.l5Wrap) this.l5Wrap.style.pointerEvents = 'none';
-                this.later(this.reduced ? 200 : 800, () => {
-                    if (this.state !== 'level5' || this.transitioning) return;
-                    this._showTestBtn(this.l5TestBtn, true);
-                });
-            }
-        } else {
-            this.l5Misses += 1;
-            if (this.l5Feedback) {
-                this.l5Feedback.textContent = 'Thoda aur intezaar... jab glow tez ho tab tap karo.';
-                this.l5Feedback.className = 'sg-feedback is-visible';
-                this.later(1200, () => {
-                    if (this.l5Feedback?.textContent.includes('intezaar')) {
-                        this.l5Feedback.className = 'sg-feedback is-visible';
-                        this.l5Feedback.textContent = 'Jab dil tez dhadke, tab tap karo...';
-                    }
-                });
-            }
-            // soft shake on core
-            this.l5Core?.animate?.(
-                [{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }],
-                { duration: 320, easing: 'ease-out' }
-            );
-            // forgiving: never hard-fail even if misses exceed max
+    _l5Status(message, modifier = '') {
+        const status = this._activeL5Panel()?.querySelector('.sg-l5-status');
+        if (status) {
+            status.textContent = message;
+            status.className = `sg-l5-status ${modifier}`.trim();
         }
     }
 
-    /* --------------------------------------------------------
-       LEVEL 5 validation - dedicated TEST button.
-       Required heartbeats caught -> TEST PASS -> exactly one
-       queued transition to the existing game completion screen
-       (which then leads to the reward). Otherwise -> TEST FAIL,
-       stay on Level 5 and try again.
-       -------------------------------------------------------- */
-    _validateLevel5() {
-        if (this.transitioning || this.state !== 'level5') return;
+    _showL5Next(label = 'CONTINUE') {
+        const btn = this._activeL5Panel()?.querySelector('[data-l5-next]');
+        if (!btn) return;
+        this._setButtonLabel(btn, label);
+        btn.hidden = false;
+        void btn.offsetWidth;
+        btn.classList.add('is-in');
+    }
 
-        if (this.l5Hits >= HEART_CONFIG.requiredHits) {
-            // PASS
-            this.completedLevels.level5 = true;
-            this._showPassFeedback(this.l5Feedback, `${GAME_META.successMessages.level5b} ${GAME_META.successMessages.level5c}`);
-            this._hideTestBtn(this.l5TestBtn);
-            this._queueLevelTransition('level5', () => this._enterComplete(), this.reduced ? 400 : 1100);
+    _handleL5Find(event) {
+        if (this.state !== 'level5' || this.l5Stage !== 'find') return;
+        const object = event.target.closest('.sg-l5-find-object');
+        if (!object || object.disabled) return;
+        if (object.dataset.heart === 'true') {
+            this.l5StageDone = Math.max(this.l5StageDone, 1);
+            this.l5FindField?.querySelectorAll('button').forEach(btn => { btn.disabled = true; });
+            object.classList.add('is-found');
+            this._updateL5Steps();
+            this._l5Status('Of course... tum mujhe dhoond hi leti ho. ❤️', 'is-success');
+            const token = this.l5Token;
+            this.later(this.reduced ? 0 : 1050, () => {
+                if (token !== this.l5Token || this.l5Stage !== 'find') return;
+                this._l5Status('Pehla lock khul gaya. ✨', 'is-success');
+                this._showL5Next();
+            });
         } else {
-            // FAIL - stay on the level, keep tapping with the heartbeat
-            this._showFailFeedback(this.l5Feedback, this.l5Wrap);
-            // re-enable taps for another attempt (defensive; the TEST
-            // button is normally only reachable when complete)
-            if (this.l5Wrap) this.l5Wrap.style.pointerEvents = '';
+            object.disabled = true;
+            object.classList.add('is-missed');
+            const messages = ['Yahan nahi 😌', 'Nice try...', 'Dil itna easily nahi milta 😏', 'Thoda aur dhundo... ❤️'];
+            const message = messages[this.l5FindMisses % messages.length];
+            this._l5Status(message);
+            this.l5FindMisses += 1;
+            const token = this.l5Token;
+            this.later(this.reduced ? 0 : 1250, () => {
+                if (token === this.l5Token && this.l5Stage === 'find') this._l5Status('');
+            });
         }
+    }
+
+    _resetL5Hold() {
+        this.l5HoldProgress = 0;
+        if (this.l5HoldFill) this.l5HoldFill.style.strokeDashoffset = '327';
+        if (this.l5HoldLabel) this.l5HoldLabel.textContent = 'Press and hold';
+        this._l5Status('');
+    }
+
+    _startL5Hold(event) {
+        if (this.state !== 'level5' || this.l5Stage !== 'hold' || this.l5StageDone >= 2) return;
+        event.preventDefault();
+        this.l5Holding = true;
+        this.l5HoldPointer = event.pointerId;
+        this.l5HoldHeart?.setPointerCapture?.(event.pointerId);
+        this.l5HoldHeart?.classList.add('is-holding');
+        this._l5Status(this.l5HoldProgress > .66 ? 'Bas aise hi...' : this.l5HoldProgress > .33 ? 'Safe lag raha hai... ❤️' : 'Thoda aur...');
+        this.l5HoldLastFrame = performance.now();
+        if (!this.l5Raf) this.l5Raf = requestAnimationFrame((now) => this._tickL5Hold(now));
+    }
+
+    _stopL5Hold(event) {
+        if (event && this.l5HoldPointer != null && event.pointerId !== this.l5HoldPointer) return;
+        this.l5Holding = false;
+        this.l5HoldPointer = null;
+        this.l5HoldHeart?.classList.remove('is-holding');
+        if (this.l5HoldProgress > .12 && this.l5HoldProgress < 1 && this.l5HoldReleaseCount++ % 3 === 0) this._l5Status('Mat chhodo na... 😌');
+    }
+
+    _tickL5Hold(now) {
+        this.l5Raf = null;
+        if (this.state !== 'level5' || this.l5Stage !== 'hold' || this.l5StageDone >= 2) return;
+        const elapsed = Math.min(48, now - this.l5HoldLastFrame || 16);
+        this.l5HoldLastFrame = now;
+        this.l5HoldProgress = Math.max(0, Math.min(1, this.l5HoldProgress + (elapsed / 3000) * (this.l5Holding ? 1 : -0.45)));
+        if (this.l5HoldFill) this.l5HoldFill.style.strokeDashoffset = String(327 * (1 - this.l5HoldProgress));
+        if (this.l5HoldLabel) this.l5HoldLabel.textContent = `${Math.round(this.l5HoldProgress * 100)}% held`;
+        if (this.l5Holding) this._l5Status(this.l5HoldProgress > .66 ? 'Bas aise hi...' : this.l5HoldProgress > .33 ? 'Safe lag raha hai... ❤️' : 'Thoda aur...');
+        if (this.l5HoldProgress >= 1) {
+            this.l5StageDone = Math.max(this.l5StageDone, 2);
+            this.l5Holding = false;
+            this.l5HoldHeart?.classList.remove('is-holding');
+            this.l5HoldHeart?.classList.add('is-safe');
+            this._updateL5Steps();
+            if (this.l5HoldLabel) this.l5HoldLabel.textContent = 'Safe.';
+            this._l5Status('Exactly where it belongs. ❤️', 'is-success');
+            const token = this.l5Token;
+            this.later(this.reduced ? 0 : 1150, () => {
+                if (token !== this.l5Token || this.l5Stage !== 'hold') return;
+                this._l5Status('Dusra lock khul gaya. ✨', 'is-success');
+                this._showL5Next();
+            });
+            return;
+        }
+        this.l5Raf = requestAnimationFrame((next) => this._tickL5Hold(next));
+    }
+
+    _resetL5Story() {
+        const path = this.l5StoryPath;
+        if (!path) return;
+        this.l5StoryField?.classList.remove('is-complete', 'is-near-end');
+        if (!this.l5StorySvg?.querySelector('.sg-l5-story-nodes')) {
+            const nodes = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            nodes.setAttribute('class', 'sg-l5-story-nodes');
+            [[95,104],[182,159],[261,127],[326,57]].forEach(([x, y]) => {
+                const node = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                node.setAttribute('cx', x); node.setAttribute('cy', y); node.setAttribute('r', '5'); nodes.appendChild(node);
+            });
+            this.l5StorySvg?.insertBefore(nodes, this.l5StorySvg.querySelector('.sg-l5-story-start'));
+        }
+        const length = path.getTotalLength();
+        this.l5StoryPoints = Array.from({ length: 101 }, (_, i) => path.getPointAtLength(length * i / 100));
+        if (this.l5StoryProgress) {
+            this.l5StoryProgress.style.strokeDasharray = String(length);
+            this.l5StoryProgress.style.strokeDashoffset = String(length);
+        }
+        this.l5StoryField?.querySelectorAll('.sg-l5-story-nodes circle').forEach(node => node.classList.remove('is-lit'));
+        if (this.l5StoryStatus) this.l5StoryStatus.textContent = 'Start from YOU';
+        this._l5Status('');
+    }
+
+    _getL5SvgPoint(event) {
+        const point = this.l5StorySvg?.createSVGPoint();
+        const matrix = this.l5StorySvg?.getScreenCTM();
+        if (!point || !matrix) return null;
+        point.x = event.clientX; point.y = event.clientY;
+        return point.matrixTransform(matrix.inverse());
+    }
+
+    _nearestL5StoryPoint(point) {
+        let nearest = 0; let distance = Infinity;
+        this.l5StoryPoints.forEach((sample, index) => {
+            const d = Math.hypot(sample.x - point.x, sample.y - point.y);
+            if (d < distance) { distance = d; nearest = index; }
+        });
+        return { nearest, distance };
+    }
+
+    _startL5Story(event) {
+        if (this.state !== 'level5' || this.l5Stage !== 'story' || this.l5StageDone >= 3) return;
+        const point = this._getL5SvgPoint(event); if (!point) return;
+        const hit = this._nearestL5StoryPoint(point);
+        if (hit.nearest > 10 || hit.distance > 34) { if (this.l5StoryStatus) this.l5StoryStatus.textContent = 'Start from YOU'; return; }
+        event.preventDefault();
+        this.l5StoryTracing = true; this.l5StoryPointer = event.pointerId;
+        this.l5StoryField?.setPointerCapture?.(event.pointerId);
+        if (this.l5StoryStatus) this.l5StoryStatus.textContent = 'Follow the light...';
+    }
+
+    _traceL5Story(event) {
+        if (!this.l5StoryTracing || event.pointerId !== this.l5StoryPointer || this.l5Stage !== 'story') return;
+        event.preventDefault();
+        const point = this._getL5SvgPoint(event); if (!point) return;
+        const hit = this._nearestL5StoryPoint(point);
+        if (hit.distance > 32 || hit.nearest > this.l5StoryProgressValue + 14 || hit.nearest < this.l5StoryProgressValue - 8) return;
+        if (hit.nearest > this.l5StoryProgressValue) this.l5StoryProgressValue = hit.nearest;
+        const length = this.l5StoryPath?.getTotalLength() || 0;
+        if (this.l5StoryProgress) this.l5StoryProgress.style.strokeDashoffset = String(length * (1 - this.l5StoryProgressValue / 100));
+        this.l5StoryField?.querySelectorAll('.sg-l5-story-nodes circle').forEach((node, index) => node.classList.toggle('is-lit', this.l5StoryProgressValue >= [24, 49, 74, 94][index]));
+        this.l5StoryField?.classList.toggle('is-near-end', this.l5StoryProgressValue >= 72);
+        const checkpoints = [[25, 'Ek mulaqat...'], [50, 'Thodi si baatein...'], [75, 'Bahut saari yaadein...'], [96, 'Aur phir... hum. ❤️']];
+        const checkpoint = checkpoints.filter(([at]) => this.l5StoryProgressValue >= at).pop();
+        if (checkpoint && this.l5StoryStatus) this.l5StoryStatus.textContent = checkpoint[1];
+        if (this.l5StoryProgressValue >= 98) this._completeL5Story();
+    }
+
+    _stopL5Story(event) {
+        if (event && this.l5StoryPointer != null && event.pointerId !== this.l5StoryPointer) return;
+        this.l5StoryTracing = false; this.l5StoryPointer = null;
+    }
+
+    _completeL5Story() {
+        if (this.l5StageDone >= 3) return;
+        this.l5StageDone = 3; this.l5StoryTracing = false; this._updateL5Steps();
+        this.l5StoryField?.classList.add('is-complete');
+        if (this.l5StoryStatus) this.l5StoryStatus.textContent = 'YOU + ME ♥';
+        this._l5Status('Har raasta tum tak hi aata hai. ❤️', 'is-success');
+        const token = this.l5Token;
+        this.later(this.reduced ? 0 : 1050, () => {
+            if (token !== this.l5Token || this.l5Stage !== 'story') return;
+            this._l5Status('Teesra lock khul gaya. ✨', 'is-success');
+            this._showL5Next();
+        });
+    }
+
+    _prepareL5Choice() {
+        const panel = this._activeL5Panel();
+        const setup = panel?.querySelectorAll('.sg-l5-choice-setup p');
+        const token = this.l5Token;
+        this.l5Choices && (this.l5Choices.hidden = true);
+        setup?.forEach(line => line.classList.remove('is-visible'));
+        const reveal = (index) => {
+            if (token !== this.l5Token || this.l5Stage !== 'choice') return;
+            setup?.[index]?.classList.add('is-visible');
+        };
+        this.later(this.reduced ? 0 : 160, () => reveal(0));
+        this.later(this.reduced ? 0 : 760, () => reveal(1));
+        this.later(this.reduced ? 0 : 1460, () => reveal(2));
+        this.later(this.reduced ? 0 : 2100, () => {
+            if (token !== this.l5Token || this.l5Stage !== 'choice' || !this.l5Choices) return;
+            this.l5Choices.hidden = false; void this.l5Choices.offsetWidth; this.l5Choices.classList.add('is-visible');
+        });
+        this.later(this.reduced ? 0 : 6400, () => {
+            if (token === this.l5Token && this.l5Stage === 'choice' && this.l5StageDone < 4) this._l5Status('Waise answer mujhe already pata hai... 😌');
+        });
+    }
+
+    _chooseL5Choice(event) {
+        if (this.state !== 'level5' || this.l5Stage !== 'choice' || this.l5StageDone >= 4) return;
+        const choice = event.target.closest('button'); if (!choice) return;
+        this.l5StageDone = 4; this._updateL5Steps();
+        this.l5Choices?.querySelectorAll('button').forEach(btn => { btn.disabled = true; btn.classList.toggle('is-chosen', btn === choice); });
+        this._l5Status('Hmm...');
+        const token = this.l5Token;
+        this.later(this.reduced ? 0 : 720, () => {
+            if (token === this.l5Token && this.l5Stage === 'choice') this._l5Status('Problem ye hai...');
+        });
+        this.later(this.reduced ? 0 : 1500, () => {
+            if (token === this.l5Token && this.l5Stage === 'choice') this._l5Status('Wrong answer choose karne ka option diya hi nahi tha. 😌❤️', 'is-success');
+        });
+        this.later(this.reduced ? 0 : 2400, () => {
+            if (token !== this.l5Token || this.l5Stage !== 'choice') return;
+            this._l5Status('Har baar... tum. Chautha lock khul gaya. ✨', 'is-success');
+            this._showL5Next('REVEAL MY HEART');
+        });
+    }
+
+    _advanceL5Stage() {
+        if (this.state !== 'level5') return;
+        if (this.l5Stage === 'find' && this.l5StageDone >= 1) this._setL5Stage('hold');
+        else if (this.l5Stage === 'hold' && this.l5StageDone >= 2) this._setL5Stage('story');
+        else if (this.l5Stage === 'story' && this.l5StageDone >= 3) this._setL5Stage('choice');
+        else if (this.l5Stage === 'choice' && this.l5StageDone >= 4) this._setL5Stage('unlock');
+    }
+
+    _revealL5Unlock(immediate) {
+        const token = this.l5Token;
+        const panel = this._activeL5Panel();
+        const heart = panel?.querySelector('#sg-l5-unlock-heart');
+        const thread = this.root?.querySelector('#sg-l5-heart-thread');
+        let lastLine = panel?.querySelector('.sg-l5-reveal-last');
+        if (!lastLine && panel && this.l5FinishBtn) {
+            lastLine = document.createElement('p');
+            lastLine.className = 'sg-l5-reveal-line sg-l5-reveal-last';
+            lastLine.textContent = 'Aur ye to kab ka tumhara ho chuka hai.';
+            panel.insertBefore(lastLine, this.l5FinishBtn);
+        }
+        thread?.classList.add('is-unlocking');
+        this.root?.classList.add('sg-l5-final-calm');
+        heart?.classList.add('is-unlocked');
+        const lines = panel?.querySelectorAll('.sg-l5-reveal-line, .sg-l5-reveal-title');
+        lines?.forEach(line => line.classList.remove('is-visible'));
+        const reveal = (index) => {
+            if (token !== this.l5Token || this.l5Stage !== 'unlock') return;
+            lines?.[index]?.classList.add('is-visible');
+        };
+        this.later(immediate || this.reduced ? 0 : 650, () => reveal(0));
+        this.later(immediate || this.reduced ? 0 : 1800, () => reveal(1));
+        this.later(immediate || this.reduced ? 0 : 2900, () => reveal(2));
+        this.later(immediate || this.reduced ? 0 : 4050, () => reveal(3));
+        this.later(immediate || this.reduced ? 0 : 5100, () => {
+            if (token !== this.l5Token || this.l5Stage !== 'unlock' || !this.l5FinishBtn) return;
+            this.l5FinishBtn.hidden = false; void this.l5FinishBtn.offsetWidth; this.l5FinishBtn.classList.add('is-in');
+        });
+    }
+
+    _finishLevel5() {
+        if (this.transitioning || this.state !== 'level5' || this.l5Stage !== 'unlock' || this.l5StageDone !== 4) return;
+        this.l5FinishBtn.disabled = true;
+        this._markLevelCompleted(5);
+        this._queueLevelTransition('level5', () => this._enterComplete(), this.reduced ? 0 : 500);
     }
 
     _enterComplete() {
@@ -1796,16 +2330,38 @@ export class SecretGame {
     /* --------------------------------------------------------
        COMPLETE
        -------------------------------------------------------- */
-    _showComplete() {
+    _showComplete(restored = false) {
         this._hideAllLevels();
         this.state = 'complete';
         this._setProgress(5);
+        // The shared Game HUD belongs to levels 1–5 only. The existing
+        // completion scene owns the screen from this point onward.
+        this._setGameProgressVisible(false);
         if (this.completeEl) {
             this.completeEl.hidden = false;
             void this.completeEl.offsetWidth;
             this.completeEl.classList.add('is-active');
         }
         if (this.shell) this.shell.scrollTop = 0;
+
+        const showFinalActions = () => {
+            if (this.completeUnlockBtn) {
+                this.completeUnlockBtn.hidden = false;
+                this.completeUnlockBtn.classList.add('is-in');
+            }
+            if (this.completeReplayBtn) {
+                this.completeReplayBtn.disabled = false;
+                this.completeReplayBtn.hidden = false;
+                this.completeReplayBtn.classList.add('is-in');
+            }
+        };
+
+        if (restored) {
+            this.completeEl?.querySelectorAll('.sg-symbol, .sg-plus, .sg-heart-merge, .sg-complete-line')
+                .forEach(el => el.classList.add('is-in'));
+            showFinalActions();
+            return;
+        }
 
         // Animate symbols one by one
         const symbols = this.completeEl?.querySelectorAll('.sg-symbol');
@@ -1838,13 +2394,17 @@ export class SecretGame {
         if (this.completeUnlockBtn) {
             this.completeUnlockBtn.classList.remove('is-in');
             this.completeUnlockBtn.hidden = true;
-            this.later(2600, () => {
-                this.completeUnlockBtn.hidden = false;
-                void this.completeUnlockBtn.offsetWidth;
-                this.completeUnlockBtn.classList.add('is-in');
-                this.completeUnlockBtn.focus({ preventScroll: true });
-            });
         }
+        if (this.completeReplayBtn) {
+            this.completeReplayBtn.classList.remove('is-in');
+            this.completeReplayBtn.hidden = true;
+        }
+        this.later(2600, () => {
+            showFinalActions();
+            if (this.completeUnlockBtn) {
+                this.completeUnlockBtn.focus({ preventScroll: true });
+            }
+        });
     }
 
     _enterReward() {
@@ -1861,7 +2421,15 @@ export class SecretGame {
     }
 
     _showReward() {
+        // This is the only entry point into the unopened reward. Make the
+        // completion panel exclusive even if a delayed transition was
+        // interrupted or this screen is restored by the host app.
+        this._hideCompleteUI();
+        this.rewardRun += 1;
+        this.rewardReady = false;
+        this.rewardPhase = 'opening';
         this.state = 'reward';
+        this.root?.classList.add('sg-reward-active');
         if (this.rewardEl) {
             this.rewardEl.hidden = false;
             void this.rewardEl.offsetWidth;
@@ -1886,16 +2454,19 @@ export class SecretGame {
         // hint
         const hint = this.rewardEl?.querySelector('#sg-reward-hint');
         if (hint) { hint.textContent = 'Tap the envelope to open it...'; hint.hidden = false; }
+        this._onRewardShown?.();
     }
 
     _openEnvelope() {
         if (this.state !== 'reward' || !this.envelope) return;
         if (this.envelope.classList.contains('is-open')) return;
+        const rewardRun = this.rewardRun;
         this.envelope.classList.add('is-open');
         const hint = this.rewardEl?.querySelector('#sg-reward-hint');
         if (hint) hint.hidden = true;
 
         this.later(this.reduced ? 0 : 720, () => {
+            if (this.state !== 'reward' || rewardRun !== this.rewardRun || !this.envelope?.classList.contains('is-open')) return;
             if (this.rewardCard) {
                 this.rewardCard.hidden = false;
                 void this.rewardCard.offsetWidth;
@@ -1903,15 +2474,19 @@ export class SecretGame {
                 // scroll card into view gently
                 this.later(300, () => this.rewardCard.scrollIntoView({ behavior: this.reduced ? 'auto' : 'smooth', block: 'nearest' }));
             }
-            this.later(this.reduced ? 0 : 800, () => {
-                if (this.rewardContinueBtn) {
-                    this.rewardContinueBtn.hidden = false;
-                    void this.rewardContinueBtn.offsetWidth;
-                    this.rewardContinueBtn.classList.add('is-in');
-                    this.rewardContinueBtn.focus({ preventScroll: true });
-                }
-            });
+            this.later(this.reduced ? 0 : 800, () => this._revealRewardContinue(rewardRun));
         });
+    }
+
+    _revealRewardContinue(rewardRun) {
+        if (this.state !== 'reward' || rewardRun !== this.rewardRun || this.rewardReady) return;
+        this.rewardReady = true;
+        this.rewardPhase = 'opened';
+        if (!this.rewardContinueBtn) return;
+        this.rewardContinueBtn.hidden = false;
+        void this.rewardContinueBtn.offsetWidth;
+        this.rewardContinueBtn.classList.add('is-in');
+        this.rewardContinueBtn.focus({ preventScroll: true });
     }
 
     _handoffAfterReward() {
@@ -1943,21 +2518,25 @@ export class SecretGame {
 
     /* --------------------------------------------------------
        Single authoritative transition - the ONLY way a level
-       advances. Direct setTimeout (not in this.timers) so
-       in-level pacing timers can never cancel a committed
-       transition, while destroy() still invalidates it safely.
-       The transitioning lock guarantees exactly ONE scheduled
-       transition - double TEST clicks can never queue twice.
+       advances. The pending transition is tracked so cleanup and
+       browser visibility recovery can always release its lock.
        -------------------------------------------------------- */
     _queueLevelTransition(expectedState, nextFn, delay = 750) {
         if (this.transitioning) return;
         if (this.state !== expectedState || this.destroyed) return;
         this.transitioning = true;
-        setTimeout(() => {
-            this.transitioning = false;
-            if (this.destroyed || this.state !== expectedState) return;
-            nextFn();
-        }, delay);
+        const token = ++this.transitionToken;
+        this.pendingTransition = { token, expectedState, nextFn };
+        this.later(delay, () => this._finishPendingTransition(token));
+    }
+
+    _finishPendingTransition(token) {
+        const pending = this.pendingTransition;
+        if (!pending || pending.token !== token) return;
+        this.pendingTransition = null;
+        this.transitioning = false;
+        if (this.destroyed || this.state !== pending.expectedState) return;
+        pending.nextFn();
     }
 
     /* --------------------------------------------------------
@@ -1976,6 +2555,9 @@ export class SecretGame {
     _clearAllTimers() {
         for (const id of this.timers) clearTimeout(id);
         this.timers = [];
+        this.pendingTransition = null;
+        this.transitionToken += 1;
+        this.transitioning = false;
         for (const id of this.rafs) cancelAnimationFrame(id);
         this.rafs = [];
         if (this.l5Raf) { cancelAnimationFrame(this.l5Raf); this.l5Raf = null; }

@@ -91,6 +91,8 @@ export class QuestionLockScreen {
         // input + unlock button usable while the keyboard is open.
         this._boundOnViewportChange = () => this._syncKeyboardInset();
         this._handedOver = false;
+        this._focusFrame = null;
+        this._focusToken = 0;
 
         // Wired by entry-lock.js or main.js: called when unlock succeeds
         this.onHandover = null;
@@ -291,12 +293,38 @@ export class QuestionLockScreen {
             this.unlockBtn?.classList.add('is-visible');
         }, this.reduced ? 0 : delays.button);
 
-        // After entrance, focus the input
+        // After the visible entrance has settled, focus the actual answer
+        // field. The animation-frame delay avoids opening a mobile keyboard
+        // while the field is still hidden or moving into place.
         const totalDelay = this.reduced ? 0 : (Math.max(...Object.values(delays)) + 300);
         setTimeout(() => {
             this.busy = false;
-            this.input?.focus({ preventScroll: true });
+            this._focusInputWhenReady();
         }, this.reduced ? 0 : totalDelay);
+    }
+
+    _focusInputWhenReady() {
+        const token = ++this._focusToken;
+        if (this._focusFrame != null) cancelAnimationFrame(this._focusFrame);
+        this._focusFrame = requestAnimationFrame(() => {
+            this._focusFrame = null;
+            if (token !== this._focusToken) return;
+            this._focusInput();
+        });
+    }
+
+    _focusInput() {
+        const input = this.input;
+        if (!input || input.disabled || !input.isConnected || this.overlay?.hidden || !this.overlay?.classList.contains('is-visible')) return;
+        try {
+            input.focus({ preventScroll: true });
+        } catch {
+            input.focus();
+        }
+        if (document.activeElement === input) {
+            const end = input.value.length;
+            try { input.setSelectionRange(end, end); } catch {}
+        }
     }
 
     /* ---- Input Validation ---- */
@@ -423,6 +451,7 @@ export class QuestionLockScreen {
         this._setButtonEnabled(true);
         this._showFeedback('Hmm... 😄<br>Ek baar fir soch kar dekho. 💙', 'error');
         this._shakeInput();
+        this._focusInput();
         // Do not trigger gate, stay on lock screen
     }
 
@@ -651,6 +680,11 @@ export class QuestionLockScreen {
     }
 
     cleanup() {
+        this._focusToken += 1;
+        if (this._focusFrame != null) {
+            cancelAnimationFrame(this._focusFrame);
+            this._focusFrame = null;
+        }
         for (const id of this.timers) {
             clearTimeout(id);
         }

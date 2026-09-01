@@ -19,6 +19,8 @@ import { QuestionLockScreen } from './question-lock.js';
 import { BirthdayReveal } from './birthday-reveal.js';
 import { BackButton } from './back-button.js';
 import { SecretGame } from './secret-game.js';
+import { InfiniteGarden } from './infinite-garden.js';
+import { FinalLoveLetter } from './final-love-letter.js';
 import { sleep } from './utils.js';
 
 
@@ -36,6 +38,8 @@ const app = {
     questionLock: null,   // QuestionLockScreen instance (question lock screen)
     birthdayReveal: null, // BirthdayReveal instance (letter -> memory handoff)
     secretGame: null,     // SecretGame instance (THE SECRET OF US)
+    infiniteGarden: null, // InfiniteGarden instance (final interactive scene)
+    finalLoveLetter: null,// FinalLoveLetter instance (post-reward ending)
     backBtn: null,        // BackButton instance (global UI-only control)
     backState: 'none',    // 'none' | 'love-letter' | 'love-message' |
                           // 'countdown' | 'birthday-letter' | 'birthday-reveal' |
@@ -50,7 +54,15 @@ const app = {
     audioInitialized: false, // true once AudioManager is created
     cleaned: false,       // true once cleanup() has run
     passwordVerifiedThisSession: false, // never persisted; reset whenever #question-lock is shown
+    inactivityTimer: null,
+    lastActivityAt: 0,
+    inactivityListenersAttached: false,
+    inactivityLoggingOut: false,
+    inactivityRescheduleFrame: null,
 };
+
+const INACTIVITY_TIMEOUT_MS = 480000;
+const INACTIVITY_ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'scroll', 'wheel'];
 
 const DATE_GATE_STORAGE_KEY = 'hbm.dateGate.v1';
 
@@ -98,6 +110,7 @@ function skipCompletedEarlyFlow(event) {
 }
 
 function showQuestionLock() {
+    stopInactivityTracking();
     // This flag is deliberately memory-only. Returning to the password
     // page always requires a fresh successful password verification.
     app.passwordVerifiedThisSession = false;
@@ -113,6 +126,141 @@ function showQuestionLock() {
     question.overlay?.classList.remove('is-visible', 'is-leaving');
     if (question.overlay) question.overlay.hidden = true;
     question.start();
+}
+
+function recordInactivityActivity() {
+    if (!app.passwordVerifiedThisSession || app.inactivityLoggingOut) return;
+    app.lastActivityAt = Date.now();
+    // A scrolling panel can emit many events per frame. The timestamp still
+    // updates on every event, while timer work is coalesced to one frame.
+    if (app.inactivityRescheduleFrame != null) return;
+    app.inactivityRescheduleFrame = requestAnimationFrame(() => {
+        app.inactivityRescheduleFrame = null;
+        scheduleInactivityLogout();
+    });
+}
+
+function scheduleInactivityLogout() {
+    if (!app.passwordVerifiedThisSession || app.inactivityLoggingOut) return;
+    if (app.inactivityTimer != null) {
+        clearTimeout(app.inactivityTimer);
+        app.inactivityTimer = null;
+    }
+
+    const remaining = INACTIVITY_TIMEOUT_MS - (Date.now() - app.lastActivityAt);
+    if (remaining <= 0) {
+        performInactivityLogout();
+        return;
+    }
+
+    app.inactivityTimer = window.setTimeout(() => {
+        app.inactivityTimer = null;
+        // Background tabs can delay timers, so use elapsed wall-clock time.
+        if (Date.now() - app.lastActivityAt >= INACTIVITY_TIMEOUT_MS) {
+            performInactivityLogout();
+        } else {
+            scheduleInactivityLogout();
+        }
+    }, remaining);
+}
+
+function handleInactivityVisibilityChange() {
+    if (document.visibilityState === 'visible') scheduleInactivityLogout();
+}
+
+function startInactivityTracking() {
+    if (app.cleaned || !app.passwordVerifiedThisSession) return;
+    app.inactivityLoggingOut = false;
+    app.lastActivityAt = Date.now();
+
+    if (!app.inactivityListenersAttached) {
+        for (const eventName of INACTIVITY_ACTIVITY_EVENTS.filter(eventName => eventName !== 'scroll')) {
+            window.addEventListener(eventName, recordInactivityActivity, { passive: true });
+        }
+        // Scroll events do not bubble, so capture them from nested scene
+        // scrollers as well as the document itself.
+        document.addEventListener('scroll', recordInactivityActivity, { passive: true, capture: true });
+        document.addEventListener('visibilitychange', handleInactivityVisibilityChange);
+        app.inactivityListenersAttached = true;
+    }
+    scheduleInactivityLogout();
+}
+
+function stopInactivityTracking() {
+    if (app.inactivityRescheduleFrame != null) {
+        cancelAnimationFrame(app.inactivityRescheduleFrame);
+        app.inactivityRescheduleFrame = null;
+    }
+    if (app.inactivityTimer != null) {
+        clearTimeout(app.inactivityTimer);
+        app.inactivityTimer = null;
+    }
+    if (app.inactivityListenersAttached) {
+        for (const eventName of INACTIVITY_ACTIVITY_EVENTS.filter(eventName => eventName !== 'scroll')) {
+            window.removeEventListener(eventName, recordInactivityActivity);
+        }
+        document.removeEventListener('scroll', recordInactivityActivity, true);
+        document.removeEventListener('visibilitychange', handleInactivityVisibilityChange);
+        app.inactivityListenersAttached = false;
+    }
+    app.lastActivityAt = 0;
+}
+
+function clearExperienceRestoreState() {
+    try {
+        window.localStorage.removeItem(STATE_KEY);
+        window.localStorage.removeItem(POST_MEMORY_STATE_KEY);
+    } catch {
+        /* Storage unavailable: the memory-only lock still applies. */
+    }
+}
+
+function performInactivityLogout() {
+    if (app.inactivityLoggingOut || !app.passwordVerifiedThisSession) return;
+    app.inactivityLoggingOut = true;
+    stopInactivityTracking();
+
+    // Invalidate callbacks before hiding live protected views. Individual
+    // progress keys and audio preferences are deliberately not cleared.
+    app.revealRun += 1;
+    app.postMemoryRun += 1;
+    try { void app.birthdayReveal?.cancel?.(); } catch {}
+    try { app.opening?.reset?.(); } catch {}
+    try { app.memoryLane?.reset?.(); } catch {}
+    try { app.finalLoveLetter?.stop?.(); } catch {}
+    try { app.infiniteGarden?.stop?.(); } catch {}
+    try { app.secretGame?.destroy?.(); } catch {}
+
+    try {
+        app.secretGame = new SecretGame().init();
+        app.secretGame.onRewardContinue = () => afterSecretGameReward();
+        app.secretGame.onRewardShown = () => setBackState('reward');
+    } catch (error) {
+        console.warn('Unable to reset Secret Game during inactivity logout.', error);
+    }
+
+    for (const selector of ['#scene-2', '#scene-3', '#scene-4', '#scene-5', '#scene-6', '#scene-7', '#scene-8', '#post-memory-message', '#our-timeline', '#secret-game']) {
+        const scene = document.querySelector(selector);
+        if (!scene) continue;
+        scene.hidden = true;
+        scene.classList.remove('is-visible', 'is-active', 'is-leaving', 'is-entered', 'is-restored');
+    }
+    const appEl = document.querySelector('#app');
+    if (appEl) appEl.hidden = true;
+    const loading = document.querySelector('#loading-screen');
+    if (loading) {
+        loading.hidden = false;
+        loading.classList.add('is-lettering');
+    }
+
+    clearExperienceRestoreState();
+    app.memoryOpened = false;
+    app.revealStarted = false;
+    app.revealStage = 'none';
+    app.backState = 'none';
+    app.backBtn?.setVisible(false);
+    showQuestionLock();
+    app.inactivityLoggingOut = false;
 }
 
 
@@ -213,8 +361,22 @@ function initApp() {
         app.secretGame = new SecretGame().init();
         // After the reward is fully read, hand over to future sections
         app.secretGame.onRewardContinue = () => afterSecretGameReward();
+        app.secretGame.onRewardShown = () => setBackState('reward');
     } catch (error) {
         console.warn('Secret Game unavailable, continuing without it.', error);
+    }
+
+    try {
+        app.infiniteGarden = new InfiniteGarden().init();
+    } catch (error) {
+        console.warn('Infinite Garden unavailable, continuing without it.', error);
+    }
+
+    try {
+        app.finalLoveLetter = new FinalLoveLetter().init();
+        app.finalLoveLetter.onGarden = () => showInfiniteGarden();
+    } catch (error) {
+        console.warn('Final love letter unavailable, continuing without it.', error);
     }
 
     // Timeline CTA -> Secret Game: delegated listener (robust, no duplicate)
@@ -297,6 +459,7 @@ function initApp() {
         // start the Opening cinematic.
         app.questionLock.onHandover = () => {
             app.passwordVerifiedThisSession = true;
+            startInactivityTracking();
             if (app.opening) {
                 app.opening.start();
             }
@@ -336,13 +499,19 @@ function initApp() {
         });
     }
 
-    // Level 2: Final ending - Experience Again button
+    // The existing epilogue now hands forward into the final garden.
     const epilogueRestartBtn = document.querySelector('#epilogue-restart');
     if (epilogueRestartBtn) {
         epilogueRestartBtn.addEventListener('click', () => {
-            restartExperience();
+            showInfiniteGarden();
         });
     }
+
+    document.querySelector('#infinite-garden-restart')?.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        restartExperience();
+    });
 
     // 9. Reveal the cinematic layer on top of the loading screen,
     //    OR restore the scene the user was in before a refresh.
@@ -593,37 +762,69 @@ function hideTimelineForGame() {
 
 function afterSecretGameReward() {
     if (app.cleaned) return;
-    // Reward has been read - reveal the next sections.
-    // If future sections exist (Special Message etc.), show them.
-    // Otherwise reveal the placeholder scenes as the handoff interface.
-    setBackState('post-reward');
-    // Hide game is already done by SecretGame handoff
-    // Show the dedicated future sections if they exist
-    const futureIds = ['#scene-3', '#scene-4', '#scene-5', '#scene-6'];
-    let anyShown = false;
-    for (const sel of futureIds) {
-        const el = document.querySelector(sel);
-        if (el) {
-            // Only reveal if it was a placeholder - keep existing content
-            el.hidden = false;
-            el.classList.add('is-visible');
-            anyShown = true;
-        }
-    }
-    // Final celebration placeholder (scene-7)
-    const celeb = document.querySelector('#scene-7');
-    if (celeb) { celeb.hidden = false; celeb.classList.add('is-visible'); anyShown = true; }
-    // Final love message / epilogue (scene-8)
-    const epi = document.querySelector('#scene-8');
-    if (epi) { epi.hidden = false; epi.classList.add('is-visible'); }
+    showFinalLoveLetter();
+}
 
-    // If nothing was configured for the future, at least show a
-    // clean completion handoff inside the app so the flow feels done
-    if (!anyShown) {
-        const appEl = document.querySelector('#app');
-        if (appEl) appEl.hidden = false;
+function showFinalLoveLetter({ restore = false, ending = false } = {}) {
+    if (app.cleaned || !app.finalLoveLetter) return;
+    hideInfiniteGarden();
+    for (let i = 3; i <= 8; i++) {
+        const scene = document.querySelector(`#scene-${i}`);
+        if (scene) { scene.hidden = true; scene.classList.remove('is-visible', 'is-active'); }
     }
+    app.finalLoveLetter.start({ restore, ending });
+    setBackState('final-love-letter');
     window.scrollTo(0, 0);
+}
+
+/* The final garden remains isolated from the preceding epilogue. */
+function showInfiniteGarden({ restore = false } = {}) {
+    if (app.cleaned || !app.infiniteGarden) return;
+    app.finalLoveLetter?.stop();
+
+    const epilogue = document.querySelector('#scene-8');
+    if (epilogue) {
+        epilogue.hidden = true;
+        epilogue.classList.remove('is-visible', 'is-active');
+    }
+
+    app.infiniteGarden.start({ restore });
+    setBackState('infinite-garden');
+    window.scrollTo(0, 0);
+}
+
+function hideInfiniteGarden({ returnToLetter = false } = {}) {
+    if (!app.infiniteGarden) return;
+    app.infiniteGarden.stop();
+
+    if (returnToLetter) showFinalLoveLetter({ ending: true });
+}
+
+// This is a presentation restore, not a new game. Keep the outgoing letter
+// on screen until the reward has been restored, so a stale/destroyed game
+// controller can never leave the Back press looking like a no-op.
+function returnToSecretGameReward() {
+    let game = app.secretGame;
+
+    try {
+        if (!game || game.destroyed) {
+            game = new SecretGame().init();
+            game.onRewardContinue = () => afterSecretGameReward();
+            game.onRewardShown = () => setBackState('reward');
+            app.secretGame = game;
+        }
+
+        if (!game.restoreReward?.()) return false;
+
+        app.infiniteGarden?.stop();
+        app.finalLoveLetter?.stop();
+        setBackState('reward');
+        window.scrollTo(0, 0);
+        return true;
+    } catch (error) {
+        console.warn('Unable to restore the earned Secret Game reward.', error);
+        return false;
+    }
 }
 
 
@@ -672,7 +873,9 @@ function backButtonVisible(state) {
         state === 'timeline' ||
         state === 'secret-game' ||
         state === 'reward' ||
-        state === 'post-reward'
+        state === 'post-reward' ||
+        state === 'final-love-letter' ||
+        state === 'infinite-garden'
     );
 }
 
@@ -890,21 +1093,32 @@ async function handleBack() {
         try { app.secretGame?.destroy(); } catch {}
         app.secretGame = new SecretGame().init();
         app.secretGame.onRewardContinue = () => afterSecretGameReward();
+        app.secretGame.onRewardShown = () => setBackState('reward');
         showPostMemoryMessage();
         return;
     }
 
+    if (app.backState === 'reward') {
+        // Reward Back restores the completed Secret Game stage; it never
+        // resets the game or sends the visitor to an earlier experience scene.
+        if (app.secretGame?.back()) setBackState('secret-game');
+        return;
+    }
+
     if (app.backState === 'post-reward') {
-        // Back from reward handoff stage -> "After all these memories..."
-        // page (the step before the game in the current flow).
-        // Hide future sections if they were shown
-        for (let i = 3; i <= 8; i++) {
-            const s = document.querySelector(`#scene-${i}`);
-            if (s) { s.hidden = true; s.classList.remove('is-visible', 'is-active'); }
-        }
-        const sg = document.querySelector('#secret-game');
-        if (sg) { sg.hidden = true; sg.classList.remove('is-visible'); }
-        showPostMemoryMessage();
+        // Legacy saved state: route it into the replacement final letter.
+        showFinalLoveLetter({ restore: true });
+        return;
+    }
+
+    if (app.backState === 'final-love-letter') {
+        returnToSecretGameReward();
+        return;
+    }
+
+    if (app.backState === 'infinite-garden') {
+        // Return to the final letter at its closing, not an earlier scene.
+        hideInfiniteGarden({ returnToLetter: true });
         return;
     }
 
@@ -941,6 +1155,8 @@ const RESTORABLE_SCENES = new Set([
     'timeline',
     'secret-game',
     'post-reward',
+    'final-love-letter',
+    'infinite-garden',
 ]);
 
 function saveExperienceState() {
@@ -985,6 +1201,8 @@ const POST_MEMORY_CHECKPOINTS = new Set([
     'timeline',
     'secret-game',
     'post-reward',
+    'final-love-letter',
+    'infinite-garden',
 ]);
 
 /** Persist only stable checkpoints reached after the Memory Lane handoff. */
@@ -1038,7 +1256,11 @@ function restorePostMemoryExperience(stage) {
     } else if (stage === 'secret-game') {
         hideTimelineForGame();
     } else if (stage === 'post-reward') {
-        afterSecretGameReward();
+        showFinalLoveLetter({ restore: true });
+    } else if (stage === 'final-love-letter') {
+        showFinalLoveLetter({ restore: true });
+    } else if (stage === 'infinite-garden') {
+        showInfiniteGarden({ restore: true });
     }
 }
 
@@ -1078,6 +1300,10 @@ function restoreExperience(scene) {
     } else if (scene === 'secret-game' || scene === 'post-reward') {
         openMemoryScene();
         setTimeout(() => showPostMemoryMessage(), 320);
+    } else if (scene === 'final-love-letter') {
+        showFinalLoveLetter({ restore: true });
+    } else if (scene === 'infinite-garden') {
+        showInfiniteGarden({ restore: true });
     }
 }
 
@@ -1089,6 +1315,8 @@ function savePostMemoryCheckpointForState(state) {
         timeline: 'timeline',
         'secret-game': 'secret-game',
         'post-reward': 'post-reward',
+        'final-love-letter': 'final-love-letter',
+        'infinite-garden': 'infinite-garden',
     };
     const stage = stageByState[state];
     if (stage) savePostMemoryState(stage);
@@ -1243,6 +1471,8 @@ function cleanup() {
     if (app.cleaned) return;
     app.cleaned = true;
 
+    stopInactivityTracking();
+
     window.removeEventListener(BEGIN_EVENT, beginExperience);
 
     try { app.memoryLane?.destroy(); } catch { /* ignore */ }
@@ -1256,6 +1486,12 @@ function cleanup() {
 
     try { app.secretGame?.destroy(); } catch { /* ignore */ }
     app.secretGame = null;
+
+    try { app.infiniteGarden?.destroy(); } catch { /* ignore */ }
+    app.infiniteGarden = null;
+
+    try { app.finalLoveLetter?.destroy(); } catch { /* ignore */ }
+    app.finalLoveLetter = null;
 
     try { app.backBtn?.destroy(); } catch { /* ignore */ }
     app.backBtn = null;
@@ -1286,6 +1522,9 @@ window.addEventListener('pagehide', (e) => {
 async function restartExperience() {
     if (app.cleaned) return;
 
+    stopInactivityTracking();
+    app.passwordVerifiedThisSession = false;
+
     // 1. Invalidate any running reveal run so stale callbacks
     //    can never re-open Memory Lane behind the restart.
     app.revealRun += 1;
@@ -1294,6 +1533,8 @@ async function restartExperience() {
     //    This clears all timers, clears chapter state, hides
     //    the chapter, shows the intro, and fires 'intro' state.
     app.memoryLane?.reset();
+    hideInfiniteGarden();
+    app.finalLoveLetter?.stop();
 
     // 3. Hide Memory Lane scene completely.
     const scene2 = document.querySelector('#scene-2');
@@ -1338,6 +1579,7 @@ async function restartExperience() {
     try {
         app.secretGame = new SecretGame().init();
         app.secretGame.onRewardContinue = () => afterSecretGameReward();
+        app.secretGame.onRewardShown = () => setBackState('reward');
     } catch {}
     const tl = document.querySelector('#our-timeline');
     if (tl) { tl.hidden = true; tl.classList.remove('is-visible'); }
