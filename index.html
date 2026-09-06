@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="css/animation.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/secret-game.css">
+    <link rel="stylesheet" href="css/particle-countdown.css">
     
     <!-- Fonts - Using system fonts for performance, with Google Fonts as enhancement -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -331,11 +332,20 @@
               age STAY on screen forever - no automatic exit. The only way
               forward is the "Aage Badho ❤️" button, which hands off to
               Memory Lane. -->
+        <section id="cinematic-countdown" aria-hidden="true" hidden>
+            <canvas class="cinematic-countdown-canvas" aria-hidden="true"></canvas>
+            <div class="cinematic-countdown-line" aria-hidden="true"></div>
+            <p class="cinematic-countdown-number" aria-live="polite">5</p>
+            <p class="cinematic-countdown-message">Happy Birthday My Wife</p>
+            <svg class="cinematic-countdown-heart" viewBox="0 0 120 108" aria-label="A beating heart" role="img">
+                <path d="M60 100C49 88 10 65 10 34 10 15 34 7 48 20l12 12 12-12C86 7 110 15 110 34c0 31-39 54-50 66Z" />
+            </svg>
+        </section>
+
         <div id="birthday-reveal" aria-hidden="true" hidden>
             <div class="birthday-reveal-sky" aria-hidden="true"></div>
             <div class="birthday-reveal-glow" aria-hidden="true"></div>
             <div class="birthday-reveal-wave" aria-hidden="true"></div>
-
             <!-- Birthday Love Letter: shown before the countdown. The
                  countdown NEVER starts while this message is visible -
                  only her "Aage Badho ❤️" press continues. -->
@@ -410,12 +420,10 @@ I love you. ❤️</p>
             </div>
 
             <div class="birthday-reveal-stage">
-                <p class="birthday-reveal-count" aria-live="polite">5</p>
-                <p class="birthday-reveal-micro" aria-hidden="true">Ek pal aur...</p>
-                <p class="birthday-reveal-final">Happy Birthday, My Love ❤️</p>
+                <p class="birthday-reveal-final" hidden>Happy Birthday, My Love ❤️</p>
                 <!-- Live age: filled by js/birthday-reveal.js from the
-                     real clock (born 21 Sep 2007, 01:30:00 IST - UTC 2007-09-20T20:00:00Z) -->
-                <div class="birthday-reveal-age">
+                     real clock (born 21 Sep 2007, 01:30:00 IST - UTC 2007-09-20T20:00:00.000Z) -->
+                <div class="birthday-reveal-age" hidden>
                     <p class="birthday-reveal-age-row birthday-reveal-age-years">
                         <span class="birthday-reveal-age-value" data-age="years">0</span>
                         <span class="birthday-reveal-age-unit">Years</span>
@@ -446,16 +454,13 @@ I love you. ❤️</p>
                     </p>
                 </div>
                 <button type="button" class="birthday-reveal-continue"
-                        id="birthday-reveal-continue">
+                        id="birthday-reveal-continue" hidden>
                     Aage Badho <span class="birthday-reveal-continue-heart" aria-hidden="true">❤️</span>
                 </button>
             </div>
-
-            <!-- Celebration decorations: candles + balloons appear only
-                 AFTER the countdown reaches 1 (spawned by
-                 js/birthday-reveal.js) -->
             <div class="birthday-reveal-candles" id="birthday-reveal-candles" aria-hidden="true"></div>
             <div class="birthday-reveal-balloons" id="birthday-reveal-balloons" aria-hidden="true"></div>
+
         </div>
 
         <!-- Scene 2: Memory Lane - an interactive romantic memory book -->
@@ -511,6 +516,14 @@ I love you. ❤️</p>
                         <div class="memory-message" id="memory-message"></div>
                     </div>
                 </div>
+
+                <!-- Transient Act punctuation. It is not part of the Memory Lane data. -->
+                <section class="memory-act-transition" id="memory-act-transition" aria-live="polite" aria-atomic="true" hidden>
+                    <div class="memory-act-transition-card">
+                        <h2 class="memory-act-transition-title" id="memory-act-transition-title"></h2>
+                        <p class="memory-act-transition-copy" id="memory-act-transition-copy" hidden></p>
+                    </div>
+                </section>
                 
                 <!-- Next Memory - appears only once the whole chapter has settled -->
                 <div class="memory-actions" id="memory-actions">
@@ -618,6 +631,7 @@ I love you. ❤️</p>
                         <p>Woh jisme hasi bhi hai. Fights bhi hain. Misunderstandings bhi hain. Pagalpan bhi hai. Long conversations bhi hain. Kabhi chhoti si baat par mood off hona bhi hai. Aur phir ek dusre ke bina zyada der reh na paana bhi hai.</p>
                         <p>Main hamari har memory ko isliye yaad nahi rakhta kyunki woh sab perfect moments the. Main unhe yaad rakhta hoon kyunki un moments mein tum thi.</p>
                         <p>Aur sach bolun toh tumhare saath ordinary moment bhi mere liye memory ban jaata hai.</p>
+                        <p class="final-love-letter-callback" data-letter-callback="first-hello">Ek chhote se hello se shuru hui baat kab itni gehri ho gayi, pata hi nahi chala.</p>
                     </section>
 
                     <section class="final-love-letter-chapter" data-letter-paragraph>
@@ -626,6 +640,7 @@ I love you. ❤️</p>
                         <p>Mere liye ye woh chhoti chhoti cheezein hain jinse meri life beautiful bani hai.</p>
                         <p>Tumne meri life mein sirf memories nahi add ki. Tumne meri life ko feel karne ka tareeka change kar diya.</p>
                         <p>Tumne mujhe kisi ka wait karna sikhaya. Kisi ki awaaz miss karna sikhaya. Kisi ki smile ko apni khushi samajhna sikhaya.</p>
+                        <p class="final-love-letter-callback" data-letter-callback="love-mix" hidden></p>
                     </section>
 
                     <section class="final-love-letter-chapter" data-letter-paragraph>
@@ -676,6 +691,7 @@ I love you. ❤️</p>
                         <p>Happy Birthday, meri cute wife. &#10084;&#65039;</p>
                         <p>I love you more than main kabhi properly words mein explain kar paunga. Aur shayad isi liye maine ye poora experience banaya. Kyuki ek simple &ldquo;Happy Birthday&rdquo; kabhi enough tha hi nahi.</p>
                         <p>Tum mere liye simple nahi ho. Tum special ho. Bahut zyada.</p>
+                        <p class="final-love-letter-callback" data-letter-callback="future">Jo kuch peeche tha woh hamari kahani hai... aur jo aage hai, use bhi main tumhare saath hi jeena chahta hoon.</p>
                     </section>
 
                     <section class="final-love-letter-chapter final-love-letter-closing" id="final-love-letter-closing" data-letter-paragraph>
@@ -691,40 +707,8 @@ I love you. ❤️</p>
             </div>
         </section>
         
-        <section id="scene-4" class="scene scene-star-map" aria-labelledby="scene4-title" hidden>
-            <div class="scene-bg"></div>
-            <div class="scene-content">
-                <h2 id="scene4-title" class="scene-title">Star Map</h2>
-                <p class="scene-placeholder">Coming in Phase 2...</p>
-            </div>
-        </section>
-        
-        <section id="scene-5" class="scene scene-wish-garden" aria-labelledby="scene5-title" hidden>
-            <div class="scene-bg"></div>
-            <div class="scene-content">
-                <h2 id="scene5-title" class="scene-title">Wish Garden</h2>
-                <p class="scene-placeholder">Coming in Phase 2...</p>
-            </div>
-        </section>
-        
-        <section id="scene-6" class="scene scene-time-capsule" aria-labelledby="scene6-title" hidden>
-            <div class="scene-bg"></div>
-            <div class="scene-content">
-                <h2 id="scene6-title" class="scene-title">Time Capsule</h2>
-                <p class="scene-placeholder">Coming in Phase 2...</p>
-            </div>
-        </section>
-        
-        <section id="scene-7" class="scene scene-celebration" aria-labelledby="scene7-title" hidden>
-            <div class="scene-bg"></div>
-            <div class="scene-content">
-                <h2 id="scene7-title" class="scene-title">Celebration</h2>
-                <p class="scene-placeholder">Coming in Phase 2...</p>
-            </div>
-        </section>
-        
         <!-- Level 2: Final ending - Experience Again -->
-        <section id="scene-8" class="scene scene-epilogue" aria-labelledby="scene8-title" hidden>
+        <section id="scene-8" class="scene scene-epilogue" aria-labelledby="scene8-title" data-legacy-quarantined="true" hidden>
             <div class="scene-bg"></div>
             <div class="scene-content">
                 <div class="epilogue-content">
@@ -753,13 +737,29 @@ I love you. ❤️</p>
             <canvas class="infinite-garden-canvas infinite-garden-active-canvas" aria-hidden="true"></canvas>
             <div class="infinite-garden-horizon" aria-hidden="true"></div>
             <div class="infinite-garden-copy" aria-live="polite">
-                <p class="infinite-garden-eyebrow">A little forever, growing</p>
-                <h2 id="infinite-garden-title" class="infinite-garden-heading">An Infinite Garden for Her &#127800;</h2>
-                <p class="infinite-garden-instruction">Jahan tum touch karogi, wahan ek naya phool khilega.</p>
+                <p class="infinite-garden-eyebrow">Hamari kahani, hamesha khilti hui</p>
+                <h2 id="infinite-garden-title" class="infinite-garden-heading">Hamari Kahani Ka Gulshan ❤️</h2>
+                <p class="infinite-garden-instruction">Jahan dil kare, wahan tap karo... aur hamari kahani me ek aur phool khilne do. ❤️</p>
+            </div>
+            <div class="infinite-garden-milestone" data-garden-control role="dialog" aria-modal="true" aria-labelledby="garden-milestone-title" aria-hidden="true" hidden>
+                <div class="infinite-garden-milestone-heart" aria-hidden="true">
+                    <svg viewBox="0 0 320 300" fill="none" focusable="false">
+                        <path class="infinite-garden-heart-stroke is-jasmine" fill="none" d="M160 270C112 222 51 175 51 108C51 63 86 40 121 52C140 59 153 75 160 92C167 75 180 59 199 52C234 40 269 63 269 108C269 175 208 222 160 270Z"></path>
+                        <path class="infinite-garden-heart-stroke is-coral" fill="none" d="M160 270C112 222 51 175 51 108C51 63 86 40 121 52C140 59 153 75 160 92C167 75 180 59 199 52C234 40 269 63 269 108C269 175 208 222 160 270Z"></path>
+                    </svg>
+                </div>
+                <div class="infinite-garden-milestone-copy" aria-live="polite">
+                    <h3 id="garden-milestone-title">I LOVE YOU ❤️</h3>
+                    <p>23... kyunki isi tareekh ne meri zindagi ko tum diya. ❤️</p>
+                </div>
             </div>
             <div class="infinite-garden-actions" data-garden-control>
+                <button type="button" class="infinite-garden-reset" id="infinite-garden-reset" data-garden-control>
+                    <span>Gulshan Phir Se Khilao 🌸</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 18 0"></path><path d="M3 12h6M9 18l-6-6 6-6"></path></svg>
+                </button>
                 <button type="button" class="infinite-garden-restart" id="infinite-garden-restart" data-garden-control>
-                    <span>Experience Again</span>
+                    <span>Puri Kahani Phir Se ❤️</span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 18 0"></path><path d="M3 12h6M9 18l-6-6 6-6"></path></svg>
                 </button>
             </div>
@@ -771,7 +771,7 @@ I love you. ❤️</p>
              but BEFORE THE SECRET OF US game.
              Rendered from TIMELINE_MOMENTS in secret-game-data.js.
              ======================================================== -->
-        <section id="our-timeline" class="scene scene-timeline" aria-labelledby="timeline-title" hidden>
+        <section id="our-timeline" class="scene scene-timeline" aria-labelledby="timeline-title" data-legacy-quarantined="true" hidden>
             <div class="scene-bg" aria-hidden="true"></div>
             <div class="timeline-shell">
                 <p class="timeline-eyebrow" style="font-size:0.72rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--green-300);font-weight:600;">Our Timeline</p>
@@ -827,17 +827,15 @@ I love you. ❤️</p>
 
             <!-- LEVEL 1: PHOTO MEMORY ORDER PUZZLE -->
             <div id="sg-level-1" class="sg-level" hidden>
-                <p class="sg-level-eyebrow">01 / 05 — OUR MEMORIES</p>
-                <h3 class="sg-level-title">Put Our Memories In Order ❤️</h3>
-                <p class="sg-level-subtitle">Every photo holds a memory. Arrange them in the order our story unfolded.</p>
+                <p class="sg-level-eyebrow">01 / 05 — HAMARI YAADEN</p>
+                <h3 class="sg-level-title">Hamari Yaadein ❤️</h3>
+                <p class="sg-level-subtitle">Hamari mulaqat ke sequence ke according photos ko sahi order mein jamao ❤️</p>
                 <div class="sg-memory-frame">
-                    <div id="sg-l1-list" class="sg-memory-grid" role="list" aria-label="Photo memories, drag to rearrange their order"></div>
+                    <div id="sg-l1-list" class="sg-memory-grid" role="list" aria-label="Hamari photos ko drag karke sahi order mein jamao"></div>
                 </div>
                 <div id="sg-l1-feedback" class="sg-feedback" aria-live="polite"></div>
                 <div class="sg-l1-controls">
-                    <button type="button" class="sg-btn" id="sg-l1-check" aria-label="Test the order"><span>TEST</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
-                    <!-- Temporary development control: remove once photo order is final. -->
-                    <button type="button" class="sg-btn sg-btn-ghost" id="sg-l1-skip" aria-label="Skip Game 1"><span>SKIP GAME</span></button>
+                    <button type="button" class="sg-btn" id="sg-l1-check" aria-label="Order check karo"><span>CHECK KARO</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12l5 5l10 -10"></path></svg></button>
                 </div>
             </div>
 
@@ -860,7 +858,7 @@ I love you. ❤️</p>
                     <p id="sg-l3-eyebrow" class="sg-level-eyebrow">03 / 05 — MERE DIL KI BAAT</p>
                     <h3 id="sg-l3-title" class="sg-level-title">MERE DIL KI BAAT ❤️</h3>
                     <p id="sg-l3-subtitle" class="sg-level-subtitle">Dekhte hain tum mujhe kitna achhe se samajhti ho...</p>
-                    <p id="sg-l3-progress" class="sg-game3-progress" aria-live="polite">1 / 3 · Batao, main kya choose karta?</p>
+                    <p id="sg-l3-progress" class="sg-game3-progress" aria-live="polite">1 / 5 · Batao, main kya choose karta?</p>
                 </header>
                 <div id="sg-l3-quiz" class="sg-game3-quiz">
                     <div id="sg-l3-card" class="sg-game3-card">
@@ -899,17 +897,17 @@ I love you. ❤️</p>
                 </section>
                 <section id="sg-l4-jackpot" class="sg-game4-stage sg-game4-jackpot" aria-labelledby="sg-l4-jackpot-title" hidden>
                     <header class="sg-game4-header">
-                        <p class="sg-level-eyebrow">04 / 05 — DATE NIGHT JACKPOT</p>
-                        <h3 id="sg-l4-jackpot-title" class="sg-level-title">DATE NIGHT JACKPOT</h3>
-                        <p class="sg-level-subtitle">Let fate plan a little night for us. ✨</p>
+                        <p class="sg-level-eyebrow">04 / 05 — HAMARI LOVE MIX</p>
+                        <h3 id="sg-l4-jackpot-title" class="sg-level-title">HAMARI LOVE MIX</h3>
+                        <p class="sg-level-subtitle">Dekhte hain hamari yaadon, tumhare nakhron aur mere reactions ka aaj kya combination banta hai... ❤️</p>
                     </header>
                     <div id="sg-l4-jackpot-grid" class="sg-jackpot-grid" aria-live="polite"></div>
-                    <button type="button" class="sg-btn sg-game4-action" id="sg-l4-jackpot-action"><span>Create Our Date Night ✨</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+                    <button type="button" class="sg-btn sg-game4-action" id="sg-l4-jackpot-action"><span>Hamari Love Mix Banao</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
                     <div id="sg-l4-jackpot-reveal" class="sg-jackpot-reveal" aria-live="polite" hidden>
-                        <h4>OUR DATE NIGHT JACKPOT</h4>
-                        <p class="sg-jackpot-reveal-subtitle">Tonight is for us.</p>
-                        <p>Maybe the date was random…</p>
-                        <p class="sg-jackpot-love-line">but choosing you never was. ❤️</p>
+                        <h4>HAMARI LOVE MIX</h4>
+                        <p class="sg-jackpot-reveal-subtitle">Hamari yaadon aur nakhron ka special mix.</p>
+                        <p>Har mix apni jagah special hai...</p>
+                        <p class="sg-jackpot-love-line">Combination random ho sakta hai... par tumhare saath har version mera favourite hai. ❤️</p>
                         <button type="button" class="sg-btn sg-game4-action" id="sg-l4-continue" hidden><span>Continue →</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
                     </div>
                 </section>
@@ -952,6 +950,23 @@ I love you. ❤️</p>
                     <div id="sg-l5-unlock-heart" class="sg-l5-lock-heart sg-l5-unlock-heart" aria-hidden="true"><i></i><i></i><i></i><i></i><b>⌁</b><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div><p class="sg-l5-reveal-line">Tum soch rahi thi ki tum bas ek game khel rahi ho...</p><p class="sg-l5-reveal-line">But actually...</p><h3 class="sg-l5-reveal-title">You were unlocking my heart. ♥</h3><button type="button" class="sg-btn sg-l5-btn" id="sg-l5-finish" hidden><span>CONTINUE ♥</span></button>
                 </section>
             </div>
+
+            <!-- FINAL KISS REVEAL -->
+            <section id="sg-kiss-reveal" class="sg-kiss-reveal" aria-labelledby="sg-kiss-reveal-title" hidden>
+                <p class="sg-kiss-reveal-eyebrow">ONE LAST LITTLE REVEAL</p>
+                <h3 id="sg-kiss-reveal-title">Har galat jawab ki ek chhoti si keemat thi...</h3>
+                <div class="sg-kiss-reveal-rows" aria-live="polite">
+                    <p class="sg-kiss-reveal-row" data-kiss-game="game2"><span>Game II</span><strong>0 kisses</strong></p>
+                    <p class="sg-kiss-reveal-row" data-kiss-game="game3"><span>Game III</span><strong>0 kisses</strong></p>
+                    <p class="sg-kiss-reveal-row" data-kiss-game="game4"><span>Game IV</span><strong>0 kisses</strong></p>
+                    <p class="sg-kiss-reveal-row" data-kiss-game="game5"><span>Game V</span><strong>0 kisses</strong></p>
+                </div>
+                <div class="sg-kiss-reveal-heart" aria-hidden="true">♥</div>
+                <p id="sg-kiss-reveal-zero" class="sg-kiss-reveal-zero" hidden>Ek bhi penalty nahi... impressive. ❤️</p>
+                <p class="sg-kiss-reveal-total-label">Total Kisses You Owe Me</p>
+                <p id="sg-kiss-reveal-total" class="sg-kiss-reveal-total" aria-live="polite">0</p>
+                <button type="button" class="sg-btn" id="sg-kiss-reveal-continue" hidden><span>CONTINUE ❤️</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+            </section>
 
             <!-- COMPLETE -->
             <div id="sg-complete" class="sg-complete" hidden>

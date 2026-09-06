@@ -295,7 +295,7 @@ I love you. ❤️</p>
                 <p class="birthday-reveal-micro" aria-hidden="true">Ek pal aur...</p>
                 <p class="birthday-reveal-final">Happy Birthday, My Love ❤️</p>
                 <!-- Live age: filled by js/birthday-reveal.js from the
-                     real clock (born 21 Sep 2007, 01:30:00 IST) -->
+                     real clock (born 23 Sep 2007, 01:25:00 IST) -->
                 <div class="birthday-reveal-age">
                     <p class="birthday-reveal-age-row birthday-reveal-age-years">
                         <span class="birthday-reveal-age-value" data-age="years">0</span>

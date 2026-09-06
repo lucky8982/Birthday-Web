@@ -1,39 +1,9 @@
-/* ============================================================
-   Happy Birthday My Love 💙 - Birthday Reveal
-   ------------------------------------------------------------
-   File:    js/birthday-reveal.js
-    Purpose: Plays the birthday moment right after the love letter
-             opens, as its own full-screen cinematic scene before
-             the Memory Lane handoff:
-             Birthday Love Letter (read by her; the countdown waits
-             for her "Aage Badho ❤️" press) -> 5 -> 4 -> 3 -> 2 -> 1
-             -> candles ignite -> balloons float + burst ->
-             "Happy Birthday, My Love ❤️" -> live age display.
-            The title and the live age STAY on screen indefinitely.
-            There is no automatic exit and no auto handoff - the
-            only way forward is the "Aage Badho ❤️" button, and
-            play() resolves only when that button is pressed.
-            The age is always computed from the browser's real
-            current time (Date.now(), refreshed every second) so
-            it stays exact no matter when the site is opened.
-Note:    Pure additive overlay - if #birthday-reveal is
-            missing, play() resolves immediately and the
-            original flow continues unchanged. Reduced-motion
-            users get the same sequence with calmer timing and
-            no stars / heartbeat waves (animations themselves
-            are disabled in CSS).
-            The sequence is modular: a future love-message
-            stage can be awaited via loveMessageStage after the
-            continue button, before the Memory Lane handoff,
-            without touching the rest of the flow.
-   ============================================================ */
-
 import { sleep, prefersReducedMotion } from './utils.js';
 
 /* ------------------------------------------------------------
    Birth moment: 21 Sep 2007, 01:30:00 IST (Asia/Kolkata).
    IST is UTC+5:30 with no DST, so the instant is fixed forever:
-   UTC 2007-09-20T20:00:00Z. Interpreting the wall-clock in a
+   UTC 2007-09-20T20:00:00.000Z. Interpreting the wall-clock in a
    fixed offset keeps the result identical on every device,
    regardless of the user's locale/timezone.
    ------------------------------------------------------------ */
@@ -126,41 +96,18 @@ export function ageParts(now = Date.now()) {
     };
 }
 
-/* Countdown steps: the number plus one micro line per step.
-   The sequence is explicit and fixed: 5 -> 4 -> 3 -> 2 -> 1,
-   in exactly this order, never starting elsewhere. */
-const COUNT_STEPS = [
-    { n: 5, text: 'Bas kuch pal...' },
-    { n: 4, text: 'Thoda aur...' },
-    { n: 3, text: 'Ek pal aur...' },
-    { n: 2, text: 'Bas thoda sa...' },
-    { n: 1, text: 'Ab sirf tum...' },
-];
-
-/* Countdown pacing - one full cycle per number (≈2.45s):
-     count-emerge (CSS)  + READ hold  + count-dissolve (CSS)
-     0.55s               + 2.00s      + 0.45s               ≈ 3.0s visible, 2.0s fully opaque
-   The next number never starts before the previous one has
-   finished its dissolve phase. Reduced motion keeps a calm
-   readable hold (CSS animations are off, so no in/out wait). */
-const STEP_READ = 2000; // number stays readable after entering (spec: ~2000ms)
-const STEP_OUT = 250;   // dissolve duration (matches count-dissolve)
-
 export class BirthdayReveal {
     constructor() {
         this.layer = document.querySelector('#birthday-reveal');
-        this.count = this.layer?.querySelector('.birthday-reveal-count');
-        this.micro = this.layer?.querySelector('.birthday-reveal-micro');
+        this.sky = this.layer?.querySelector('.birthday-reveal-sky');
+        this.candlesEl = this.layer?.querySelector('#birthday-reveal-candles');
+        this.balloonsEl = this.layer?.querySelector('#birthday-reveal-balloons');
         this.final = this.layer?.querySelector('.birthday-reveal-final');
         this.age = this.layer?.querySelector('.birthday-reveal-age');
-        this.sky = this.layer?.querySelector('.birthday-reveal-sky');
-        this.wave = this.layer?.querySelector('.birthday-reveal-wave');
         this.continueBtn = this.layer?.querySelector('.birthday-reveal-continue');
         this.letterStage = this.layer?.querySelector('#birthday-reveal-letter');
         this.letterBtn = this.letterStage?.querySelector('#birthday-reveal-letter-btn');
         this.letterBody = this.letterStage?.querySelector('.birthday-reveal-letter-body');
-        this.candlesEl = this.layer?.querySelector('#birthday-reveal-candles');
-        this.balloonsEl = this.layer?.querySelector('#birthday-reveal-balloons');
         this.reduced = prefersReducedMotion();
         this.playing = false;
         this.ageTimer = null;
@@ -197,83 +144,61 @@ export class BirthdayReveal {
         // The sequence is fully driven by play() - nothing to wire.
     }
 
+    _wait(ms) { return sleep(ms); }
+    _stopEffects() {}
+
+    async _startCelebration(run) {
+        this.layer?.classList.add('is-celebrating');
+        this._spawnStars();
+        this._spawnCandles();
+        this._spawnBalloons();
+        await sleep(this.reduced ? 0 : 1150);
+        if (this._canceled || run !== this._run) return;
+        this._popBalloons();
+        await this._showFinalStage(run);
+    }
+
     /**
      * Play the full reveal. Resolves ONLY when the user presses
      * "Aage Badho ❤️" (or the layer is missing). Never throws:
      * a missing layer simply skips the sequence.
      */
-    async play() {
+    async play({ showLetter = false, letterOnly = false } = {}) {
         if (!this.layer || this.playing) return;
         const run = (this._run += 1);
         this.playing = true;
         this._canceled = false;
 
-        const pauseMs = this.reduced ? 300 : 500;   // pause after "1"
-        const celebrationMs = this.reduced ? 0 : 1500; // candles + balloons
-        const burstMs = this.reduced ? 0 : 850;     // balloon pop moment
-
-        // The reveal is its own full-screen cinematic scene: fade in over
-        // the fading letter overlay; everything behind is fully covered.
         this.layer.hidden = false;
         this.layer.removeAttribute('aria-hidden');
         this.layer.classList.add('is-visible');
-        this._spawnStars();
-
-        // 1. BIRTHDAY LOVE LETTER - she reads the message first. The
-        //    countdown NEVER starts while the message is visible: it
-        //    waits for her "Aage Badho ❤️" press, and only then does
-        //    the letter completely leave the visual stack.
-        this._showLetter();
-        this._fireStage('letter');
-        await this._waitForLetter();
-        if (this._canceled || run !== this._run) {
-            await this._cancelSequence();
-            return;
+        for (const el of [this.final, this.age, this.continueBtn]) this._hide(el);
+        // The long letter remains part of the original celebration page.
+        if (showLetter) {
+            this._showLetter();
+            this._fireStage('letter');
+            await this._waitForLetter();
+            if (run !== this._run) return;
+            await this._hideLetter(run);
+            if (run !== this._run) return;
+            if (letterOnly) {
+                this.layer.classList.add('is-leaving');
+                await this._wait(this.reduced ? 0 : 350);
+                if (run !== this._run) return;
+                this.layer.classList.remove('is-visible', 'is-leaving', 'is-celebrating');
+                this.layer.setAttribute('aria-hidden', 'true');
+                this.layer.hidden = true;
+                this.playing = false;
+                return;
+            }
         }
-        await this._hideLetter();
-        this._fireStage('countdown');
-
-        // 2. Countdown 5 -> 4 -> 3 -> 2 -> 1. One explicit cycle per
-        //    number: enters (blur -> focus -> heartbeat), stays readable,
-        //    dissolves, and only then does the next number begin.
-        //    Title, age, candles and balloons stay hidden throughout.
-        for (const step of COUNT_STEPS) {
-            if (this._canceled || run !== this._run) break;
-            await this._playCountStep(step, run);
-        }
-        if (this._canceled || run !== this._run) {
-            await this._cancelSequence();
-            return;
-        }
-
-        // 3. The celebration: a short pause, then warm birthday light,
-        //    candles ignite and balloons rise into the scene. A small
-        //    burst pops a couple of balloons as the title reveals.
-        await sleep(pauseMs);
-        if (this._canceled || run !== this._run) {
-            await this._cancelSequence();
-            return;
-        }
-        this.layer.classList.add('is-celebrating');
-        this._spawnCandles();
-        this._spawnBalloons();
-        await sleep(celebrationMs);
-        if (this._canceled || run !== this._run) {
-            await this._cancelSequence();
-            return;
-        }
-        this._popBalloons();
-        await sleep(burstMs);
-        if (this._canceled || run !== this._run) {
-            await this._cancelSequence();
-            return;
-        }
+        if (this._canceled || run !== this._run) return;
+        await this._startCelebration(run);
 
         // 4. The final stage ("Happy Birthday, My Love ❤️" + live age
         //    + "Aage Badho ❤️"). From here on the scene stays on
         //    screen indefinitely - the only way forward is the
         //    continue button, which resolves this stage.
-        await this._showFinalStage(run);
     }
 
     /* The final stage: the title, the live age and the continue
@@ -288,14 +213,14 @@ export class BirthdayReveal {
 
         // 1. "Happy Birthday, My Love ❤️" - the emotional centerpiece.
         this._show(this.final);
-        await sleep(settleTitle);
+        await this._wait(settleTitle);
         if (this._canceled || run !== this._run) return;
 
         // 2. Live age - recomputed from Date.now() every second.
         this._show(this.age);
         this._updateAge();
         this.ageTimer = setInterval(() => this._updateAge(), 1000);
-        await sleep(settleAge);
+        await this._wait(settleAge);
         if (this._canceled || run !== this._run) return;
 
         // 3. The ONLY way forward: the user presses "Aage Badho ❤️".
@@ -346,12 +271,8 @@ export class BirthdayReveal {
 
         this.layer.hidden = false;
         this.layer.removeAttribute('aria-hidden');
-        this.layer.classList.add('is-visible', 'is-celebrating');
-        this._spawnStars();
-        this._spawnCandles();
-        this._spawnBalloons();
-
-        await this._showFinalStage(run);
+        this.layer.classList.add('is-visible');
+        await this._startCelebration(run);
     }
 
     /* ---- Birthday Love Letter stage ---- */
@@ -409,124 +330,58 @@ export class BirthdayReveal {
 
     /* The letter leaves the visual stack completely (fade + gentle
        zoom) before the countdown begins. */
-    async _hideLetter() {
+    async _hideLetter(run) {
         if (!this.letterStage) return;
         this.letterStage.classList.add('is-leaving');
-        await sleep(this.reduced ? 0 : 550);
+        await this._wait(this.reduced ? 0 : 550);
+        if (run !== this._run) return;
         this.letterStage.classList.remove('is-in', 'is-leaving');
         this.letterStage.setAttribute('aria-hidden', 'true');
         this.letterStage.hidden = true;
     }
 
-    /* ---- Celebration decorations (after the countdown) ---- */
+    _spawnStars() {
+        if (this.reduced || !this.sky) return;
+        this.sky.innerHTML = Array.from({ length: innerWidth < 640 ? 26 : 46 }, (_, i) => {
+            const left = (i * 37.7) % 100, top = (i * 61.3) % 100;
+            return `<span class="birthday-reveal-star" style="left:${left}%;top:${top}%;width:${1 + i % 3}px;height:${1 + i % 3}px;--o:.35;--dur:${3 + i % 4}s;--delay:-${i % 4}s"></span>`;
+        }).join('');
+    }
 
-    /* Elegant CSS candles along the bottom edge; flames ignite one by
-       one with a subtle stagger and keep flickering gently. */
     _spawnCandles() {
         if (this.reduced || !this.candlesEl) return;
-        const total = window.matchMedia('(max-width: 640px)').matches ? 4 : 6;
-        let html = '';
-        for (let i = 0; i < total; i++) {
+        const total = innerWidth < 640 ? 4 : 6;
+        this.candlesEl.innerHTML = Array.from({ length: total }, (_, i) => {
             const left = 8 + i * (84 / (total - 1));
-            const h = 42 + Math.random() * 18;
-            const tilt = (Math.random() * 2 - 1) * 3;
-            html += '<span class="birthday-reveal-candle" style="--i:' + i +
-                ';left:' + left.toFixed(1) + '%;--h:' + h.toFixed(1) +
-                'px;--tilt:' + tilt.toFixed(1) + 'deg">' +
-                '<span class="birthday-reveal-candle-flame"></span>' +
-                '<span class="birthday-reveal-candle-wick"></span>' +
-                '<span class="birthday-reveal-candle-body"></span>' +
-                '</span>';
-        }
-        this.candlesEl.innerHTML = html;
-        this.candlesEl.querySelectorAll('.birthday-reveal-candle')
-            .forEach((c) => c.classList.add('is-in'));
+            return `<span class="birthday-reveal-candle is-in" style="--i:${i};left:${left}%;--h:${44 + i % 3 * 8}px;--tilt:${i % 2 ? 2 : -2}deg"><span class="birthday-reveal-candle-flame"></span><span class="birthday-reveal-candle-wick"></span><span class="birthday-reveal-candle-body"></span></span>`;
+        }).join('');
     }
 
-    /* Balloons in muted romantic colors, different sizes and depths,
-       rising into the scene along the edges (never over the center). */
     _spawnBalloons() {
         if (this.reduced || !this.balloonsEl) return;
-        const PALETTE = [
-            ['#b76e79', '#e8b4bc'],   // dusty rose
-            ['#6e8fb7', '#b7cce8'],   // soft dusk blue
-            ['#8d7bb8', '#cdc0e8'],   // lavender
-            ['#c9a25f', '#eed9ae'],   // champagne
-            ['#7ba38a', '#c2ddc9'],   // sage
-            ['#b5838d', '#e2c2c9'],   // rosewood
-        ];
-        const count = window.matchMedia('(max-width: 640px)').matches ? 5 : 7;
-        let html = '';
-        for (let i = 0; i < count; i++) {
-            const c = PALETTE[i % PALETTE.length];
-            const size = 42 + Math.random() * 34;
-            const left = i % 2 === 0 ? 2 + Math.random() * 10 : 88 - Math.random() * 10;
-            const top = 6 + Math.random() * 22;
-            const dur = (6 + Math.random() * 3).toFixed(2);
-            let frags = '';
-            for (let f = 0; f < 6; f++) {
-                const ang = (f / 6) * Math.PI * 2 + Math.random() * 0.6;
-                const dist = 22 + Math.random() * 22;
-                frags += '<span class="birthday-reveal-fragment" style="--dx:' +
-                    (Math.cos(ang) * dist).toFixed(1) + 'px;--dy:' +
-                    (Math.sin(ang) * dist - 14).toFixed(1) + 'px"></span>';
-            }
-            html += '<span class="birthday-reveal-balloon" style="--i:' + i +
-                ';left:' + left.toFixed(1) + '%;top:' + top.toFixed(1) +
-                '%;--size:' + size.toFixed(1) + 'px;--c1:' + c[0] +
-                ';--c2:' + c[1] + ';--dur:' + dur + 's">' +
-                '<span class="birthday-reveal-balloon-fill"></span>' +
-                '<span class="birthday-reveal-balloon-string"></span>' +
-                frags +
-                '</span>';
-        }
-        this.balloonsEl.innerHTML = html;
-        this.balloonsEl.querySelectorAll('.birthday-reveal-balloon')
-            .forEach((b) => b.classList.add('is-in'));
+        const colors = [['#b76e79','#e8b4bc'], ['#6e8fb7','#b7cce8'], ['#8d7bb8','#cdc0e8'], ['#c9a25f','#eed9ae'], ['#7ba38a','#c2ddc9']];
+        const total = innerWidth < 640 ? 5 : 7;
+        this.balloonsEl.innerHTML = Array.from({ length: total }, (_, i) => {
+            const c = colors[i % colors.length], left = i % 2 ? 78 + i % 3 * 5 : 3 + i % 3 * 4;
+            const fragments = Array.from({ length: 6 }, (_, n) => `<span class="birthday-reveal-fragment" style="--dx:${Math.cos(n * 1.05) * 34}px;--dy:${Math.sin(n * 1.05) * 34}px"></span>`).join('');
+            return `<span class="birthday-reveal-balloon is-in is-floating" style="--i:${i};left:${left}%;top:${7 + i % 3 * 8}%;--size:${44 + i % 3 * 12}px;--c1:${c[0]};--c2:${c[1]};--dur:${6 + i % 3}s"><span class="birthday-reveal-balloon-fill"></span><span class="birthday-reveal-balloon-string"></span>${fragments}</span>`;
+        }).join('');
     }
 
-    /* A small restrained celebration burst: a couple of balloons pop
-       with tiny fragments; everything else keeps floating calmly. */
     _popBalloons() {
         if (this.reduced || !this.balloonsEl) return;
-        const balloons = this.balloonsEl.querySelectorAll('.birthday-reveal-balloon');
-        if (!balloons.length) return;
-        const picks = [...balloons].sort(() => Math.random() - 0.5).slice(0, 2);
-        picks.forEach((b) => {
-            b.classList.remove('is-floating');
-            void b.offsetWidth;
-            b.classList.add('is-popping');
+        [...this.balloonsEl.querySelectorAll('.birthday-reveal-balloon')].slice(0, 2).forEach(balloon => {
+            balloon.classList.remove('is-floating'); balloon.classList.add('is-popping');
         });
-    }
-
-    /* One full countdown step: show -> hold -> dissolve -> hide.
-       Resolves only after this number has completely left the
-       screen, so steps can never overlap or race. */
-    async _playCountStep(step, run) {
-        if (this.count) this.count.textContent = String(step.n);
-        if (this.micro) this.micro.textContent = step.text;
-        this._show(this.count);
-        this._show(this.micro);
-        this._beat();
-        await sleep(this.reduced ? 750 : STEP_READ);
-        if (this._canceled || run !== this._run) return;
-        this._out(this.count);
-        this._out(this.micro);
-        this._hide(this.wave);
-        await sleep(this.reduced ? 0 : STEP_OUT);
-        if (this._canceled || run !== this._run) return;
-        this._hide(this.count);
-        this._hide(this.micro);
     }
 
     /* Clean teardown when the sequence is canceled mid-flight. */
     async _cancelSequence() {
+        this._stopEffects();
         // Resolve any pending letter wait so a re-entry (Back button
         // -> play() again) never hangs on a stale click promise.
         this._letterContinue();
 
-        this._hide(this.count);
-        this._hide(this.micro);
         this._hide(this.final);
         this._hide(this.age);
         this._hide(this.continueBtn);
@@ -544,31 +399,6 @@ export class BirthdayReveal {
             this.layer.hidden = true;
         }
         this.playing = false;
-    }
-
-    /* A heartbeat radial wave expanding from the center of the sky. */
-    _beat() {
-        if (this.reduced) return;
-        this._show(this.wave);
-    }
-
-    /* Tiny stars dotted across the midnight sky (like the opening). */
-    _spawnStars() {
-        if (this.reduced || !this.sky) return;
-        const total = window.matchMedia('(max-width: 640px)').matches ? 26 : 46;
-        let html = '';
-        for (let i = 0; i < total; i++) {
-            const left = Math.round(Math.random() * 100);
-            const top = Math.round(Math.random() * 100);
-            const size = (Math.random() * 1.8 + 1).toFixed(2);
-            const o = (Math.random() * 0.35 + 0.15).toFixed(2);
-            const dur = (Math.random() * 3.5 + 2.5).toFixed(2);
-            const delay = (Math.random() * 4).toFixed(2);
-            html += '<span class="birthday-reveal-star" style="left:' + left +
-                '%;top:' + top + '%;width:' + size + 'px;height:' + size +
-                'px;--o:' + o + ';--dur:' + dur + 's;--delay:-' + delay + 's"></span>';
-        }
-        this.sky.innerHTML = html;
     }
 
     /* Resolves when the continue button is pressed. The listener is
@@ -597,17 +427,16 @@ export class BirthdayReveal {
 
     /* Stop the clock and fade the whole scene out. */
     async _exit(run) {
+        this._stopEffects();
         if (this.ageTimer) {
             clearInterval(this.ageTimer);
             this.ageTimer = null;
         }
 
         this.layer?.classList.add('is-leaving');
-        await sleep(this.reduced ? 0 : 450);
+        await this._wait(this.reduced ? 0 : 450);
         if (run !== undefined && run !== this._run) return;
 
-        this._hide(this.count);
-        this._hide(this.micro);
         this._hide(this.final);
         this._hide(this.age);
         this._hide(this.continueBtn);
@@ -641,7 +470,8 @@ export class BirthdayReveal {
             secRow.classList.remove('is-ticking');
             void secRow.offsetWidth;
             secRow.classList.add('is-ticking');
-            setTimeout(() => secRow.classList.remove('is-ticking'), 300);
+            const run = this._run;
+            this._wait(300).then(() => { if (run === this._run) secRow.classList.remove('is-ticking'); });
         }
     }
 
@@ -656,14 +486,6 @@ export class BirthdayReveal {
         el.classList.add('is-in');
     }
 
-    /* Begin the exit animation (used between countdown steps). */
-    _out(el) {
-        if (!el || this.reduced) return;
-        el.classList.remove('is-in');
-        void el.offsetWidth;
-        el.classList.add('is-out');
-    }
-
     _hide(el) {
         if (!el) return;
         el.classList.remove('is-in', 'is-out');
@@ -671,6 +493,7 @@ export class BirthdayReveal {
     }
 
     destroy() {
+        this._stopEffects();
         // Stop any running sequence (countdown/age timer) so nothing
         // keeps ticking after the reveal is gone.
         this._canceled = true;

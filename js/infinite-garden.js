@@ -12,6 +12,40 @@ const FLOWERS = [
     { name: 'wild', weight: 7, petals: '#e4b8d8', edge: '#f1d7e9', center: '#f0c775' },
 ];
 
+const GARDEN_PROGRESS_KEY = 'hbm.infiniteGardenProgress';
+const GARDEN_PROGRESS_VERSION = 1;
+const MAX_SAVED_FLOWERS = 80;
+const FLOWER_BY_NAME = new Map(FLOWERS.map((flower) => [flower.name, flower]));
+const INITIAL_INSTRUCTION = 'Jahan dil kare, wahan tap karo... aur hamari kahani me ek aur phool khilne do. ❤️';
+const FIRST_JASMINE_MESSAGE = 'Sabse pehla phool Jasmine... tumhari pasand ka, aur meri taraf se sirf tumhare liye. ❤️';
+const LATER_INSTRUCTION = 'Jahan dil kare tap karo... yeh gulshan hamare saath ke saath badhta rahega.';
+const BIRTHDAY_MILESTONE_TOUCH = 23;
+
+function inRange(value, min, max) {
+    return Number.isFinite(value) && value >= min && value <= max;
+}
+
+function serializeFlower(flower) {
+    return {
+        species: flower.species.name,
+        bx: flower.bx, ex: flower.ex, ey: flower.ey, c1: flower.c1, c2: flower.c2,
+        side: flower.side, rotation: flower.rotation, scale: flower.scale,
+        petalCount: flower.petalCount, leaves: flower.leaves, cluster: flower.cluster,
+    };
+}
+
+function deserializeFlower(data) {
+    const species = FLOWER_BY_NAME.get(data?.species);
+    if (!species ||
+        !inRange(data.bx, 0, 1) || !inRange(data.ex, 0, 1) || !inRange(data.ey, 0, 1) ||
+        !inRange(data.c1, -0.12, 0.12) || !inRange(data.c2, -0.22, 0.22) ||
+        (data.side !== -1 && data.side !== 1) || !inRange(data.rotation, -0.55, 0.55) ||
+        !inRange(data.scale, 0.7, 1.08) || !Number.isInteger(data.petalCount) || data.petalCount < 5 || data.petalCount > 8 ||
+        !Number.isInteger(data.leaves) || data.leaves < 2 || data.leaves > 3 ||
+        !Number.isInteger(data.cluster) || data.cluster < 1 || data.cluster > 3) return null;
+    return { ...data, species };
+}
+
 function pickFlower() {
     const roll = Math.random() * FLOWERS.reduce((total, item) => total + item.weight, 0);
     let cursor = 0;
@@ -29,13 +63,24 @@ export class InfiniteGarden {
         this.instruction = this.root?.querySelector('.infinite-garden-instruction');
         this.flowers = [];
         this.active = [];
+        this.firstBloomPending = null;
+        this.milestoneFlowerPending = null;
+        this.acceptedTouches = 0;
+        this.birthdayMilestone = { triggered: false, settled: false };
+        this.messageTimer = 0;
+        this.milestoneTimer = 0;
+        this.milestoneDismissTimer = 0;
+        this.milestoneExitTimer = 0;
         this.raf = 0;
+        this.entryFrame = 0;
+        this.run = 0;
         this.running = false;
         this.initialized = false;
         this.width = 0;
         this.height = 0;
         this.dpr = 1;
         this.reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+        this.milestone = this.root?.querySelector('.infinite-garden-milestone');
         this._pointer = this.handlePointer.bind(this);
         this._resize = this.resize.bind(this);
         this._tick = this.tick.bind(this);
@@ -43,38 +88,58 @@ export class InfiniteGarden {
 
     init() { this.initialized = !!(this.root && this.staticCtx && this.activeCtx); return this; }
 
-    start({ restore = false } = {}) {
+    start() {
         if (!this.initialized) this.init();
         if (!this.initialized) return;
+        const run = ++this.run;
+        if (this.entryFrame) cancelAnimationFrame(this.entryFrame);
         this.running = true;
         this.root.hidden = false;
         this.root.classList.remove('is-visible', 'is-active', 'is-entered');
         this.resize();
-        if (!restore) this.reset();
+        const restoreMilestone = this.restorePersistedFlowers();
         this.root.removeEventListener('pointerdown', this._pointer);
         this.root.addEventListener('pointerdown', this._pointer);
         window.removeEventListener('resize', this._resize);
         window.addEventListener('resize', this._resize, { passive: true });
         void this.root.offsetWidth;
         this.root.classList.add('is-visible', 'is-active');
-        requestAnimationFrame(() => this.root?.classList.add('is-entered'));
+        if (restoreMilestone) this.showBirthdayMilestone({ restored: true });
+        this.entryFrame = requestAnimationFrame(() => {
+            this.entryFrame = 0;
+            if (this.running && run === this.run) this.root?.classList.add('is-entered');
+        });
     }
 
     stop() {
+        this.run += 1;
         this.running = false;
         this.root?.removeEventListener('pointerdown', this._pointer);
         window.removeEventListener('resize', this._resize);
         if (this.raf) cancelAnimationFrame(this.raf);
         this.raf = 0;
+        if (this.entryFrame) cancelAnimationFrame(this.entryFrame);
+        this.entryFrame = 0;
+        this.clearMessageTimer();
+        this.hideBirthdayMilestone();
         this.active.length = 0;
         this.root?.classList.remove('is-visible', 'is-active', 'is-entered');
         if (this.root) this.root.hidden = true;
     }
 
     reset() {
+        if (this.raf) cancelAnimationFrame(this.raf);
+        this.raf = 0;
         this.flowers.length = 0;
         this.active.length = 0;
-        this.instruction?.classList.remove('is-softened', 'is-hidden');
+        this.firstBloomPending = null;
+        this.milestoneFlowerPending = null;
+        this.acceptedTouches = 0;
+        this.birthdayMilestone = { triggered: false, settled: false };
+        this.clearMessageTimer();
+        this.hideBirthdayMilestone();
+        this.clearPersistedFlowers();
+        this.setInstruction(INITIAL_INSTRUCTION, 0);
         this.renderStatic();
         this.clearActive();
     }
@@ -102,7 +167,7 @@ export class InfiniteGarden {
     grassHeight() { return clamp(this.height * 0.19, 82, 168); }
 
     handlePointer(event) {
-        if (!this.running || event.defaultPrevented || (event.button !== undefined && event.button !== 0)) return;
+        if (!this.running || this.isBirthdayMilestoneOpen() || this.milestoneExitTimer || event.defaultPrevented || event.isPrimary === false || (event.button !== undefined && event.button !== 0)) return;
         if (event.target.closest('button, a, input, textarea, select, [data-garden-control], .music-toggle, .experience-back-btn')) return;
         const rect = this.root.getBoundingClientRect();
         const x = event.clientX - rect.left;
@@ -114,12 +179,13 @@ export class InfiniteGarden {
     plant(x, y) {
         const ground = this.height - this.grassHeight() * 0.47;
         const rootSpread = clamp(this.width * 0.04, 13, 48);
-        const species = pickFlower();
+        const isFirstBloom = !this.firstBloomPending && this.flowers.length === 0 && this.active.length === 0;
+        const species = isFirstBloom ? FLOWER_BY_NAME.get('jasmine') : pickFlower();
         const safeX = clamp(x, 22, this.width - 22);
         const safeY = clamp(y, Math.max(148, this.height * 0.29), ground - 34);
         const rootX = this.width * 0.5 + (Math.random() - 0.5) * rootSpread * 2;
         const curve = safeX - rootX;
-        this.active.push({
+        const flower = {
             bx: rootX / this.width,
             ex: safeX / this.width,
             ey: safeY / this.height,
@@ -134,26 +200,209 @@ export class InfiniteGarden {
             species,
             started: performance.now(),
             duration: this.reduced ? 380 : 1500 + Math.random() * 700,
-        });
-        const count = this.flowers.length + this.active.length;
-        this.instruction?.classList.toggle('is-softened', count >= 1);
-        this.instruction?.classList.toggle('is-hidden', count >= 3);
+        };
+        const nextTouch = this.acceptedTouches + 1;
+        const isBirthdayMilestoneTouch = nextTouch === BIRTHDAY_MILESTONE_TOUCH && !this.birthdayMilestone.triggered;
+        this.acceptedTouches = nextTouch;
+        if (isFirstBloom) this.firstBloomPending = flower;
+        if (isBirthdayMilestoneTouch) {
+            this.milestoneFlowerPending = flower;
+            this.birthdayMilestone = { triggered: true, settled: false };
+        }
+        this.savePersistedFlowers();
+        this.active.push(flower);
+        this.setInstruction(LATER_INSTRUCTION, this.flowers.length + this.active.length);
         this.requestFrame();
     }
 
+    restorePersistedFlowers() {
+        this.active.length = 0;
+        let flowers = [];
+        let firstBloom = null;
+        let milestoneFlower = null;
+        let acceptedTouches = 0;
+        let birthdayMilestone = { triggered: false, settled: false };
+        try {
+            const raw = window.localStorage.getItem(GARDEN_PROGRESS_KEY);
+            const data = raw ? JSON.parse(raw) : null;
+            if (data?.version === GARDEN_PROGRESS_VERSION && Array.isArray(data.flowers) && data.flowers.length <= MAX_SAVED_FLOWERS) {
+                const restoredFlowers = data.flowers.map(deserializeFlower);
+                if (!restoredFlowers.some((flower) => !flower)) {
+                    flowers = restoredFlowers;
+                    firstBloom = data.firstBloom ? deserializeFlower(data.firstBloom) : null;
+                    milestoneFlower = data.milestoneFlower ? deserializeFlower(data.milestoneFlower) : null;
+                    const legacyCount = flowers.length + (firstBloom ? 1 : 0) + (milestoneFlower ? 1 : 0);
+                    const hasAcceptedTouches = Number.isSafeInteger(data.acceptedTouches) && data.acceptedTouches >= 0;
+                    acceptedTouches = hasAcceptedTouches ? data.acceptedTouches : legacyCount;
+                    const savedMilestone = data.birthdayMilestone;
+                    if (savedMilestone?.triggered === true && acceptedTouches >= BIRTHDAY_MILESTONE_TOUCH) {
+                        birthdayMilestone = { triggered: true, settled: savedMilestone.settled === true };
+                    } else if (!hasAcceptedTouches && acceptedTouches >= BIRTHDAY_MILESTONE_TOUCH) {
+                        birthdayMilestone = { triggered: true, settled: true };
+                    }
+                }
+            }
+        } catch {
+            flowers = [];
+        }
+        if (firstBloom?.species.name === 'jasmine') {
+            flowers = [firstBloom, ...flowers].slice(0, MAX_SAVED_FLOWERS);
+        }
+        if (milestoneFlower && birthdayMilestone.triggered && !birthdayMilestone.settled) {
+            flowers = [milestoneFlower, ...flowers].slice(0, MAX_SAVED_FLOWERS);
+        }
+        this.flowers = flowers;
+        this.firstBloomPending = null;
+        this.milestoneFlowerPending = null;
+        this.acceptedTouches = acceptedTouches;
+        this.birthdayMilestone = birthdayMilestone;
+        this.clearMessageTimer();
+        this.hideBirthdayMilestone();
+        this.setInstruction(flowers.length ? LATER_INSTRUCTION : INITIAL_INSTRUCTION, flowers.length);
+        this.renderStatic();
+        if (firstBloom || milestoneFlower) this.savePersistedFlowers();
+        return birthdayMilestone.triggered && !birthdayMilestone.settled;
+    }
+
+    savePersistedFlowers() {
+        try {
+            window.localStorage.setItem(GARDEN_PROGRESS_KEY, JSON.stringify({
+                version: GARDEN_PROGRESS_VERSION,
+                flowers: this.flowers.slice(0, MAX_SAVED_FLOWERS).map(serializeFlower),
+                acceptedTouches: this.acceptedTouches,
+                birthdayMilestone: this.birthdayMilestone,
+                ...(this.firstBloomPending ? { firstBloom: serializeFlower(this.firstBloomPending) } : {}),
+                ...(this.milestoneFlowerPending ? { milestoneFlower: serializeFlower(this.milestoneFlowerPending) } : {}),
+            }));
+        } catch {
+            /* Storage is best-effort; the current garden remains usable. */
+        }
+    }
+
+    clearPersistedFlowers() {
+        try { window.localStorage.removeItem(GARDEN_PROGRESS_KEY); } catch { /* ignore */ }
+    }
+
     requestFrame() { if (!this.raf && this.running) this.raf = requestAnimationFrame(this._tick); }
+
+    clearMessageTimer() {
+        if (this.messageTimer) window.clearTimeout(this.messageTimer);
+        this.messageTimer = 0;
+    }
+
+    clearMilestoneTimers() {
+        if (this.milestoneTimer) window.clearTimeout(this.milestoneTimer);
+        if (this.milestoneDismissTimer) window.clearTimeout(this.milestoneDismissTimer);
+        if (this.milestoneExitTimer) window.clearTimeout(this.milestoneExitTimer);
+        this.milestoneTimer = 0;
+        this.milestoneDismissTimer = 0;
+        this.milestoneExitTimer = 0;
+    }
+
+    isBirthdayMilestoneOpen() {
+        return this.birthdayMilestone.triggered && !this.birthdayMilestone.settled;
+    }
+
+    showBirthdayMilestone({ restored = false } = {}) {
+        if (!this.isBirthdayMilestoneOpen() || !this.milestone) return;
+        this.clearMilestoneTimers();
+        const run = this.run;
+        this.root?.classList.add('is-birthday-milestone');
+        this.milestone.hidden = false;
+        this.milestone.removeAttribute('aria-hidden');
+        this.milestone.classList.remove('is-leaving', 'is-settled', 'is-restored');
+        if (restored) this.milestone.classList.add('is-restored');
+        void this.milestone.offsetWidth;
+        this.milestone.classList.add('is-visible');
+        const beginReadableHold = () => {
+            if (!this.running || run !== this.run || !this.isBirthdayMilestoneOpen()) return;
+            this.milestone.classList.add('is-settled');
+            this.milestoneDismissTimer = window.setTimeout(() => {
+                this.milestoneDismissTimer = 0;
+                if (!this.running || run !== this.run || !this.isBirthdayMilestoneOpen()) return;
+                this.settleBirthdayMilestone(run);
+            }, 4600);
+        };
+        if (restored || this.reduced) {
+            beginReadableHold();
+            return;
+        }
+        this.milestoneTimer = window.setTimeout(() => {
+            this.milestoneTimer = 0;
+            beginReadableHold();
+        }, 1100);
+    }
+
+    hideBirthdayMilestone() {
+        this.clearMilestoneTimers();
+        this.root?.classList.remove('is-birthday-milestone');
+        if (!this.milestone) return;
+        this.milestone.classList.remove('is-visible', 'is-leaving', 'is-settled', 'is-restored');
+        this.milestone.setAttribute('aria-hidden', 'true');
+        this.milestone.hidden = true;
+    }
+
+    settleBirthdayMilestone(run = this.run) {
+        if (!this.isBirthdayMilestoneOpen()) return;
+        this.birthdayMilestone = { triggered: true, settled: true };
+        this.savePersistedFlowers();
+        this.clearMilestoneTimers();
+        if (!this.milestone) return;
+        this.milestone.classList.add('is-leaving');
+        this.milestoneExitTimer = window.setTimeout(() => {
+            this.milestoneExitTimer = 0;
+            if (!this.running || run !== this.run) return;
+            this.root?.classList.remove('is-birthday-milestone');
+            this.milestone?.classList.remove('is-visible', 'is-leaving', 'is-settled', 'is-restored');
+            this.milestone?.setAttribute('aria-hidden', 'true');
+            if (this.milestone) this.milestone.hidden = true;
+            this.setInstruction(LATER_INSTRUCTION, this.flowers.length + this.active.length);
+        }, this.reduced ? 0 : 720);
+    }
+
+    setInstruction(message, count) {
+        if (!this.instruction) return;
+        this.instruction.textContent = message;
+        this.instruction.classList.toggle('is-softened', count >= 1);
+        this.instruction.classList.toggle('is-hidden', count >= 3);
+    }
+
+    showFirstJasmineMessage() {
+        this.clearMessageTimer();
+        this.setInstruction(FIRST_JASMINE_MESSAGE, 0);
+        this.messageTimer = window.setTimeout(() => {
+            this.messageTimer = 0;
+            if (!this.running) return;
+            this.setInstruction(LATER_INSTRUCTION, this.flowers.length + this.active.length);
+        }, 4200);
+    }
 
     tick(now) {
         this.raf = 0;
         if (!this.running) return;
         this.clearActive();
         const growing = [];
+        let committed = false;
         for (const flower of this.active) {
             const progress = clamp((now - flower.started) / flower.duration, 0, 1);
             this.drawPlant(this.activeCtx, flower, progress, true);
-            if (progress >= 1) this.flowers.push(flower); else growing.push(flower);
+            if (progress >= 1) {
+                this.flowers.push(flower);
+                if (flower === this.firstBloomPending) {
+                    this.firstBloomPending = null;
+                    this.showFirstJasmineMessage();
+                }
+                if (flower === this.milestoneFlowerPending) {
+                    this.milestoneFlowerPending = null;
+                    this.showBirthdayMilestone();
+                }
+                committed = true;
+            } else growing.push(flower);
         }
-        if (growing.length !== this.active.length) this.renderStatic();
+        if (committed) {
+            this.renderStatic();
+            this.savePersistedFlowers();
+        }
         this.active = growing;
         if (this.active.length) this.requestFrame();
     }

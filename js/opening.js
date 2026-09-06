@@ -130,6 +130,7 @@ export class OpeningCinematic {
         this.letterUnlocked = false; // the right answer unlocked the CTA
         this.letterReady = false;   // question/answers/CTA finished entering
         this.selectedAnswer = null; // the picked answer (correct one wins)
+        this.letterOpeningEvent = null; // the CTA event that opened the letter
         this.dodge = 0;             // CTA dodge direction counter
         this.timers = [];
         this.autoAdvanceTimer = null;
@@ -147,7 +148,7 @@ export class OpeningCinematic {
         this.onStage = null;
 
         // Bound handlers
-        this._onTap = () => this.advance();
+        this._onTap = (event) => this.advance(event);
         this._onKey = (e) => this.onKey(e);
         this._onAnswer = (e) => this.onAnswer(e);
         this._onCta = (e) => this.onCta(e);
@@ -248,7 +249,8 @@ export class OpeningCinematic {
      * current message for the next one. Taps during a transition
      * are ignored.
      */
-    advance() {
+    advance(event) {
+        if (event?.target?.closest?.('#letter-cta')) return;
         if (this.busy || this.finished || !this.started) return;
 
         this.clearAutoAdvance();
@@ -265,7 +267,7 @@ export class OpeningCinematic {
             this.showMessage(0);
         } else if (this.state === 'message') {
             this.exitMessage();
-        } else if (this.state === 'letter' && this.letterOpened) {
+        } else if (this.state === 'letter' && this.letterOpened && event !== this.letterOpeningEvent) {
             // The letter has been read: hand over to the birthday reveal.
             this.finish();
         }
@@ -416,6 +418,7 @@ export class OpeningCinematic {
         this.state = 'letter';
         this.clearAutoAdvance();
         this.letterOpened = false;
+        this.letterOpeningEvent = null;
         this.letterUnlocked = false;
         this.letterReady = false;
         this.selectedAnswer = null;
@@ -452,11 +455,12 @@ export class OpeningCinematic {
      * with a soft paragraph reveal. It stays open and readable -
      * only the user's next tap moves on to the birthday reveal.
      */
-    openLetter() {
+    openLetter(event) {
         // ONLY the unlocked CTA reaches this point - the letter
         // stays closed otherwise.
         if (this.state !== 'letter' || this.letterOpened || this.busy || !this.letterUnlocked) return;
         this.letterOpened = true;
+        this.letterOpeningEvent = event;
         this.busy = true;
         // The Back control belongs to the date-question gate only.
         // Once KHOLO is accepted, the original letter-opening scene
@@ -553,7 +557,9 @@ export class OpeningCinematic {
             return;
         }
 
-        this.openLetter();
+        e?.preventDefault?.();
+        e?.stopImmediatePropagation?.();
+        this.openLetter(e);
     }
 
     /**
@@ -593,6 +599,7 @@ export class OpeningCinematic {
     /** Every letter-scene visit starts with a clean slate */
     resetLetterUi() {
         this._letterRun += 1;
+        this.letterOpeningEvent = null;
         this.letterScene?.classList.remove('is-message');
         if (this.answersEl) {
             this.answersEl.querySelectorAll('.letter-answer').forEach((btn) => {

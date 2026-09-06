@@ -39,7 +39,7 @@ const PHOTO_MEMORIES = [
     {
         id: 1,
         title: 'A Quiet Beginning',
-        image: 'assets/images/memories/dummy-photo-01.JPG',
+        image: 'assets/images/memories/dummy-photo-01.jpg',
         message: 'Some stories begin loudly. Ours started softly - a look, a word, a feeling I could not yet name - and I knew I would never be the same.',
         titleAnimation: 'title-memory-01',
         photoAnimation: 'photo-memory-01',
@@ -52,7 +52,7 @@ const PHOTO_MEMORIES = [
     {
         id: 2,
         title: 'The First Hello',
-        image: 'assets/images/memories/dummy-photo-02.JPG',
+        image: 'assets/images/memories/dummy-photo-02.jpg',
         message: 'One ordinary word, spoken without thinking, quietly rearranged my entire world around the sound of it.',
         titleAnimation: 'title-memory-02',
         photoAnimation: 'photo-memory-02',
@@ -195,7 +195,7 @@ const PHOTO_MEMORIES = [
     {
         id: 13,
         title: 'Dreams We Share',
-        image: 'assets/images/memories/dummy-photo-13.JPG',
+        image: 'assets/images/memories/dummy-photo-13.jpg',
         message: 'We speak of tomorrows as if they are already ours - and beside you, they somehow feel possible.',
         titleAnimation: 'title-memory-13',
         photoAnimation: 'photo-memory-13',
@@ -208,7 +208,7 @@ const PHOTO_MEMORIES = [
     {
         id: 14,
         title: 'Peaceful Moments',
-        image: 'assets/images/memories/dummy-photo-14.JPG',
+        image: 'assets/images/memories/dummy-photo-14.jpg',
         message: 'Our silences are never empty. They are filled with everything words are too small to carry.',
         titleAnimation: 'title-memory-14',
         photoAnimation: 'photo-memory-14',
@@ -221,7 +221,7 @@ const PHOTO_MEMORIES = [
     {
         id: 15,
         title: 'Growing Side by Side',
-        image: 'assets/images/memories/dummy-photo-15.JPG',
+        image: 'assets/images/memories/dummy-photo-15.jpg',
         message: 'Every day beside you, I become a softer, braver version of myself - shaped by your patience and your light.',
         titleAnimation: 'title-memory-15',
         photoAnimation: 'photo-memory-15',
@@ -234,7 +234,7 @@ const PHOTO_MEMORIES = [
     {
         id: 16,
         title: 'Our Secret Dances',
-        image: 'assets/images/memories/dummy-photo-16.JPG',
+        image: 'assets/images/memories/dummy-photo-16.jpg',
         message: 'We have danced where no one else will ever see - in quiet rooms and quiet hours, in the safe country of being us.',
         titleAnimation: 'title-memory-16',
         photoAnimation: 'photo-memory-16',
@@ -247,7 +247,7 @@ const PHOTO_MEMORIES = [
     {
         id: 17,
         title: 'Under the Same Sky',
-        image: 'assets/images/memories/dummy-photo-17.JPG',
+        image: 'assets/images/memories/dummy-photo-17.jpg',
         message: 'When the world keeps us apart, we still stand under the same sky - and I speak to it softly, hoping it carries my voice to you.',
         titleAnimation: 'title-memory-17',
         photoAnimation: 'photo-memory-17',
@@ -260,7 +260,7 @@ const PHOTO_MEMORIES = [
     {
         id: 18,
         title: 'A Promise Kept',
-        image: 'assets/images/memories/dummy-photo-18.JPG',
+        image: 'assets/images/memories/dummy-photo-18.jpg',
         message: 'I promised myself I would love you well. Every day with you is my quiet way of keeping that promise.',
         titleAnimation: 'title-memory-18',
         photoAnimation: 'photo-memory-18',
@@ -273,7 +273,7 @@ const PHOTO_MEMORIES = [
     {
         id: 19,
         title: 'You and Me',
-        image: 'assets/images/memories/dummy-photo-19.JPG',
+        image: 'assets/images/memories/dummy-photo-19.jpg',
         message: 'Against every doubt and every distance - through all of it - it has always been, and will always be, you and me.',
         titleAnimation: 'title-memory-19',
         photoAnimation: 'photo-memory-19',
@@ -286,7 +286,7 @@ const PHOTO_MEMORIES = [
     {
         id: 20,
         title: 'Forever Begins Now',
-        image: 'assets/images/memories/dummy-photo-20.JPG',
+        image: 'assets/images/memories/dummy-photo-20.jpg',
         message: 'I used to think forever was a long time. Now I know it is simply every single moment I choose you.',
         titleAnimation: 'title-memory-20',
         photoAnimation: 'photo-memory-20',
@@ -299,7 +299,7 @@ const PHOTO_MEMORIES = [
     {
         id: 21,
         title: 'The Little Map',
-        image: 'assets/images/memories/dummy-photo-21.JPG',
+        image: 'assets/images/memories/dummy-photo-21.jpg',
         message: 'Every road I ever walked was quietly leading to you. I would walk them all again, gladly, for the same arrival.',
         titleAnimation: 'title-memory-21',
         photoAnimation: 'photo-memory-21',
@@ -312,7 +312,7 @@ const PHOTO_MEMORIES = [
     {
         id: 22,
         title: 'Mornings Like These',
-        image: 'assets/images/memories/dummy-photo-22.JPG',
+        image: 'assets/images/memories/dummy-photo-22.jpg',
         message: 'Waking beside you is the most ordinary miracle I know - and I never once grow tired of it.',
         titleAnimation: 'title-memory-22',
         photoAnimation: 'photo-memory-22',
@@ -325,7 +325,7 @@ const PHOTO_MEMORIES = [
     {
         id: 23,
         title: 'Coffee & Conversations',
-        image: 'assets/images/memories/dummy-photo-23.JPG',
+        image: 'assets/images/memories/dummy-photo-23.jpg',
         message: 'We have solved nothing and everything over cups that grew cold - and I would trade every answer for those hours.',
         titleAnimation: 'title-memory-23',
         photoAnimation: 'photo-memory-23',
@@ -338,7 +338,7 @@ const PHOTO_MEMORIES = [
     {
         id: 24,
         title: 'The Longest Walk',
-        image: 'assets/images/memories/dummy-photo-24.JPG',
+        image: 'assets/images/memories/dummy-photo-24.jpg',
         message: 'We always took the long way, and I loved you for it. There is nowhere I would rather arrive than anywhere with you.',
         titleAnimation: 'title-memory-24',
         photoAnimation: 'photo-memory-24',
@@ -351,7 +351,7 @@ const PHOTO_MEMORIES = [
     {
         id: 25,
         title: 'Moments of Quiet',
-        image: 'assets/images/memories/dummy-photo-25.JPG',
+        image: 'assets/images/memories/dummy-photo-25.jpg',
         message: 'Thank you for the quiet - for knowing me without my needing to explain. Being understood by you is my greatest comfort.',
         titleAnimation: 'title-memory-25',
         photoAnimation: 'photo-memory-25',
@@ -364,7 +364,7 @@ const PHOTO_MEMORIES = [
     {
         id: 26,
         title: 'City Lights',
-        image: 'assets/images/memories/dummy-photo-26.JPG',
+        image: 'assets/images/memories/dummy-photo-26.jpg',
         message: 'When I picture our future, I do not see a place. I see a string of moments, every one of them with you beside me.',
         titleAnimation: 'title-memory-26',
         photoAnimation: 'photo-memory-26',
@@ -377,7 +377,7 @@ const PHOTO_MEMORIES = [
     {
         id: 27,
         title: 'Weathering Storms',
-        image: 'assets/images/memories/dummy-photo-27.JPG',
+        image: 'assets/images/memories/dummy-photo-27.jpg',
         message: 'I no longer fear the storms. I have watched us weather them together - and each one only makes us stronger.',
         titleAnimation: 'title-memory-27',
         photoAnimation: 'photo-memory-27',
@@ -390,7 +390,7 @@ const PHOTO_MEMORIES = [
     {
         id: 28,
         title: 'The Journey Ahead',
-        image: 'assets/images/memories/dummy-photo-28.JPG',
+        image: 'assets/images/memories/dummy-photo-28.jpg',
         message: 'I cannot see every bend of the road before us, but I know exactly who I want walking it with me. Always you.',
         titleAnimation: 'title-memory-28',
         photoAnimation: 'photo-memory-28',
@@ -403,7 +403,7 @@ const PHOTO_MEMORIES = [
     {
         id: 29,
         title: 'Always by Your Side',
-        image: 'assets/images/memories/dummy-photo-29.JPG',
+        image: 'assets/images/memories/dummy-photo-29.jpg',
         message: 'Wherever life leads us, I will be there - steady, certain, and endlessly grateful to call you mine.',
         titleAnimation: 'title-memory-29',
         photoAnimation: 'photo-memory-29',
@@ -416,7 +416,7 @@ const PHOTO_MEMORIES = [
     {
         id: 30,
         title: 'Our Forever',
-        image: 'assets/images/memories/dummy-photo-30.JPG',
+        image: 'assets/images/memories/dummy-photo-30.jpg',
         message: 'This is not the last page of our story - it is the first of everything we have yet to become. Every memory carried me to you, and every moment ahead belongs to you. Happy birthday, my love.',
         titleAnimation: 'title-memory-30',
         photoAnimation: 'photo-memory-30',
@@ -663,11 +663,58 @@ export const memories = (() => {
 })();
 
 
+/* ------------------------------------------------------------
+   ACT METADATA
+   ------------------------------------------------------------
+   These ranges only wrap the existing reading order. They are not
+   entries, do not participate in progress, and never replace the
+   exact-memory index used for restoration.
+   ------------------------------------------------------------ */
+export const MEMORY_ACTS = Object.freeze([
+    Object.freeze({
+        start: 0,
+        end: 3,
+        title: 'Where It Began',
+        line: 'Some stories begin quietly, then become everything.',
+    }),
+    Object.freeze({
+        start: 4,
+        end: 13,
+        title: 'The Little Things',
+        line: 'Love found its shape in the moments no one else could see.',
+        light: true,
+    }),
+    Object.freeze({
+        start: 14,
+        end: 18,
+        title: 'What We Became',
+        line: 'Somewhere along the way, comfort became home.',
+        light: true,
+    }),
+    Object.freeze({
+        start: 19,
+        end: 30,
+        title: 'The Life We Share',
+        line: 'The life we choose is made of ordinary moments, held with care.',
+        light: true,
+    }),
+    Object.freeze({
+        start: 31,
+        end: 36,
+        title: 'What Comes Next',
+        line: 'And still, the most beautiful part of us is ahead.',
+    }),
+]);
+
+
 /* Timings - must match animation.css */
 const EXIT_MS = 520;
 const INTRO_EXIT_MS = 380;
 const FINAL_DELAY_MS = 700;
 const NEXT_IN_MS = 450;
+const ACT_TRANSITION_MS = 900;
+const ACT_TRANSITION_LIGHT_MS = 680;
+const ACT_TRANSITION_EXIT_MS = 170;
 
 /*
  * Letter reveal timings. The stagger is derived per letter:
@@ -702,6 +749,9 @@ const CONTINUE_THRESHOLD = 8;
  */
 const READ_KEY = 'hbm.memoryReadState';
 const SCROLL_END_TOLERANCE_PX = 32;
+const READ_SCROLL_KEYS = new Set([
+    'ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '
+]);
 
 /**
  * Safe localStorage access - some privacy modes throw.
@@ -754,6 +804,11 @@ export class MemoryLane {
         this.backIntroBtn = null;
         this.final = null;
         this.finalBtn = null;
+        this.actTransition = null;
+        this.actTransitionTitle = null;
+        this.actTransitionCopy = null;
+        this._actTransitionTarget = null;
+        this._actTransitionPrevious = null;
 
         this.initialized = false;
         this.state = 'intro';
@@ -762,6 +817,7 @@ export class MemoryLane {
         this.queued = 0;
         this.reduced = prefersReducedMotion();
         this.timers = [];
+        this.lifecycleToken = 0;
 
         // Optional stage hook - lets main.js follow the lane's
         // internal stage ('intro' | 'exiting' | 'playing' |
@@ -798,8 +854,14 @@ export class MemoryLane {
          */
         this._awaitingRead = false;
         this._readTargetId = null;
+        this._readUserInteracted = false;
         this._readMemories = null; // lazy-loaded Set of read memory ids
         this._onMessageScroll = () => this._handleMessageScroll();
+        this._onReadIntent = (event) => {
+            if (!this._awaitingRead) return;
+            if (event.type === 'keydown' && !READ_SCROLL_KEYS.has(event.key)) return;
+            this._readUserInteracted = true;
+        };
 
         // Bound handlers
         this._onReveal = () => this.beginReveal();
@@ -845,7 +907,7 @@ export class MemoryLane {
        Lifecycle
        ============================================================ */
 
-    enter() {
+    enter({ restore = false } = {}) {
         if (!this.initialized) {
             this.initialized = true;
 
@@ -868,6 +930,9 @@ export class MemoryLane {
             this.final = $('#memory-final');
             this.finalBtn = $('#memory-final-cta');
             this.restartIntroBtn = $('#memory-restart-intro');
+            this.actTransition = $('#memory-act-transition');
+            this.actTransitionTitle = $('#memory-act-transition-title');
+            this.actTransitionCopy = $('#memory-act-transition-copy');
 
             this.revealBtn?.addEventListener('click', this._onReveal);
             this.nextBtn?.addEventListener('click', this._onNext);
@@ -878,7 +943,7 @@ export class MemoryLane {
             window.addEventListener('keydown', this._onKey);
         }
 
-        this.reset();
+        this.reset({ persist: !restore });
     }
 
 
@@ -886,7 +951,7 @@ export class MemoryLane {
        Reset
        ============================================================ */
 
-    reset() {
+    reset({ persist = true } = {}) {
         console.log('[MemoryLane] reset() called, current state:', this.state);
         this.clearTimers();
 
@@ -904,6 +969,7 @@ export class MemoryLane {
         this.stage = 'title';
         this.current = 0;
         this.queued = 0;
+        this.hideActTransition();
 
         if (this.titleBlock) {
             this.titleBlock.classList.remove('is-in', 'is-settled');
@@ -1037,6 +1103,7 @@ export class MemoryLane {
          */
         this.refreshContinueButton();
 
+        if (persist) this.saveCurrentPosition(null, 'intro');
         this._fireState('intro');
         console.log('[MemoryLane] reset() complete, new state:', this.state);
     }
@@ -1094,6 +1161,10 @@ export class MemoryLane {
             return;
         }
 
+        if (this.state === 'act-transition') {
+            return;
+        }
+
         if (this.state === 'final') {
             return;
         }
@@ -1110,6 +1181,11 @@ export class MemoryLane {
     prev() {
         // Read-gate: same rule as Next while the message is unread.
         if (this._awaitingRead) return;
+
+        if (this.state === 'act-transition') {
+            this.cancelActTransition();
+            return;
+        }
 
         if (this.state === 'final') {
             if (this.final) {
@@ -1137,6 +1213,7 @@ export class MemoryLane {
         if (!this.chapter) return;
 
         const m = memories[this.current];
+        const previousIndex = this.current;
 
         this.state = 'exiting';
 
@@ -1163,8 +1240,144 @@ export class MemoryLane {
                 ((this.current + dir) % this.total + this.total) %
                 this.total;
 
+            if (dir > 0 && this.isActBoundary(target)) {
+                this.showActTransition(target, previousIndex);
+                return;
+            }
+
             this.startSequence(target);
         });
+    }
+
+
+    /* ============================================================
+       Act transitions
+       ============================================================ */
+
+    getActForIndex(index) {
+        return MEMORY_ACTS.find(
+            (act) => index >= act.start && index <= act.end
+        ) || null;
+    }
+
+    isActBoundary(index) {
+        const act = this.getActForIndex(index);
+        return Boolean(act && act.start === index && index !== 0);
+    }
+
+    hideActTransition() {
+        if (this.actTransition) {
+            this.actTransition.hidden = true;
+            this.actTransition.classList.remove('is-visible', 'is-leaving');
+        }
+
+        if (this.actTransitionTitle) {
+            this.actTransitionTitle.textContent = '';
+        }
+
+        if (this.actTransitionCopy) {
+            this.actTransitionCopy.textContent = '';
+            this.actTransitionCopy.hidden = true;
+        }
+
+        this._actTransitionTarget = null;
+        this._actTransitionPrevious = null;
+    }
+
+    showActTransition(target, previousIndex) {
+        const act = this.getActForIndex(target);
+
+        if (!act || !this.actTransition || !this.actTransitionTitle) {
+            this.startSequence(target);
+            return;
+        }
+
+        /* The current card is transient, but its incoming memory is
+           persisted through the existing exact-memory record. A refresh
+           therefore restores that memory directly instead of replaying a
+           card or inventing a 38th entry. */
+        this.clearTimers();
+        this.disarmReadWatch();
+        this.current = target;
+        this.state = 'act-transition';
+        this.stage = 'act-transition';
+        this.queued = 0;
+        this._actTransitionTarget = target;
+        this._actTransitionPrevious = previousIndex;
+        this.saveCurrentPosition(target, 'active');
+        this._fireState('playing');
+
+        if (this.chapter) {
+            this.chapter.hidden = true;
+        }
+
+        this.actTransitionTitle.textContent = act.title;
+
+        /* Boundaries after longer letters intentionally use title-only
+           punctuation so the transition provides breath without adding
+           another paragraph to read. */
+        if (this.actTransitionCopy) {
+            this.actTransitionCopy.hidden = Boolean(act.light);
+            this.actTransitionCopy.textContent = act.light ? '' : act.line;
+        }
+
+        this.actTransition.hidden = false;
+        this.actTransition.classList.remove('is-visible', 'is-leaving');
+        void this.actTransition.offsetWidth;
+        this.actTransition.classList.add('is-visible');
+
+        const duration = this.scale(
+            act.light ? ACT_TRANSITION_LIGHT_MS : ACT_TRANSITION_MS
+        );
+
+        this.later(duration, () => {
+            if (
+                this.state !== 'act-transition' ||
+                this._actTransitionTarget !== target
+            ) {
+                return;
+            }
+
+            this.actTransition?.classList.add('is-leaving');
+
+            this.later(this.scale(ACT_TRANSITION_EXIT_MS), () => {
+                if (
+                    this.state !== 'act-transition' ||
+                    this._actTransitionTarget !== target
+                ) {
+                    return;
+                }
+
+                this.hideActTransition();
+
+                /* The Act card temporarily hides the existing chapter
+                   container. Restore that real container before handing
+                   back to the unchanged memory renderer. */
+                if (this.chapter) {
+                    this.chapter.hidden = false;
+                }
+
+                this.startSequence(target);
+            });
+        });
+    }
+
+    /* Safe for any owner that must leave the lane while an Act card is
+       visible. Timers are invalidated before the preceding real memory is
+       restored, so a delayed card callback cannot reopen the lane. */
+    cancelActTransition({ restorePrevious = true } = {}) {
+        if (this.state !== 'act-transition') return false;
+
+        const previousIndex = this._actTransitionPrevious;
+        this.clearTimers();
+        this.hideActTransition();
+
+        if (restorePrevious && Number.isInteger(previousIndex)) {
+            this.saveCurrentPosition(previousIndex, 'settled');
+            this._restoreSettledMemory(previousIndex);
+        }
+
+        return true;
     }
 
 
@@ -1179,6 +1392,7 @@ export class MemoryLane {
         if (!m || !this.chapter) return;
 
         this.clearTimers();
+        this.hideActTransition();
 
         // A new chapter begins: any pending read-gate from the
         // previous message is removed together with its listener.
@@ -1187,6 +1401,8 @@ export class MemoryLane {
         this.current = index;
         this.state = 'playing';
         this.stage = 'title';
+        this.saveCurrentPosition(index, 'active');
+        this._fireState('playing');
 
         if (this.nextBtn) {
             this.nextBtn.hidden = true;
@@ -1466,27 +1682,13 @@ export class MemoryLane {
     settleChapter() {
         this.stage = 'settled';
         this.state = 'settled';
+        this.saveCurrentPosition(this.current, 'settled');
 
         this.saveProgress(this.current + 1);
 
         const m = memories[this.current];
 
-        if (
-            m &&
-            !this.isMemoryRead(m.id) &&
-            this.messageOverflows()
-        ) {
-            if (this.nextBtn) {
-                this.nextBtn.hidden = true;
-            }
-
-            if (this.prevBtn) {
-                this.prevBtn.hidden = true;
-            }
-
-            this.armReadWatch(m.id);
-            return;
-        }
+        if (this._armUnreadReadGate(m)) return;
 
         this._revealSettledControls();
     }
@@ -1506,6 +1708,7 @@ export class MemoryLane {
                 }
 
                 this.state = 'final';
+                this.saveCurrentPosition(this.current, 'final');
                 this._fireState('final');
 
                 if (this.final) {
@@ -1549,6 +1752,33 @@ export class MemoryLane {
     }
 
     /**
+     * Arm the existing gate for an unread overflowing letter. Letter
+     * entrance choreography scrolls the message programmatically, so its
+     * settled reading position is reset before the user-only listener is
+     * attached.
+     */
+    _armUnreadReadGate(m) {
+        if (
+            !m ||
+            m.type !== 'letter' ||
+            this.isMemoryRead(m.id) ||
+            !this.messageOverflows()
+        ) {
+            return false;
+        }
+
+        if (m.type === 'letter' && this.messageBlock) {
+            this.messageBlock.scrollTop = 0;
+        }
+
+        if (this.nextBtn) this.nextBtn.hidden = true;
+        if (this.prevBtn) this.prevBtn.hidden = true;
+
+        this.armReadWatch(m.id);
+        return true;
+    }
+
+    /**
      * Watch the message until it has really been read to its END
      * (with a small tolerance for mobile rounding), then persist
      * "read" and reveal the navigation buttons. Never time-based -
@@ -1565,28 +1795,40 @@ export class MemoryLane {
 
         this._awaitingRead = true;
         this._readTargetId = id;
+        this._readUserInteracted = false;
 
         // One bound handler per scroll container (letters scroll the
         // message area, photos scroll the chapter) - never duplicated.
         this.messageBlock.addEventListener('scroll', this._onMessageScroll, { passive: true });
         this.chapter.addEventListener('scroll', this._onMessageScroll, { passive: true });
-
-        // Edge case: the end is already on screen without scrolling.
-        this._handleMessageScroll();
+        this.messageBlock.addEventListener('wheel', this._onReadIntent, { passive: true });
+        this.messageBlock.addEventListener('touchstart', this._onReadIntent, { passive: true });
+        this.messageBlock.addEventListener('pointerdown', this._onReadIntent, { passive: true });
+        this.chapter.addEventListener('wheel', this._onReadIntent, { passive: true });
+        this.chapter.addEventListener('touchstart', this._onReadIntent, { passive: true });
+        this.chapter.addEventListener('pointerdown', this._onReadIntent, { passive: true });
+        window.addEventListener('keydown', this._onReadIntent, true);
     }
 
     disarmReadWatch() {
-        if (this._readTargetId !== null) {
-            this.messageBlock?.removeEventListener('scroll', this._onMessageScroll);
-            this.chapter?.removeEventListener('scroll', this._onMessageScroll);
-        }
+        this.messageBlock?.removeEventListener('scroll', this._onMessageScroll);
+        this.chapter?.removeEventListener('scroll', this._onMessageScroll);
+        this.messageBlock?.removeEventListener('wheel', this._onReadIntent);
+        this.messageBlock?.removeEventListener('touchstart', this._onReadIntent);
+        this.messageBlock?.removeEventListener('pointerdown', this._onReadIntent);
+        this.chapter?.removeEventListener('wheel', this._onReadIntent);
+        this.chapter?.removeEventListener('touchstart', this._onReadIntent);
+        this.chapter?.removeEventListener('pointerdown', this._onReadIntent);
+        window.removeEventListener('keydown', this._onReadIntent, true);
         this._awaitingRead = false;
         this._readTargetId = null;
+        this._readUserInteracted = false;
     }
 
     /** Scroll listener: fires while the visitor reads the message */
     _handleMessageScroll() {
         if (!this._awaitingRead || this.state !== 'settled') return;
+        if (!this._readUserInteracted) return;
         if (!this._isMessageAtEnd()) return;
 
         const id = this._readTargetId;
@@ -1939,6 +2181,39 @@ export class MemoryLane {
         }
     }
 
+    _readProgressRecord() {
+        const storage = getProgressStorage();
+        if (!storage) return {};
+        try {
+            const data = JSON.parse(storage.getItem(PROGRESS_KEY));
+            return data && typeof data === 'object' ? data : {};
+        } catch {
+            return {};
+        }
+    }
+
+    loadCurrentPosition() {
+        const data = this._readProgressRecord();
+        const index = data.currentMemoryIndex;
+        const state = data.currentMemoryState;
+        if (!Number.isInteger(index) || index < 0 || index >= this.total) return null;
+        if (state !== 'active' && state !== 'settled' && state !== 'final') return null;
+        return { index, state };
+    }
+
+    saveCurrentPosition(index, state) {
+        const storage = getProgressStorage();
+        if (!storage) return;
+        try {
+            const data = this._readProgressRecord();
+            data.currentMemoryIndex = Number.isInteger(index) ? index : null;
+            data.currentMemoryState = state;
+            storage.setItem(PROGRESS_KEY, JSON.stringify(data));
+        } catch {
+            /* Current position is best-effort and never blocks the lane. */
+        }
+    }
+
     /**
      * Store the last completed memory number.
      * Progress only moves forward - it is never lowered.
@@ -1955,10 +2230,9 @@ export class MemoryLane {
                 memoryNumber
             );
 
-            storage.setItem(
-                PROGRESS_KEY,
-                JSON.stringify({ lastCompletedMemory })
-            );
+            const data = this._readProgressRecord();
+            data.lastCompletedMemory = lastCompletedMemory;
+            storage.setItem(PROGRESS_KEY, JSON.stringify(data));
         } catch {
             /* Ignore - progress is best-effort */
         }
@@ -2016,6 +2290,98 @@ export class MemoryLane {
         }
 
         this.beginReveal(memoryNumber - 1);
+    }
+
+    /** Restore the exact saved lane entry without replaying its timed
+        sequence or changing completion progress. */
+    restoreCurrentPosition() {
+        const position = this.loadCurrentPosition();
+        if (!position) return false;
+        this._restoreSettledMemory(position.index, position.state === 'final');
+        return true;
+    }
+
+    _restoreSettledMemory(index, final = false) {
+        const m = memories[index];
+        if (!m || !this.chapter) return;
+
+        this.clearTimers();
+        this.disarmReadWatch();
+        this.current = index;
+        this.state = final ? 'final' : 'settled';
+        this.stage = 'settled';
+        this.queued = 0;
+
+        if (this.intro) this.intro.hidden = true;
+        this.chapter.hidden = false;
+        this.chapter.classList.remove(
+            'compose-a', 'compose-b', 'compose-c', 'compose-d',
+            'compose-e', 'compose-f', 'compose-g', 'compose-h',
+            'compose-letter'
+        );
+        this.chapter.classList.add(m.composition, 'is-active');
+
+        if (m.type === 'letter') {
+            this.renderLetterTitle(m);
+            this.renderLetterHeart(m);
+            this.renderLetterMessage(m);
+            this.message?.querySelectorAll('.memory-letter-para, .memory-letter-sign')
+                .forEach(el => el.classList.add('is-in'));
+        } else {
+            this.renderTitle(m);
+            this.renderPhoto(m);
+            this.renderMessage(m);
+        }
+
+        if (this.titleBlock) {
+            this.titleBlock.classList.remove('is-in');
+            if (this._titleAnim) this.titleBlock.classList.remove(this._titleAnim);
+            this._titleAnim = m.titleAnimation;
+            this.titleBlock.classList.add('is-settled');
+        }
+        if (this.photoBlock) this.photoBlock.classList.add('is-in');
+        if (this.frame && m.type !== 'letter') {
+            this.frame.classList.remove('is-in');
+            if (this._photoAnim) this.frame.classList.remove(this._photoAnim);
+            this._photoAnim = m.photoAnimation;
+            this.frame.classList.add(m.photoSettle);
+        }
+        if (this.messageBlock) {
+            if (this._messageAnim) this.messageBlock.classList.remove(this._messageAnim);
+            this._messageAnim = m.messageAnimation;
+            this.messageBlock.classList.add('is-in');
+            this.messageBlock.scrollTop = 0;
+        }
+
+        this.refreshIntroBackButton();
+        const awaitingRead = !final && this._armUnreadReadGate(m);
+
+        if (awaitingRead) {
+            // The existing entry remains exact; only its unread gate is
+            // restored instead of exposing navigation on refresh.
+        } else if (final) {
+            this.refreshPrevButton();
+            if (this.nextBtn) this.nextBtn.hidden = true;
+            if (this.final) {
+                this.final.hidden = false;
+                this.final.classList.add('memory-final-in');
+                this._placeFinalButtonInNav();
+            }
+        } else {
+            this.refreshPrevButton();
+            if (this.final) {
+                this.final.hidden = true;
+                this.final.classList.remove('memory-final-in');
+                this._restoreFinalButton();
+            }
+            if (this.nextBtn) {
+                this.nextBtn.hidden = false;
+                this.nextBtn.classList.add('memory-next-in');
+            }
+        }
+
+        this.preloadNeighbors();
+        this._fireState(final ? 'final' : 'settled');
     }
 
 
@@ -2430,7 +2796,13 @@ export class MemoryLane {
        ============================================================ */
 
     later(ms, fn) {
-        const id = setTimeout(fn, ms);
+        const lifecycle = this.lifecycleToken;
+        let id = null;
+        id = setTimeout(() => {
+            this.timers = this.timers.filter((timerId) => timerId !== id);
+            if (lifecycle !== this.lifecycleToken) return;
+            fn();
+        }, ms);
 
         this.timers.push(id);
 
@@ -2439,6 +2811,7 @@ export class MemoryLane {
 
 
     clearTimers() {
+        this.lifecycleToken++;
         for (const id of this.timers) {
             clearTimeout(id);
         }
@@ -2449,6 +2822,7 @@ export class MemoryLane {
 
     destroy() {
         this.clearTimers();
+        this.hideActTransition();
 
         /*
          * Remove any pending read-gate scroll listener.

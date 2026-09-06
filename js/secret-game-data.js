@@ -68,31 +68,30 @@ export const TIMELINE_MOMENTS = [
    ------------------------------------------------------------ */
 /* ------------------------------------------------------------
    LEVEL 1 - PHOTO MEMORY ORDER PUZZLE
-   Temporary placeholder photos. Replace this single array when
-   the real images and chronology are ready; `order` is the one
-   authoritative correct sequence.
+   Filename number is the authoritative chronology. Distinct ids ensure
+   old dummy-card checkpoints restore as a fresh shuffled board.
    ------------------------------------------------------------ */
 export const PHOTO_MEMORY_PUZZLE = [
-    { id: 'memory-01', src: 'assets/game1-dummy/dummy-01.svg', order: 1 },
-    { id: 'memory-02', src: 'assets/game1-dummy/dummy-02.svg', order: 2 },
-    { id: 'memory-03', src: 'assets/game1-dummy/dummy-03.svg', order: 3 },
-    { id: 'memory-04', src: 'assets/game1-dummy/dummy-04.svg', order: 4 },
-    { id: 'memory-05', src: 'assets/game1-dummy/dummy-05.svg', order: 5 },
-    { id: 'memory-06', src: 'assets/game1-dummy/dummy-06.svg', order: 6 },
-    { id: 'memory-07', src: 'assets/game1-dummy/dummy-07.svg', order: 7 },
-    { id: 'memory-08', src: 'assets/game1-dummy/dummy-08.svg', order: 8 },
-    { id: 'memory-09', src: 'assets/game1-dummy/dummy-09.svg', order: 9 },
-    { id: 'memory-10', src: 'assets/game1-dummy/dummy-10.svg', order: 10 },
-    { id: 'memory-11', src: 'assets/game1-dummy/dummy-11.svg', order: 11 },
-    { id: 'memory-12', src: 'assets/game1-dummy/dummy-12.svg', order: 12 },
-    { id: 'memory-13', src: 'assets/game1-dummy/dummy-13.svg', order: 13 },
-    { id: 'memory-14', src: 'assets/game1-dummy/dummy-14.svg', order: 14 },
-    { id: 'memory-15', src: 'assets/game1-dummy/dummy-15.svg', order: 15 },
-    { id: 'memory-16', src: 'assets/game1-dummy/dummy-16.svg', order: 16 },
-    { id: 'memory-17', src: 'assets/game1-dummy/dummy-17.svg', order: 17 },
-    { id: 'memory-18', src: 'assets/game1-dummy/dummy-18.svg', order: 18 },
-    { id: 'memory-19', src: 'assets/game1-dummy/dummy-19.svg', order: 19 },
-    { id: 'memory-20', src: 'assets/game1-dummy/dummy-20.svg', order: 20 },
+    { id: 'game1-01', src: 'assets/images/game-1/game1-01.jpg', order: 1, objectPosition: '50% 4%' },
+    { id: 'game1-02', src: 'assets/images/game-1/game1-02.jpg', order: 2, objectPosition: '56% 50%' },
+    { id: 'game1-03', src: 'assets/images/game-1/game1-03.jpg', order: 3, objectPosition: '50% 4%' },
+    { id: 'game1-04', src: 'assets/images/game-1/game1-04.jpg', order: 4, objectPosition: '50% 50%' },
+    { id: 'game1-05', src: 'assets/images/game-1/display/game1-05-display.jpg', order: 5, objectPosition: '50% 45%' },
+    { id: 'game1-06', src: 'assets/images/game-1/game1-06.jpg', order: 6, objectPosition: '50% 0%' },
+    { id: 'game1-07', src: 'assets/images/game-1/game1-07.jpg', order: 7, objectPosition: '50% 48%' },
+    { id: 'game1-08', src: 'assets/images/game-1/game1-08.jpg', order: 8, objectPosition: '50% 0%' },
+    { id: 'game1-09', src: 'assets/images/game-1/display/game1-09-display.jpg', order: 9, objectPosition: '50% 0%' },
+    { id: 'game1-10', src: 'assets/images/game-1/game1-10.jpg', order: 10, objectPosition: '50% 4%' },
+    { id: 'game1-11', src: 'assets/images/game-1/game1-11.jpg', order: 11, objectPosition: '50% 0%' },
+    { id: 'game1-12', src: 'assets/images/game-1/game1-12.jpg', order: 12, objectPosition: '50% 0%' },
+    { id: 'game1-13', src: 'assets/images/game-1/display/game1-13-display.jpg', order: 13, objectPosition: '50% 0%' },
+    { id: 'game1-14', src: 'assets/images/game-1/game1-14.jpg', order: 14, objectPosition: '68% 50%' },
+    { id: 'game1-15', src: 'assets/images/game-1/display/game1-15-display.jpg', order: 15, objectPosition: '50% 50%' },
+    { id: 'game1-16', src: 'assets/images/game-1/display/game1-16-display.jpg', order: 16, objectPosition: '50% 8%' },
+    { id: 'game1-17', src: 'assets/images/game-1/display/game1-17-display.jpg', order: 17, objectPosition: '50% 50%' },
+    { id: 'game1-18', src: 'assets/images/game-1/display/game1-18-display.jpg', order: 18, objectPosition: '32% 50%' },
+    { id: 'game1-19', src: 'assets/images/game-1/game1-19.jpg', order: 19, objectPosition: '50% 0%' },
+    { id: 'game1-20', src: 'assets/images/game-1/game1-20.jpg', order: 20, objectPosition: '50% 0%' },
 ];
 
 /* Level 2: exactly three visible slots with a single recovery round each. */
@@ -100,46 +99,46 @@ export const GAME2_MEMORY_DATA = [
     {
         slot: 0,
         original: {
-            id: 'g2-m1-original', slot: 0, stage: 'original', image: 'assets/images/memories/dummy-photo-01.jpg',
-            title: 'Where it all began', question: 'Hamari pehli mulakat kis chhote se mazak se shuru hui thi?',
-            options: ['Ek random message se', 'Ek photo challenge se', 'Ek song recommendation se', 'Ek coffee plan se', 'Ek birthday wish se'], correctIndex: 0,
-            revealText: 'Wahi ek random sa message... aur phir tum meri favourite story ban gayi. ❤',
+            id: 'g2-m1-original', slot: 0, stage: 'original', image: 'assets/images/game-2/game2-memory1-main.jpg', imageFit: 'contain',
+            title: '15/07/2026', question: '15/07/2026 ko meri wife ko gussa kyun aaya tha?',
+            options: ['Kyunki maine uski baat dhyaan se nahi suni thi', 'Kyunki main usse chhed raha tha', 'Kyunki maine late reply kiya tha', 'Kyunki main biwi ko zabardasti khila raha tha.', 'Kyunki main uska mood samajh nahi paaya tha'], correctIndex: 3,
+            revealText: 'Bas thoda sa khila raha tha... aur biwi ka gussa bhi kitna pyaara lag raha tha. ❤',
         },
         recovery: {
-            id: 'g2-m1-recovery', slot: 0, stage: 'recovery', image: 'assets/images/memories/dummy-photo-02.jpg',
-            title: 'The first hello', question: 'Pehli baar baat karke tumhari kaunsi baat dil ko sabse pehle achhi lagi thi?',
-            options: ['Tumhari honesty', 'Tumhari hasi', 'Tumhara patience', 'Tumhari sharmili si baat', 'Tumhara confidence'], correctIndex: 1,
-            revealText: 'Tumhari hasi mein hi toh pehle din se mera ghar sa lagta hai. ❤',
+            id: 'g2-m1-recovery', slot: 0, stage: 'recovery', image: 'assets/images/game-2/game2-memory1-recovery.jpg', imageFit: 'contain',
+            title: 'Thoda Aur Socho...', question: '15/07/2026 ko mujhe maar kyun rahi thi?',
+            options: ['Kyunki maine uska phone nahi uthaya tha', 'Kyunki main apni biwi ke paas baith nahi raha tha.', 'Kyunki main sirf hass raha tha', 'Kyunki maine usse ignore kiya tha', 'Kyunki main usko mana nahi raha tha'], correctIndex: 1,
+            revealText: 'Bas paas baithna tha... aur biwi ne apna haq bilkul pyaar se jata diya. ❤',
         },
     },
     {
         slot: 1,
         original: {
-            id: 'g2-m2-original', slot: 1, stage: 'original', image: 'assets/images/memories/dummy-photo-05.JPG',
-            title: 'Our long conversations', question: 'Hamari woh pehli lambi baat kis waqt tak chalti rahi thi?',
-            options: ['Bas dinner tak', 'Raat se subah tak', 'Lunch break tak', 'Ek movie ke baad', 'Sirf aadha ghanta'], correctIndex: 1,
-            revealText: 'Raat kab subah ban gayi, pata hi nahi chala — tumse baat jo ho rahi thi. ✨',
+            id: 'g2-m2-original', slot: 1, stage: 'original', image: 'assets/images/game-2/game2-memory2-main.jpg', imageFit: 'contain',
+            title: '25/02/2025', question: '25/02/2025 ko tum kis mood mein thi aur aisa kyun kar rahi thi?',
+            options: ['Kyunki tum sharma rahi thi', 'Kyunki tum mujhe tang kar rahi thi', 'Kyunki main kiss nahi kar raha tha.', 'Kyunki tum romantic mood mein thi', 'Kyunki tum bas mera reaction dekhna chahti thi'], correctIndex: 2,
+            revealText: 'Bas ek kiss ki kami thi... aur phir mood ko reason mil gaya. ❤',
         },
         recovery: {
-            id: 'g2-m2-recovery', slot: 1, stage: 'recovery', image: 'assets/images/memories/dummy-photo-06.JPG',
-            title: 'The comfort of us', question: 'Jab baatein khatam hone ka naam nahi leti, hum usually kis baat par muskura dete hain?',
-            options: ['Purane jokes par', 'Future ke sapnon par', 'Random silly baaton par', 'Food plans par', 'Ek doosre ki awaaz par'], correctIndex: 4,
-            revealText: 'Tumhari awaaz... mere har lambe din ka sabse soft ending note hai. ❤',
+            id: 'g2-m2-recovery', slot: 1, stage: 'recovery', image: 'assets/images/game-2/game2-memory2-recovery.jpg', imageFit: 'contain',
+            title: 'Ab Sach Sach Batao...', question: '25/02/2025 ko kiss ke baad kaisa lag raha tha?',
+            options: ['Dil bahut shaant ho gaya tha', 'Aur bhi zyada sharam aa rahi thi', 'Bas smile ruk hi nahi rahi thi', 'Aisa lag raha tha waqt wahi ruk jaaye', 'Biwi ke mann mein laddu phoot rahe the.'], correctIndex: 4,
+            revealText: 'Kiss ke baad biwi ke mann mein laddu phoot rahe the... aur meri smile bhi ruk nahi rahi thi. ❤',
         },
     },
     {
         slot: 2,
         original: {
-            id: 'g2-m3-original', slot: 2, stage: 'original', image: 'assets/images/memories/dummy-photo-09.JPG',
-            title: 'The promise we keep', question: 'Hamare beech ka sabse khoobsurat vaada kya raha hai?',
-            options: ['Har baat par agree karna', 'Har din surprise dena', 'Mushkil mein haath na chhodna', 'Har call lambi karna', 'Har photo save karna'], correctIndex: 2,
-            revealText: 'Har museebat ke baad bhi, humne haath nahi chhoda. Bas yahi toh hum hain. ❤',
+            id: 'g2-m3-original', slot: 2, stage: 'original', image: 'assets/images/game-2/game2-memory3-main.jpg',
+            title: '03/09/2026', question: '03/09/2026 ko meri biwi itne nakhre kyun kar rahi thi?',
+            options: ['Kiss na dena pade isiliye.', 'Kyunki mood thoda shararti tha', 'Kyunki mujhe aur tadpana tha', 'Kyunki bas nakhre dikhane ka mann tha', 'Kyunki seedha maan jaana boring hota'], correctIndex: 0,
+            revealText: 'Nakhre bhi pyaare... par kiss se bachne ki chaal pakdi gayi. 😏',
         },
         recovery: {
-            id: 'g2-m3-recovery', slot: 2, stage: 'recovery', image: 'assets/images/memories/dummy-photo-10.JPG',
-            title: 'Still choosing us', question: 'Aaj bhi, sab kuch ke beech, hum ek doosre ko kya choose karte hain?',
-            options: ['Perfect answers', 'Easy days', 'Ek doosre ka saath', 'Badi celebrations', 'Silent goodbyes'], correctIndex: 2,
-            revealText: 'Har baar, har din — tum aur main. Ek doosre ka saath. ✨',
+            id: 'g2-m3-recovery', slot: 2, stage: 'recovery', image: 'assets/images/game-2/game2-memory3-recovery.jpg',
+            title: 'Last Chance 😏', question: '03/09/2026 ko meri biwi photo kyun nahi khinchwa rahi thi?',
+            options: ['Kyunki pehle aur ready hona tha', 'Kyunki mood pose dene ka nahi tha', 'Kyunki bas mujhe pareshan karna tha', 'Us din zyada khubsurat dikh rahi thi isiliye.', 'Kyunki natural rehna zyada pasand tha'], correctIndex: 3,
+            revealText: 'Photo se bachne ka reason bhi kitna pyaara tha... biwi waise hi bahut khubsurat lag rahi thi. ❤',
         },
     },
 ];
@@ -151,41 +150,68 @@ export const GAME2_MEMORY_DATA = [
    ------------------------------------------------------------ */
 export const MIND_READING_DATA = [
     {
-        question: 'Agar achanak hume ek poori free night mil jaaye, to tumhe kya lagta hai main secretly kya choose karunga?',
+        question: 'Jab mera mood kharab hota hai, mujhe sabse zyada kya chahiye hota hai?',
         options: [
-            'Bas hum dono, soft music aur ek peaceful si raat',
-            'Bina destination ke ek random long drive',
-            'City lights ke beech ek fancy dinner',
-            'Bas paas baithkar der raat tak baatein karna',
+            'Thoda akela time',
+            'Tumhara pyar aur saath',
+            'Sirf silence',
+            'Bas mood apne aap theek hone dena',
+            'Tumhari ek pyari si smile',
         ],
-        correctIndex: 0,
+        correctIndex: 1,
     },
     {
-        question: 'Agar hum ek din ke liye sabse door gayab ho sakein, to tumhe kya lagta hai mera dil tumhe kahan le jaana chahega?',
+        question: 'Main tumhari kaunsi cheez ko sabse zyada protect karna chahta hoon?',
         options: [
-            'Ek shaant beach — bas waves, hawa aur tum',
-            'Mountains me ek peaceful si jagah, duniya se door',
-            'Kisi purani city ki galiyon me bina kisi plan ke ghoomna',
-            'Ek cozy sa room, bahar baarish aur andar bas hum',
+            'Tumhari smile ko',
+            'Tumhare dreams ko',
+            'Tumhari peace ko',
+            'Tumhare gusse ko',
+            'Tumhari masoomiyat ko',
         ],
         correctIndex: 3,
     },
     {
-        question: 'Abhi iss waqt kaunsi choti si cheez mujhe sabse zyada khush kar degi?',
+        question: 'Tumhari kaunsi ek cheez mujhe har baar automatically smile kara deti hai?',
         options: [
-            'Bina kuch kahe tumhara haath mere haath me aa jaana',
-            'Bina kisi reason ke ek lamba sa hug',
-            'Mere kisi stupid joke par tumhara fir se hasna',
-            'Jab mujhe bilkul expect na ho tab tumhara quietly “I love you” kehna',
+            'Tumhari awaaz',
+            'Tumhara gussa',
+            'Tumhare face ke unique expressions',
+            'Tumhari hasi',
+            'Tumhare nakhre',
         ],
-        correctIndex: 1,
+        correctIndex: 2,
+    },
+    {
+        question: 'Mujhe tumhare saath sabse zyada sukoon kab milta hai?',
+        options: [
+            'Jab tum mere kareeb rehti ho',
+            'Jab hum bahar ghoom rahe hote hain',
+            'Jab hum phone par baat karte hain',
+            'Jab hum dono chup-chaap baithe hote hain',
+            'Jab tum mera haath pakad kar baithi hoti ho',
+        ],
+        correctIndex: 0,
+    },
+    {
+        question: 'Mere liye tum sirf meri wife nahi ho… sabse zyada kya ho?',
+        options: [
+            'Meri life',
+            'Mera trust',
+            'Sab kuch',
+            'Meri power',
+            'Mera confidence',
+        ],
+        correctIndex: 2,
     },
 ];
 
 export const WHO_WOULD_DATA = [
-    { question: 'Hum dono me se kaun sirf miss karne ki wajah se achanak midnight date plan kar sakta hai?', correctChoice: 'you' },
-    { question: 'Kaun secretly surprise plan karega aur fir aise act karega jaise use kuch yaad hi nahi?', correctChoice: 'me' },
-    { question: 'Sirf ek hug lene ke liye faltu si argument start kaun karega? 😌', correctChoice: 'both' },
+    { question: 'Chhoti baat par drama aur nakhre kaun karta hai?', correctChoice: 'me' },
+    { question: 'Photos - videos bhejne ya khinchwane ke time nakhre kaun karta hai?', correctChoice: 'me' },
+    { question: 'Hum dono mein kisi bhi baat ko lekar sabse zyada taane kaun maarta hai?', correctChoice: 'me' },
+    { question: 'Romantic baatein kaun karta hai?', correctChoice: 'you' },
+    { question: 'Hamare beech ladai ya bahas ho jaaye to situation samajh kar jhukta kaun hai?', correctChoice: 'both' },
 ];
 
 export const WHO_CHOICE_META = [
@@ -201,39 +227,39 @@ export const WHO_CHOICE_META = [
    ------------------------------------------------------------ */
 export const CHEMISTRY_QUESTIONS = [
     {
-        question: 'Our perfect night together would be…',
+        question: 'Tumhare according hamari chemistry ki sabse special baat kya hai?',
         choices: [
-            { label: 'Late night drive — just us and the city lights 🌙', reveal: 'You chose the quiet road — where every light feels like us.' },
-            { label: 'Cozy dinner — soft light, long talks 🕯️', reveal: 'You chose the warm glow — where time slows just for us.' },
-            { label: 'A little bit of both — surprise me ✨', reveal: 'You chose a little mystery — that’s our favorite chemistry.' },
+            { label: 'Ladai ke baad bhi ek dusre ke paas aa jaana', reveal: 'Chahe kitni bhi bahas ho... end mein dil fir ek dusre ke paas hi aa jaata hai. ❤️' },
+            { label: 'Ek dusre ke nakhre handle kar lena', reveal: 'Tumhare nakhre aur mera patience... shayad isi ka naam hamari chemistry hai. 😌❤️' },
+            { label: 'Har situation mein ek dusre ka saath dena', reveal: 'Situation koi bhi ho, hum dono ek team hain... aur wahi meri favourite baat hai. ❤️' },
         ],
-        finalLine: 'Somehow… you always know what feels like us. ❤️',
+        finalLine: 'Shayad hamari chemistry special isliye nahi kyunki hum same hain... balki isliye kyunki hum har baar ek dusre ko choose karte hain. ❤️',
     },
     {
-        question: 'If we had a free evening with no plans…',
+        question: 'Agar hum dono ka mood thoda off ho, tumhe mere saath kya sabse zyada accha lagega?',
         choices: [
-            { label: 'Stay in — blankets, whispers, no rush', reveal: 'Staying in — where the world can wait.' },
-            { label: 'Go somewhere beautiful we’ve never been', reveal: 'Going somewhere new — because anywhere is home with you.' },
-            { label: 'Do something completely spontaneous', reveal: 'Spontaneous — because our best moments were never planned.' },
+            { label: 'Bas ek long hug aur chup-chaap paas rehna', reveal: 'Kabhi kabhi solution words nahi hote... bas tumhara mere paas hona hi kaafi hota hai. ❤️' },
+            { label: 'Dil khol kar sab baatein karna', reveal: 'Tumse dil ki baat ho jaaye to aadha mood waise hi theek ho jaata hai. ✨' },
+            { label: 'Kahin bahar nikal kar mood change karna', reveal: 'Kabhi kabhi bas jagah badalni hoti hai... saath tum ho to mood khud badal jaata hai. ❤️' },
         ],
-        finalLine: 'That’s our chemistry — calm and spontaneous at once. 🌙',
+        finalLine: 'Mood off ho sakta hai... par tumhare saath hona kabhi off nahi lagta. ❤️',
     },
     {
-        question: 'When I need you most, what would I want?',
+        question: 'Hamari perfect romantic night mein sabse important kya hona chahiye?',
         choices: [
-            { label: 'A hug that says everything 🤍', reveal: 'A hug — soft, long, without words.' },
-            { label: 'Your words — calm and close', reveal: 'Your words — the ones only you know how to say.' },
-            { label: 'Just being beside me — quietly', reveal: 'Just beside me — present, warm, enough.' },
+            { label: 'Bas hum dono, bina phone ke', reveal: 'Duniya thodi der wait kar sakti hai... tumhare saath ka waqt nahi. ❤️' },
+            { label: 'Late-night baatein aur thoda romance', reveal: 'Raat, tumhari baatein aur thoda sa romance... mere liye perfect combination. ❤️' },
+            { label: 'Masti, teasing aur bohot saari hasi', reveal: 'Humara romance bina thodi masti aur hasi ke complete hi kahan hota hai. 😌❤️' },
         ],
-        finalLine: 'You knew. That’s why it’s us. 💙',
+        finalLine: 'Perfect night jagah ya plan se nahi banti... mere liye tumhare saath se banti hai. ❤️',
     },
 ];
 
 export const JACKPOT_CATEGORIES = [
-    { key: 'date', label: 'DATE', options: ['Midnight Drive 🌙', 'Rooftop Evening ✨', 'Beach Walk at Dusk 🌊', 'Cozy Night In 🕯️', 'Old-City Wander 🏙️', 'Rain-Day Hideaway ☔'] },
-    { key: 'food', label: 'FOOD', options: ['Dessert Together 🍓', 'Pizza & Conversations 🍕', 'Favorite Dinner 🍝', 'Late Night Coffee ☕', 'Street-Food Adventure 🥟', 'Homemade Treats 🍰'] },
-    { key: 'mood', label: 'MOOD', options: ['Just Us Tonight 🤍', 'No Phones, Just Love 📵', 'Laugh Until Midnight 😂', 'Slow & Quiet 🌙', 'Soft Music Only 🎶', 'A Little Mischief 😏'] },
-    { key: 'activity', label: 'ACTIVITY', options: ['Watch Our Favorite Movie 🎬', 'Stargaze Together ⭐', 'Take Random Photos 📸', 'Dance in the Living Room 💃', 'Talk Until 2 AM 🌙', 'Plan a Tiny Surprise 🎁'] },
+    { key: 'date', label: 'HAMARI MEMORY', options: ['Pahli bike ride', 'Hamari pahli mulakat', 'Pahli mulakat, pahla touch', 'Pahli ice cream saath me', 'Pahli photos saath me', 'Hamari pahli bahas'] },
+    { key: 'food', label: 'MERA REACTION', options: ['Tumhe pyar se manana', 'Ek tight hug dena', 'Kiss karke gussa thanda karna', 'Tumhari baat chup-chaap sunna', 'Tumhe lekar bahar nikal jaana', 'Tumhare nakhre dekh kar bas smile karna'] },
+    { key: 'mood', label: 'BIWI KA MOOD', options: ['Hamesha gusse me rehna', 'Romantic baaton par gussa hona', 'Khana khane ko bolo to gussa ho jaana', 'Mujhse sab kuch na batana', 'Mujhse pyar se baat na karna', 'Mujhse ladai karna'] },
+    { key: 'activity', label: 'BIWI KI AADAT', options: ['Hamesha sote rehna', 'Hamesha bahar ka khana', 'Naye kapde pehenna aur makeup karna', 'Main jo bolun hamesha uska ulta karna', 'Baat-baat par gussa hona', 'Mere saath photo na khinchwana'] },
 ];
 
 /* ------------------------------------------------------------
