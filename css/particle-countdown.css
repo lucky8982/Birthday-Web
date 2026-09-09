@@ -1,33 +1,34 @@
-/* Canvas owns the visible countdown. The retained markup remains available
-   to assistive technology without adding a second visual layer. */
+/* The countdown owns the viewport while its Canvas scene is active. */
 #cinematic-countdown {
     position: fixed;
     inset: 0;
-    z-index: 16;
+    width: 100vw;
+    width: 100dvw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 1000;
     overflow: hidden;
     isolation: isolate;
-    background: #030712;
+    background: #03030b;
 }
 
-#cinematic-countdown[hidden] { display: none !important; }
+#cinematic-countdown[hidden] {
+    display: none !important;
+}
+
+#cinematic-countdown.is-running {
+    animation: cinematic-countdown-enter .35s ease-out both;
+}
 
 .cinematic-countdown-canvas {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
+    display: block;
+    width: 100vw;
+    width: 100dvw;
+    height: 100vh;
+    height: 100dvh;
 }
 
-.cinematic-countdown-line,
-.cinematic-countdown-number,
-.cinematic-countdown-message,
-.cinematic-countdown-heart {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
+@keyframes cinematic-countdown-enter {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
