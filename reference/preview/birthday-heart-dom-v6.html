@@ -1,0 +1,22 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Birthday Heart DOM/CSS Preview</title>
+<style>
+  * { box-sizing: border-box; } body { margin: 0; min-height: 100vh; display: grid; place-items: center; overflow: hidden; background: #100e19; color: #f6b8cb; font-family: Arial, sans-serif; }
+  #preview { position: relative; width: min(82vw, 360px); aspect-ratio: 1.05; overflow: visible; }
+  .master { --scale: .59; position:absolute; top:50%; left:50%; width:450px; height:450px; transform:translate(-50%,-50%) scale(var(--scale)); }
+  .item,.x,.y { position:absolute; inset:0 auto auto 0; width:1px; height:1px; } .x,.y { will-change:transform; animation-fill-mode:both; }
+  .x { animation: x 10s ease-in-out infinite alternate; animation-delay:var(--delay); } .y { animation:y 20s linear infinite; animation-delay:var(--delay); }
+  .text { position:absolute; white-space:nowrap; transform:translate(-50%,-50%) rotate(-30deg); font-size:9.5px; font-weight:500; letter-spacing:.015em; opacity:var(--opacity); text-shadow:0 0 3px #fff6,0 0 6px #ef83aa99; }
+  @keyframes x { from { transform:translateX(0) } to { transform:translateX(450px) } }
+  @keyframes y { 0%,50%,100% { transform:translateY(180px) } 10%,40% { transform:translateY(45px) } 15%,20%,30%,35% { transform:translateY(4.5px) } 18%,32% { transform:translateY(0) } 22%,28% { transform:translateY(34.6px) } 24%,26% { transform:translateY(64.3px) } 25% { transform:translateY(112.5px) } 71%,79% { transform:translateY(428.6px) } 72.5%,77.5% { transform:translateY(441.2px) } 75% { transform:translateY(450px) } }
+  @media (prefers-reduced-motion:reduce) { .x,.y { animation-play-state:paused; } }
+</style>
+<main id="preview" aria-label="Birthday Heart preview"></main>
+<script>
+  const preview = document.querySelector('#preview'); const master = document.createElement('div'); master.className = 'master';
+  for (let i = 0; i < 100; i += 1) { const item = document.createElement('span'), x = document.createElement('span'), y = document.createElement('span'), text = document.createElement('span'); item.className='item'; x.className='x'; y.className='y'; text.className='text'; item.style.setProperty('--delay', `${i * -300}ms`); item.style.setProperty('--opacity', .72 + i % 5 * .055); text.textContent='Happy Birthday Biwi'; y.append(text); x.append(y); item.append(x); master.append(item); }
+  preview.append(master);
+  new ResizeObserver(([entry]) => master.style.setProperty('--scale', Math.min(entry.contentRect.width / 450, entry.contentRect.height / 450) * .88)).observe(preview);
+</script>

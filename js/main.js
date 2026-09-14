@@ -47,7 +47,7 @@ const app = {
                           // 'countdown' | 'birthday-letter' | 'birthday-reveal' |
                           // 'memory-landing' | 'memory' | 'post-memory-message' |
                           // 'secret-game' | 'reward' | 'final-love-letter' | 'infinite-garden'
-    revealStage: 'none',  // last reveal stage reported: 'letter' | 'countdown' | 'final'
+    revealStage: 'none',  // last reveal stage reported by BirthdayReveal
     revealRun: 0,         // reveal run id - bumped to invalidate stale callbacks
     memoryOpened: false,  // true once the surprise scene is on screen
     postMemoryRun: 0,     // invalidates post-memory handoff timers
@@ -59,15 +59,96 @@ const app = {
     inactivityTimer: null,
     lastActivityAt: 0,
     inactivityListenersAttached: false,
+    inactivityActivityEvents: [],
+    inactivityUsesScrollListener: false,
     inactivityLoggingOut: false,
     inactivityRescheduleFrame: null,
     resumeAfterInactivity: false,
+    securityHiddenAt: 0,
+    mobileBackgroundStartedAt: 0,
+    securityLocking: false,
+    requiresSecureResume: false,
+    mobileSecurityDevice: false,
+    mobileSecurityActive: false,
+    mobileSecurityListenersAttached: false,
+    mobileSecurityHeartbeat: null,
+    lastHeartbeatAt: 0,
     navigationRun: 0,
     navigationTimers: new Set(),
 };
 
-const INACTIVITY_TIMEOUT_MS = 480000;
-const INACTIVITY_ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'scroll', 'wheel'];
+// Desktop keeps the established eight-minute timeout. Mobile protected
+// sessions deliberately use the exact two-minute requirement below.
+const DESKTOP_INACTIVITY_TIMEOUT_MS = 480000;
+const MOBILE_INACTIVITY_TIMEOUT_MS = 2 * 60 * 1000;
+const MOBILE_HEARTBEAT_MS = 1000;
+const MOBILE_BACKGROUND_GRACE_MS = 60 * 1000;
+const MOBILE_INACTIVITY_ACTIVITY_EVENTS = ['pointerdown', 'touchstart', 'keydown', 'click'];
+const DESKTOP_INACTIVITY_ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'scroll', 'wheel'];
+const SECURITY_LOCK_KEY = 'hbm.securityLock';
+const SECURITY_LOCK_VERSION = 1;
+
+function detectMobileSecurityDevice() {
+    const userAgent = navigator.userAgent || '';
+    const userAgentMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(userAgent);
+    const userAgentDataMobile = navigator.userAgentData?.mobile === true;
+    const touchPoints = Number(navigator.maxTouchPoints) || 0;
+    const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches === true;
+    const narrowTouchViewport = touchPoints > 0 &&
+        Math.min(window.innerWidth || Infinity, window.innerHeight || Infinity) <= 900;
+
+    // The touch-only fallback is intentionally combined with a coarse pointer
+    // or a narrow viewport, so ordinary desktop browsers do not enter strict
+    // mobile mode merely because a touch display is connected.
+    return userAgentDataMobile || userAgentMobile ||
+        (touchPoints > 0 && coarsePointer) || narrowTouchViewport;
+}
+
+function isMobileProtectedSession() {
+    return app.mobileSecurityDevice;
+}
+
+function inactivityTimeoutMs() {
+    return isMobileProtectedSession()
+        ? MOBILE_INACTIVITY_TIMEOUT_MS
+        : DESKTOP_INACTIVITY_TIMEOUT_MS;
+}
+
+function loadSecurityLockState() {
+    try {
+        const raw = window.localStorage.getItem(SECURITY_LOCK_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (!data || data.version !== SECURITY_LOCK_VERSION || data.requiresUnlock !== true) return null;
+        return { hiddenAt: Number.isFinite(data.hiddenAt) ? data.hiddenAt : 0 };
+    } catch {
+        return null;
+    }
+}
+
+function markSecurityLockRequired(hiddenAt = 0) {
+    try {
+        window.localStorage.setItem(SECURITY_LOCK_KEY, JSON.stringify({
+            version: SECURITY_LOCK_VERSION,
+            requiresUnlock: true,
+            hiddenAt,
+        }));
+    } catch {
+        /* Storage unavailable: the in-memory lock still protects this visit. */
+    }
+}
+
+function clearSecurityLockState() {
+    app.securityHiddenAt = 0;
+    app.mobileBackgroundStartedAt = 0;
+    app.securityLocking = false;
+    app.requiresSecureResume = false;
+    try {
+        window.localStorage.removeItem(SECURITY_LOCK_KEY);
+    } catch {
+        /* Storage unavailable: nothing persisted to remove. */
+    }
+}
 
 const DATE_GATE_STORAGE_KEY = 'hbm.dateGate.v1';
 
@@ -151,11 +232,57 @@ function showQuestionLock() {
     question.start();
 }
 
-function recordInactivityActivity() {
-    if (!app.passwordVerifiedThisSession || app.inactivityLoggingOut) return;
+function isProtectedMobileSession() {
+    return isMobileProtectedSession() && app.mobileSecurityActive &&
+        app.passwordVerifiedThisSession && !app.inactivityLoggingOut;
+}
+
+function beginMobileBackgroundGrace() {
+    if (!isProtectedMobileSession() || app.mobileBackgroundStartedAt) return;
+    // This marker intentionally lives only in memory. A refresh must never
+    // turn a partial background interval into a persisted security lock.
+    app.mobileBackgroundStartedAt = Date.now();
+}
+
+function checkMobileSecurityBeforeResume(reason) {
+    if (!isProtectedMobileSession()) return false;
+    const persisted = loadSecurityLockState();
+    if (persisted || app.requiresSecureResume) {
+        triggerSecurityLock(reason);
+        return true;
+    }
+
+    const startedAt = app.mobileBackgroundStartedAt;
+    if (!startedAt) return false;
+    const elapsed = Math.max(0, Date.now() - startedAt);
+    app.mobileBackgroundStartedAt = 0;
+    app.lastHeartbeatAt = Date.now();
+    if (elapsed < MOBILE_BACKGROUND_GRACE_MS) {
+        // If a browser let the visible inactivity timer elapse while hidden,
+        // restart it now from the existing visible-activity timestamp.
+        scheduleInactivityLogout();
+        return false;
+    }
+
+    // Only a completed 60-second grace interval creates the normal
+    // persisted lock. The current route snapshot is saved by the lock path.
+    app.securityHiddenAt = startedAt;
+    triggerSecurityLock(reason);
+    return true;
+}
+
+function recordInactivityActivity(event) {
+    if (!app.passwordVerifiedThisSession || app.inactivityLoggingOut || document.hidden) return;
+
+    // Capture-phase mobile activity must check for a suspended/hidden session
+    // before the first post-wake tap can reach a protected scene.
+    if (isMobileProtectedSession() && checkMobileSecurityBeforeResume('first-interaction')) {
+        if (event?.cancelable) event.preventDefault();
+        event?.stopImmediatePropagation?.();
+        return;
+    }
+
     app.lastActivityAt = Date.now();
-    // A scrolling panel can emit many events per frame. The timestamp still
-    // updates on every event, while timer work is coalesced to one frame.
     if (app.inactivityRescheduleFrame != null) return;
     app.inactivityRescheduleFrame = requestAnimationFrame(() => {
         app.inactivityRescheduleFrame = null;
@@ -165,30 +292,110 @@ function recordInactivityActivity() {
 
 function scheduleInactivityLogout() {
     if (!app.passwordVerifiedThisSession || app.inactivityLoggingOut) return;
-    if (app.inactivityTimer != null) {
-        clearTimeout(app.inactivityTimer);
-        app.inactivityTimer = null;
-    }
+    if (app.inactivityTimer != null) clearTimeout(app.inactivityTimer);
 
-    const remaining = INACTIVITY_TIMEOUT_MS - (Date.now() - app.lastActivityAt);
+    // On mobile, hidden time is owned by the 60-second background rule,
+    // never by the visible inactivity timer.
+    if (isMobileProtectedSession() && document.hidden) return;
+    const remaining = inactivityTimeoutMs() - (Date.now() - app.lastActivityAt);
     if (remaining <= 0) {
-        performInactivityLogout();
+        triggerSecurityLock('inactivity');
         return;
     }
-
     app.inactivityTimer = window.setTimeout(() => {
         app.inactivityTimer = null;
-        // Background tabs can delay timers, so use elapsed wall-clock time.
-        if (Date.now() - app.lastActivityAt >= INACTIVITY_TIMEOUT_MS) {
-            performInactivityLogout();
+        if (Date.now() - app.lastActivityAt >= inactivityTimeoutMs()) {
+            triggerSecurityLock('inactivity');
         } else {
             scheduleInactivityLogout();
         }
     }, remaining);
 }
 
-function handleInactivityVisibilityChange() {
+function handleMobileVisibilityChange() {
+    if (!isProtectedMobileSession()) return;
+    if (document.visibilityState === 'hidden') {
+        beginMobileBackgroundGrace();
+    } else {
+        checkMobileSecurityBeforeResume('visibility-resume');
+    }
+}
+
+function handleMobileBlur() {
+    beginMobileBackgroundGrace();
+}
+
+function handleMobileFocus() {
+    checkMobileSecurityBeforeResume('focus-resume');
+}
+
+function handleMobilePageShow() {
+    checkMobileSecurityBeforeResume('pageshow');
+}
+
+function handleMobileFreeze() {
+    beginMobileBackgroundGrace();
+}
+
+function handleMobileResume() {
+    checkMobileSecurityBeforeResume('resume');
+}
+
+function handleDesktopVisibilityChange() {
     if (document.visibilityState === 'visible') scheduleInactivityLogout();
+}
+
+function runMobileSecurityHeartbeat() {
+    if (!isProtectedMobileSession()) return;
+    const now = Date.now();
+    const gap = now - app.lastHeartbeatAt;
+    // A delayed timer is bookkeeping only. If the page was backgrounded,
+    // resume handlers apply the same real-time 60-second grace rule.
+    if (gap < 0 || gap >= MOBILE_BACKGROUND_GRACE_MS) {
+        checkMobileSecurityBeforeResume('suspension-gap');
+    }
+    app.lastHeartbeatAt = now;
+}
+
+function installMobileSecurityListeners() {
+    if (!isMobileProtectedSession() || app.mobileSecurityListenersAttached) return;
+    for (const eventName of MOBILE_INACTIVITY_ACTIVITY_EVENTS) {
+        window.addEventListener(eventName, recordInactivityActivity, { capture: true, passive: false });
+    }
+    document.addEventListener('visibilitychange', handleMobileVisibilityChange);
+    window.addEventListener('blur', handleMobileBlur);
+    window.addEventListener('focus', handleMobileFocus);
+    window.addEventListener('pageshow', handleMobilePageShow);
+    document.addEventListener('freeze', handleMobileFreeze);
+    document.addEventListener('resume', handleMobileResume);
+    app.mobileSecurityListenersAttached = true;
+}
+
+function removeMobileSecurityListeners() {
+    if (!app.mobileSecurityListenersAttached) return;
+    for (const eventName of MOBILE_INACTIVITY_ACTIVITY_EVENTS) {
+        window.removeEventListener(eventName, recordInactivityActivity, true);
+    }
+    document.removeEventListener('visibilitychange', handleMobileVisibilityChange);
+    window.removeEventListener('blur', handleMobileBlur);
+    window.removeEventListener('focus', handleMobileFocus);
+    window.removeEventListener('pageshow', handleMobilePageShow);
+    document.removeEventListener('freeze', handleMobileFreeze);
+    document.removeEventListener('resume', handleMobileResume);
+    app.mobileSecurityListenersAttached = false;
+}
+
+function startMobileSecurityHeartbeat() {
+    if (!isProtectedMobileSession()) return;
+    if (app.mobileSecurityHeartbeat != null) clearInterval(app.mobileSecurityHeartbeat);
+    app.lastHeartbeatAt = Date.now();
+    app.mobileSecurityHeartbeat = window.setInterval(runMobileSecurityHeartbeat, MOBILE_HEARTBEAT_MS);
+}
+
+function stopMobileSecurityHeartbeat() {
+    if (app.mobileSecurityHeartbeat != null) clearInterval(app.mobileSecurityHeartbeat);
+    app.mobileSecurityHeartbeat = null;
+    app.lastHeartbeatAt = 0;
 }
 
 function startInactivityTracking() {
@@ -196,36 +403,43 @@ function startInactivityTracking() {
     app.inactivityLoggingOut = false;
     app.lastActivityAt = Date.now();
 
-    if (!app.inactivityListenersAttached) {
-        for (const eventName of INACTIVITY_ACTIVITY_EVENTS.filter(eventName => eventName !== 'scroll')) {
-            window.addEventListener(eventName, recordInactivityActivity, { passive: true });
+    if (isMobileProtectedSession()) {
+        app.mobileSecurityActive = true;
+        installMobileSecurityListeners();
+        startMobileSecurityHeartbeat();
+    } else if (!app.inactivityListenersAttached) {
+        app.inactivityActivityEvents = DESKTOP_INACTIVITY_ACTIVITY_EVENTS;
+        for (const eventName of app.inactivityActivityEvents) {
+            if (eventName !== 'scroll') window.addEventListener(eventName, recordInactivityActivity, { passive: true });
         }
-        // Scroll events do not bubble, so capture them from nested scene
-        // scrollers as well as the document itself.
         document.addEventListener('scroll', recordInactivityActivity, { passive: true, capture: true });
-        document.addEventListener('visibilitychange', handleInactivityVisibilityChange);
+        document.addEventListener('visibilitychange', handleDesktopVisibilityChange);
+        app.inactivityUsesScrollListener = true;
         app.inactivityListenersAttached = true;
     }
     scheduleInactivityLogout();
 }
 
 function stopInactivityTracking() {
-    if (app.inactivityRescheduleFrame != null) {
-        cancelAnimationFrame(app.inactivityRescheduleFrame);
-        app.inactivityRescheduleFrame = null;
-    }
-    if (app.inactivityTimer != null) {
-        clearTimeout(app.inactivityTimer);
-        app.inactivityTimer = null;
-    }
+    if (app.inactivityRescheduleFrame != null) cancelAnimationFrame(app.inactivityRescheduleFrame);
+    app.inactivityRescheduleFrame = null;
+    if (app.inactivityTimer != null) clearTimeout(app.inactivityTimer);
+    app.inactivityTimer = null;
+
+    stopMobileSecurityHeartbeat();
+    removeMobileSecurityListeners();
+    app.mobileSecurityActive = false;
+
     if (app.inactivityListenersAttached) {
-        for (const eventName of INACTIVITY_ACTIVITY_EVENTS.filter(eventName => eventName !== 'scroll')) {
-            window.removeEventListener(eventName, recordInactivityActivity);
+        for (const eventName of app.inactivityActivityEvents) {
+            if (eventName !== 'scroll') window.removeEventListener(eventName, recordInactivityActivity);
         }
-        document.removeEventListener('scroll', recordInactivityActivity, true);
-        document.removeEventListener('visibilitychange', handleInactivityVisibilityChange);
+        if (app.inactivityUsesScrollListener) document.removeEventListener('scroll', recordInactivityActivity, true);
+        document.removeEventListener('visibilitychange', handleDesktopVisibilityChange);
         app.inactivityListenersAttached = false;
     }
+    app.inactivityActivityEvents = [];
+    app.inactivityUsesScrollListener = false;
     app.lastActivityAt = 0;
 }
 
@@ -246,17 +460,22 @@ function clearJourneyProgressForRestart() {
     }
 }
 
-function performInactivityLogout() {
-    if (app.inactivityLoggingOut || !app.passwordVerifiedThisSession) return;
+function triggerSecurityLock(reason, stateAlreadySaved = false) {
+    if (app.securityLocking || app.inactivityLoggingOut || !app.passwordVerifiedThisSession) return;
+    app.securityLocking = true;
     app.inactivityLoggingOut = true;
     invalidateNavigation();
-    stopInactivityTracking();
 
     // Freeze the stable route before controller teardown. The lock is
     // intentionally non-destructive: successful re-entry restores this
     // snapshot and the existing game/memory progress records.
-    saveExperienceState();
+    if (!stateAlreadySaved) saveExperienceState();
     app.resumeAfterInactivity = !!loadExperienceState();
+    if (isMobileProtectedSession()) app.requiresSecureResume = true;
+    // This is the only path that persists a security lock: visible
+    // inactivity or a completed 60-second mobile background grace.
+    markSecurityLockRequired(app.securityHiddenAt || Date.now());
+    stopInactivityTracking();
 
     // Invalidate callbacks before hiding live protected views. Individual
     // progress keys and audio preferences are deliberately not cleared.
@@ -315,6 +534,15 @@ function performInactivityLogout() {
  * in try/catch so nothing can take the site down.
  */
 function initApp() {
+    // A persisted security lock is checked before the normal refresh-route
+    // restoration below, so reloading a locked experience never exposes its
+    // protected snapshot.
+    const persistedSecurityLock = loadSecurityLockState();
+    app.mobileSecurityDevice = detectMobileSecurityDevice();
+    app.resumeAfterInactivity = !!persistedSecurityLock;
+    app.securityHiddenAt = persistedSecurityLock?.hiddenAt || 0;
+    app.requiresSecureResume = !!persistedSecurityLock;
+
     // 1. Loading manager (essential - drives the intro)
     app.loading = new LoadingManager();
     app.loading.init();
@@ -494,18 +722,19 @@ function initApp() {
         // start the Opening cinematic.
         app.questionLock.onHandover = () => {
             app.passwordVerifiedThisSession = true;
-            startInactivityTracking();
             const resumeState = app.resumeAfterInactivity
                 ? loadExperienceState()
                 : null;
             app.resumeAfterInactivity = false;
+            // Authentication has succeeded. Clear only security metadata and
+            // stale timing flags, never the protected route snapshot.
+            clearSecurityLockState();
             if (resumeState) {
                 restoreExperience(resumeState);
-                return;
-            }
-            if (app.opening) {
+            } else if (app.opening) {
                 app.opening.start();
             }
+            startInactivityTracking();
         };
     } catch (error) {
         console.warn('Question Lock Screen unavailable, continuing without it.', error);
@@ -582,7 +811,9 @@ function initApp() {
         // hbm.experienceState is the current route authority. The older
         // post-memory checkpoint is migration fallback data only and must
         // never override a valid current route such as Reward.
-        if (savedExperienceState) {
+        if (app.resumeAfterInactivity) {
+            showQuestionLock();
+        } else if (savedExperienceState) {
             restoreExperience(savedExperienceState);
         } else if (savedPostMemoryState) {
             restorePostMemoryExperience(savedPostMemoryState.currentStage);
@@ -922,8 +1153,8 @@ function updateBackState(stage, run) {
     } else if (stage === 'countdown') {
         app.revealStage = 'countdown';
         setBackState('countdown');
-    } else if (stage === 'final') {
-        app.revealStage = 'final';
+    } else if (stage === 'heart-intro' || stage === 'hero-burst' || stage === 'greeting' || stage === 'title-assembly' || stage === 'heart' || stage === 'age' || stage === 'age-ready' || stage === 'final') {
+        app.revealStage = stage === 'final' ? 'age-ready' : stage;
         setBackState('birthday-reveal');
     }
 }
@@ -973,6 +1204,15 @@ async function handleBack() {
     }
 
     if (app.backState === 'birthday-reveal') {
+        if (app.revealStage === 'age' || app.revealStage === 'age-ready') {
+            // Age is an internal birthday substage: return to the already
+            // running celebration heart, not to the preceding letter.
+            app.revealRun += 1;
+            app.revealStage = 'heart';
+            setBackState('birthday-reveal');
+            await app.birthdayReveal?.restoreHeart?.();
+            return;
+        }
         // Back -> the OPEN LETTER MESSAGE page: the Birthday Reveal's
         // own letter stage, which displays the long romantic letter
         // ("Aaj ka din mere liye sirf tumhara birthday nahi hai...").
@@ -1035,7 +1275,7 @@ async function handleBack() {
         const run = (app.revealRun += 1);
         app.memoryOpened = false;
         app.revealStarted = true;
-        app.revealStage = 'final';
+        app.revealStage = 'age-ready';
         // 3. Hide Memory Lane completely (its z-index sits above the
         //    reveal). It re-enters fresh the next time "Aage Badho"
         //    is pressed on the final stage.
@@ -1172,6 +1412,11 @@ function saveExperienceState() {
         if (app.backState === 'reward') {
             snapshot.rewardPhase = app.secretGame?.rewardPhase === 'opened' ? 'opened' : 'closed';
         }
+        if (app.backState === 'birthday-reveal') {
+            snapshot.birthdaySubstage = ['heart-intro', 'hero-burst', 'greeting', 'title-assembly', 'heart', 'age', 'age-ready'].includes(app.revealStage)
+                ? app.revealStage
+                : 'age-ready';
+        }
         window.localStorage.setItem(STATE_KEY, JSON.stringify(snapshot));
     } catch {
         /* Storage unavailable (privacy mode) - best effort */
@@ -1202,6 +1447,11 @@ function loadExperienceState() {
         return {
             scene,
             rewardPhase: data.rewardPhase === 'opened' ? 'opened' : 'closed',
+            birthdaySubstage: data.birthdaySubstage === 'heart-ready'
+                ? 'age-ready'
+                : ['heart-intro', 'hero-burst', 'greeting', 'title-assembly', 'heart', 'age', 'age-ready'].includes(data.birthdaySubstage)
+                    ? data.birthdaySubstage
+                    : 'age-ready',
             timestamp: data.timestamp,
         };
     } catch {
@@ -1300,6 +1550,21 @@ function restorePostMemoryExperience(stage) {
 
 /** Restore the current route snapshot. The legacy post-memory checkpoint is
     used only when no authoritative route snapshot exists. */
+function revealRestoredApplication() {
+    // LoadingManager intentionally becomes a one-shot controller after the
+    // first entry. Security restoration must therefore reveal #app directly
+    // as well as asking the manager to hide any remaining loading screen.
+    app.loading?.exitToApp(true);
+    const appEl = document.querySelector('#app');
+    if (!appEl) return;
+    appEl.hidden = false;
+    appEl.removeAttribute('aria-hidden');
+    appEl.removeAttribute('inert');
+    appEl.style.removeProperty('display');
+    appEl.style.removeProperty('visibility');
+    appEl.style.removeProperty('pointer-events');
+}
+
 function restoreExperience(snapshot) {
     const savedScene = typeof snapshot === 'string' ? snapshot : snapshot?.scene;
     const scene = LEGACY_SCENE_MIGRATIONS[savedScene] || savedScene;
@@ -1317,7 +1582,7 @@ function restoreExperience(snapshot) {
         return;
     }
 
-    app.loading?.exitToApp(true);
+    revealRestoredApplication();
 
     if (scene === 'countdown') {
         app.revealStage = 'countdown';
@@ -1327,11 +1592,10 @@ function restoreExperience(snapshot) {
         startReveal();
     } else if (scene === 'birthday-reveal') {
         app.revealStarted = true;
-        const run = (app.revealRun += 1);
-        Promise.resolve(app.birthdayReveal?.showFinal()).then(() => {
-            if (app.cleaned || run !== app.revealRun) return;
-            openMemoryScene();
-        });
+        // Restoring a saved celebration is not completion of the celebration.
+        // showStage may await user interactions, so it must never decide a
+        // later Memory Lane handoff.
+        void app.birthdayReveal?.showStage(snapshot?.birthdaySubstage || 'age');
     } else if (scene === 'memory') {
         openMemoryScene({ restoreMemoryPosition: true });
     } else if (scene === 'memory-landing') {
@@ -1540,6 +1804,10 @@ function cleanup() {
 }
 
 window.addEventListener('pagehide', (e) => {
+    // pagehide is also emitted for a normal refresh. It can start the
+    // in-memory grace bookkeeping for a BFCache return, but never creates a
+    // security lock by itself and never persists a partial grace interval.
+    beginMobileBackgroundGrace();
     if (!e.persisted) cleanup();
 });
 
@@ -1559,6 +1827,7 @@ async function restartExperience() {
     stopInactivityTracking();
     app.passwordVerifiedThisSession = false;
     app.resumeAfterInactivity = false;
+    clearSecurityLockState();
 
     // 1. Invalidate any running reveal run so stale callbacks
     //    can never re-open Memory Lane behind the restart.

@@ -9,7 +9,7 @@
     z-index: 1000;
     overflow: hidden;
     isolation: isolate;
-    background: #03030b;
+    background: #050a18;
 }
 
 #cinematic-countdown[hidden] {

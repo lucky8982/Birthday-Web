@@ -4,10 +4,13 @@
  */
 
 import { HEART_MOTION } from './countdown-heart-motion.js';
+import { PRECOMPUTED_GLYPH_TARGETS } from './countdown-glyph-targets.js';
 
 const MASTER_WIDTH = 1366;
 const MASTER_HEIGHT = 768;
-const DOT_STEP = 13;
+const PORTRAIT_GLYPH_SAFE_WIDTH = .92;
+const PORTRAIT_GLYPH_SAFE_HEIGHT = .72;
+const PORTRAIT_GLYPH_MIN_CORE = 8;
 const OPENING_FIELD_HEIGHT = 320;
 const OPENING_FIELD_START = -150;
 const OPENING_FIELD_SPEED = .275;
@@ -46,6 +49,22 @@ const HEART_AT = BURST_AT + 2000;
 const HEART_HOLD_READY_AT = 2200;
 const HEART_HOLD_FALLBACK = 8000;
 const HEART_EXIT_DURATION = 900;
+const TITLE_CACHE_SCALE = 2;
+const COUNTDOWN_COLORS = Object.freeze({
+    background: '#050a18',
+    backgroundGlow: 'rgba(20, 33, 66, .42)',
+    backgroundGlowFade: 'rgba(5, 10, 24, 0)',
+    rainCyan: '126, 200, 227',
+    rainTeal: '94, 201, 142',
+    openingLine: 'rgba(126, 200, 227, .38)',
+    ambientIvory: '#f8e7ef',
+    ambientCyan: '#7ec8e3',
+    heartDark: '5, 10, 24',
+    titleIvory: '#fff0f6',
+    titleRose: '#ed72ad',
+    titleGlow: 'rgba(255, 73, 170, .55)',
+    titleShadow: 'rgba(5, 10, 24, .68)',
+});
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const easeOut = value => 1 - ((1 - clamp(value, 0, 1)) ** 3);
@@ -118,12 +137,12 @@ function openingFieldSprite() {
                 const seed = column * .17 + y * 1.91;
                 const mark = marks[Math.floor(hash(seed) * marks.length)];
                 const alpha = .24 + hash(seed + 43) * .54;
-                const green = 64 + Math.floor(hash(seed + 83) * 116);
-                ctx.fillStyle = `rgba(255, ${green}, 193, ${alpha})`;
+                const color = hash(seed + 83) > .7 ? COUNTDOWN_COLORS.rainTeal : COUNTDOWN_COLORS.rainCyan;
+                ctx.fillStyle = `rgba(${color}, ${alpha})`;
                 ctx.fillText(mark, column + 5, y);
             }
         }
-        ctx.fillStyle = 'rgba(255, 123, 205, .38)';
+        ctx.fillStyle = COUNTDOWN_COLORS.openingLine;
         for (let x = 0; x < width; x += 34) {
             const y = height - 28 - hash(x + 220) * 90;
             ctx.fillRect(x, y, 18 + hash(x + 270) * 42, 1);
@@ -162,47 +181,47 @@ function rainSprite(seed, depth) {
         for (let y = 8; y < spriteHeight; y += gap) {
             const n = Math.floor(hash(seed * 43 + y) * marks.length);
             const alpha = .13 + hash(seed + y * 2) * (.22 + depth * .16);
-            const red = 150 + Math.floor(hash(seed + y) * 100);
-            ctx.fillStyle = `rgba(255, ${red}, 198, ${alpha})`;
+            const color = hash(seed + y) > .72 ? COUNTDOWN_COLORS.rainTeal : COUNTDOWN_COLORS.rainCyan;
+            ctx.fillStyle = `rgba(${color}, ${alpha})`;
             ctx.fillText(marks[n], spriteWidth / 2, y);
         }
     });
 }
 
 function titleSprite() {
-    return canvas(560, 180, (ctx, width) => {
+    return canvas(560 * TITLE_CACHE_SCALE, 180 * TITLE_CACHE_SCALE, (ctx, width) => {
+        ctx.scale(TITLE_CACHE_SCALE, TITLE_CACHE_SCALE);
+        const logicalWidth = width / TITLE_CACHE_SCALE;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.font = '600 18px Georgia, "Times New Roman", serif';
-        ctx.fillStyle = '#ffe3ee';
-        ctx.fillText('I  L O V E  Y O U', width / 2, 57);
+        ctx.font = '600 21px Georgia, "Times New Roman", serif';
+        ctx.shadowColor = COUNTDOWN_COLORS.titleShadow;
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetY = 1;
+        ctx.fillStyle = COUNTDOWN_COLORS.titleShadow;
+        ctx.fillText('I  L O V E  Y O U', logicalWidth / 2, 57);
+        ctx.shadowColor = 'transparent';
+        ctx.fillStyle = COUNTDOWN_COLORS.titleIvory;
+        ctx.fillText('I  L O V E  Y O U', logicalWidth / 2, 57);
         ctx.font = 'italic 55px Georgia, "Times New Roman", serif';
-        ctx.shadowColor = 'rgba(255, 67, 176, .95)';
-        ctx.shadowBlur = 20;
-        ctx.fillStyle = '#ff9bd4';
-        ctx.fillText('Khushbu', width / 2, 114);
+        ctx.shadowColor = COUNTDOWN_COLORS.titleShadow;
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetY = 2;
+        ctx.fillStyle = COUNTDOWN_COLORS.titleShadow;
+        ctx.fillText('Khushbu', logicalWidth / 2, 114);
+        ctx.shadowColor = COUNTDOWN_COLORS.titleGlow;
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetY = 0;
+        ctx.fillStyle = COUNTDOWN_COLORS.titleRose;
+        ctx.fillText('Khushbu', logicalWidth / 2, 114);
     });
 }
 
-function glyphTargets(text, initialSize) {
-    const surface = canvas(MASTER_WIDTH, MASTER_HEIGHT, () => {});
-    const ctx = surface.getContext('2d', { willReadFrequently: true });
-    let size = initialSize;
-    ctx.font = `700 ${size}px Arial, Helvetica, sans-serif`;
-    while (ctx.measureText(text).width > MASTER_WIDTH * .76 && size > 100) {
-        size -= 8;
-        ctx.font = `700 ${size}px Arial, Helvetica, sans-serif`;
-    }
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, MASTER_WIDTH / 2, MASTER_HEIGHT * .49);
-    const pixels = ctx.getImageData(0, 0, MASTER_WIDTH, MASTER_HEIGHT).data;
+function precomputedTargets(text) {
+    const data = PRECOMPUTED_GLYPH_TARGETS[text];
     const targets = [];
-    for (let y = 18; y < MASTER_HEIGHT - 18; y += DOT_STEP) {
-        for (let x = 18; x < MASTER_WIDTH - 18; x += DOT_STEP) {
-            if (pixels[(y * MASTER_WIDTH + x) * 4 + 3] > 80) targets.push({ x, y });
-        }
+    for (let index = 0; index < data.length; index += 2) {
+        targets.push({ x: data[index], y: data[index + 1] });
     }
     return targets;
 }
@@ -228,6 +247,7 @@ export class ParticleCountdown {
         this.mode = 'opening';
         this.particles = [];
         this.burst = [];
+        this.glyphPresentation = null;
         this.heartMotion = null;
         this.backgroundGlowCache = null;
         this.heartDepthCache = null;
@@ -291,7 +311,7 @@ export class ParticleCountdown {
             rain: [0, 1, 2].map(depth => Array.from({ length: 6 }, (_, index) => rainSprite(index + 1, depth))),
         };
         this.targets.clear();
-        STAGES.forEach(stage => this.targets.set(stage.text, glyphTargets(stage.text, stage.size)));
+        STAGES.forEach(stage => this.targets.set(stage.text, precomputedTargets(stage.text)));
         if (Array.from(this.targets.values()).some(points => !points.length)) throw new Error('Countdown glyph targets could not be created.');
         const count = this.reducedMotion ? 58 : 112;
         this.rain = Array.from({ length: count }, (_, index) => {
@@ -307,6 +327,7 @@ export class ParticleCountdown {
         });
         this.particles = [];
         this.burst = [];
+        this.glyphPresentation = null;
         this.heartMotion = decodeHeartMotion(HEART_MOTION.encodedTracks);
         const lastTrackOffset = this.heartMotion.length - HEART_MOTION.fieldsPerTrack;
         this.heartMatureTrackEnd = this.heartMotion[lastTrackOffset];
@@ -323,19 +344,53 @@ export class ParticleCountdown {
         this.heartExitStartedAt = 0;
     }
 
+    getGlyphEnvelope(targets) {
+        const cap = this.reducedMotion ? 620 : 1250;
+        const count = Math.min(targets.length, cap);
+        let left = Infinity;
+        let right = -Infinity;
+        let top = Infinity;
+        let bottom = -Infinity;
+        for (let index = 0; index < count; index += 1) {
+            const target = targets[Math.floor(index * targets.length / count)];
+            const resolvedSize = 11.5 * (.7 + hash(index + 92) * .35) * 1.08;
+            left = Math.min(left, target.x - resolvedSize / 2);
+            right = Math.max(right, target.x + resolvedSize / 2);
+            top = Math.min(top, target.y - resolvedSize / 2);
+            bottom = Math.max(bottom, target.y + resolvedSize / 2);
+        }
+        return { left, right, top, bottom, width: right - left, height: bottom - top };
+    }
+
+    getGlyphPresentation(targets) {
+        if (this.height <= this.width || !targets?.length) return null;
+        const envelope = this.getGlyphEnvelope(targets);
+        const uniformScale = Math.min(
+            1,
+            this.width * PORTRAIT_GLYPH_SAFE_WIDTH / envelope.width,
+            this.height * PORTRAIT_GLYPH_SAFE_HEIGHT / envelope.height,
+        );
+        return {
+            centerX: (envelope.left + envelope.right) / 2,
+            centerY: (envelope.top + envelope.bottom) / 2,
+            fitScale: uniformScale,
+            positionScale: uniformScale / this.scale,
+        };
+    }
+
     buildBackgroundCaches() {
         this.backgroundGlowCache = canvas(this.width, this.height, (ctx, width, height) => {
             const glow = ctx.createRadialGradient(width * .5, height * .48, 0, width * .5, height * .48, Math.max(width, height) * .6);
-            glow.addColorStop(0, 'rgba(73, 12, 55, .42)');
-            glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            glow.addColorStop(0, COUNTDOWN_COLORS.backgroundGlow);
+            glow.addColorStop(1, COUNTDOWN_COLORS.backgroundGlowFade);
             ctx.fillStyle = glow;
             ctx.fillRect(0, 0, width, height);
         });
         this.heartDepthCache = canvas(this.width, this.height, (ctx, width, height) => {
             const depth = ctx.createRadialGradient(width * .5, height * .5, Math.min(width, height) * .08, width * .5, height * .5, Math.max(width, height) * .65);
-            depth.addColorStop(0, 'rgba(0, 0, 0, .04)');
-            depth.addColorStop(.56, 'rgba(0, 0, 0, .14)');
-            depth.addColorStop(1, 'rgba(0, 0, 0, .34)');
+            depth.addColorStop(0, `rgba(${COUNTDOWN_COLORS.heartDark}, .04)`);
+            depth.addColorStop(.56, `rgba(${COUNTDOWN_COLORS.heartDark}, .14)`);
+            depth.addColorStop(1, `rgba(${COUNTDOWN_COLORS.heartDark}, .34)`);
             ctx.fillStyle = depth;
             ctx.fillRect(0, 0, width, height);
         });
@@ -374,6 +429,9 @@ export class ParticleCountdown {
             this.scale = Math.min(this.width / MASTER_WIDTH, this.height / MASTER_HEIGHT);
             this.offsetX = (this.width - MASTER_WIDTH * this.scale) / 2;
             this.offsetY = (this.height - MASTER_HEIGHT * this.scale) / 2;
+        }
+        if (this.stageIndex >= 0 && this.particles.length) {
+            this.glyphPresentation = this.getGlyphPresentation(this.targets.get(STAGES[this.stageIndex].text));
         }
         if (dimensionsChanged || !this.backgroundGlowCache || !this.heartDepthCache) this.buildBackgroundCaches();
     }
@@ -429,10 +487,12 @@ export class ParticleCountdown {
             particle.delay = hash(index + target.x * .03) * 390;
             particle.heart = false;
         }
+        this.glyphPresentation = this.getGlyphPresentation(targets);
     }
 
     startBurst() {
         this.mode = 'burst';
+        this.glyphPresentation = null;
         this.burst = this.particles.map((particle, index) => {
             const angle = hash(index + 810) * Math.PI * 2;
             const speed = 3 + hash(index + 914) * 7;
@@ -463,6 +523,7 @@ export class ParticleCountdown {
 
     setHeart(elapsed) {
         this.mode = 'heart';
+        this.glyphPresentation = null;
         this.heartStartedAt = elapsed;
         this.particles.length = 0;
         this.burst.length = 0;
@@ -496,7 +557,7 @@ export class ParticleCountdown {
         const revealEdge = fieldTop * openingScale;
         const finalOpeningReveal = smooth((elapsed - 2100) / 450);
         ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
-        ctx.fillStyle = '#020207';
+        ctx.fillStyle = COUNTDOWN_COLORS.background;
         ctx.fillRect(0, 0, this.width, this.height);
         ctx.globalAlpha = (.42 - heartDimming * .24) / .42;
         ctx.drawImage(this.backgroundGlowCache, 0, 0, this.width, this.height);
@@ -517,11 +578,11 @@ export class ParticleCountdown {
             const x = hash(index + 2250) * this.width;
             const y = (hash(index + 2370) * this.height + elapsed * (index % 2 ? .035 : -.024)) % this.height;
             const size = index % 9 === 0 ? 3 : 1.4;
-            ctx.fillStyle = index % 5 === 0 ? '#f8e7ef' : '#d65596';
+            ctx.fillStyle = index % 5 === 0 ? COUNTDOWN_COLORS.ambientIvory : COUNTDOWN_COLORS.ambientCyan;
             ctx.fillRect(x, y, size, size);
         }
         if (heartDimming > 0) {
-            ctx.fillStyle = `rgba(0, 0, 0, ${heartDimming * .18})`;
+            ctx.fillStyle = `rgba(${COUNTDOWN_COLORS.heartDark}, ${heartDimming * .18})`;
             ctx.fillRect(0, 0, this.width, this.height);
             ctx.drawImage(this.heartDepthCache, 0, 0, this.width, this.height);
         }
@@ -602,6 +663,30 @@ export class ParticleCountdown {
         ctx.drawImage(this.sprites.hearts.small, x - size / 2, y - size / 2, size, size);
     }
 
+    drawGlyphParticles(ctx, stageAge, stageExit, dissolve, presentation = null) {
+        for (let index = 0; index < this.particles.length; index += 1) {
+            const particle = this.particles[index];
+            const arrival = smooth((stageAge - particle.delay) / 420);
+            const exit = this.mode === 'glyph' ? 1 - stageExit * (.35 + hash(index + 2730) * .45) : dissolve;
+            const alpha = arrival * exit;
+            const x = presentation
+                ? presentation.centerX + (particle.x - presentation.centerX) * presentation.positionScale
+                : particle.x;
+            const y = presentation
+                ? presentation.centerY + (particle.y - presentation.centerY) * presentation.positionScale
+                : particle.y;
+            const desktopCoreSize = 11.5 * particle.size * (1 + arrival * .08);
+            const coreSize = presentation
+                ? Math.max(PORTRAIT_GLYPH_MIN_CORE, desktopCoreSize) / this.scale
+                : desktopCoreSize;
+            const glowSize = coreSize * (1.65 + arrival * .18);
+            ctx.globalAlpha = alpha * .42;
+            ctx.drawImage(this.sprites.warmGlow, x - glowSize / 2, y - glowSize / 2, glowSize, glowSize);
+            ctx.globalAlpha = alpha * .93;
+            ctx.drawImage(this.sprites.warmCore, x - coreSize / 2, y - coreSize / 2, coreSize, coreSize);
+        }
+    }
+
     drawScene(ctx, elapsed) {
         ctx.save();
         ctx.translate(this.offsetX, this.offsetY);
@@ -617,18 +702,8 @@ export class ParticleCountdown {
         const stageAge = stage ? elapsed - stage.at : 0;
         const stageExit = stage ? smooth((stageAge - stage.exitStart) / GLYPH_EXIT_DURATION) : 0;
         const dissolve = this.mode === 'dissolve' ? 1 - smooth((elapsed - this.dissolveAt) / 620) : 1;
-        for (let index = 0; index < this.particles.length; index += 1) {
-            const particle = this.particles[index];
-            const arrival = smooth((stageAge - particle.delay) / 420);
-            const exit = this.mode === 'glyph' ? 1 - stageExit * (.35 + hash(index + 2730) * .45) : dissolve;
-            const alpha = arrival * exit;
-            const coreSize = 11.5 * particle.size * (1 + arrival * .08);
-            const glowSize = coreSize * (1.65 + arrival * .18);
-            ctx.globalAlpha = alpha * .42;
-            ctx.drawImage(this.sprites.warmGlow, particle.x - glowSize / 2, particle.y - glowSize / 2, glowSize, glowSize);
-            ctx.globalAlpha = alpha * .93;
-            ctx.drawImage(this.sprites.warmCore, particle.x - coreSize / 2, particle.y - coreSize / 2, coreSize, coreSize);
-        }
+        const presentation = this.glyphPresentation;
+        this.drawGlyphParticles(ctx, stageAge, stageExit, dissolve, presentation);
         if (this.mode === 'heart') {
             const exitProgress = this.heartExiting
                 ? smooth((elapsed - this.heartExitStartedAt) / HEART_EXIT_DURATION)
