@@ -267,24 +267,18 @@
                     </p>
                 </div>
 
-                <!-- The romantic gate before the letter can open: a small
-                     question, four answers, and the locked "Kholo ❤️" CTA.
-                     The letter stays closed until the correct answer is
-                     picked and the unlocked CTA is pressed. -->
+                <!-- The romantic three-question gate before the letter can
+                     open. Its copy and correct choices are supplied by the
+                     opening controller; Kholo appears only after the lock. -->
                 <div class="letter-question" id="letter-question" aria-hidden="true">
-                    <p class="letter-question-text">
-                        Baby, ek chhota sa sawaal hai... ❤️
-                    </p>
-                    <p class="letter-question-title">
-                        Hamari story ki pehli baat kis din hui thi?
-                    </p>
-                    <div class="letter-answers" id="letter-answers" tabindex="-1" role="group" aria-label="Choose the day our story began">
-                        <button type="button" class="letter-answer" data-correct="false" aria-pressed="false">09 August 2023</button>
-                        <button type="button" class="letter-answer" data-correct="true" aria-pressed="false">01 December 2023 ❤️</button>
-                        <button type="button" class="letter-answer" data-correct="false" aria-pressed="false">28 December 2023</button>
-                        <button type="button" class="letter-answer" data-correct="false" aria-pressed="false">01 January 2024</button>
+                    <p class="letter-question-text"></p>
+                    <p class="letter-question-title" aria-live="polite"></p>
+                    <p class="letter-answer-ack" id="letter-answer-ack" aria-live="polite"></p>
+                    <div class="letter-answers" id="letter-answers" tabindex="-1" role="group" aria-label="Choose MAIN or TUM">
+                        <button type="button" class="letter-answer" data-choice="main" aria-label="Choose MAIN" aria-pressed="false">MAIN</button>
+                        <button type="button" class="letter-answer" data-choice="tum" aria-label="Choose TUM" aria-pressed="false">TUM</button>
                     </div>
-                    <button type="button" class="letter-cta" id="letter-cta" aria-disabled="true" tabindex="-1">
+                    <button type="button" class="letter-cta" id="letter-cta" aria-disabled="true" tabindex="-1" hidden>
                         Kholo <span class="cta-heart" aria-hidden="true">❤️</span>
                     </button>
                 </div>
@@ -338,6 +332,12 @@
 
         <div id="birthday-reveal" aria-hidden="true" hidden>
             <div class="birthday-reveal-sky" aria-hidden="true"></div>
+            <canvas id="birthday-rain" class="birthday-reveal-rain" aria-hidden="true"></canvas>
+            <canvas id="birthday-hero-burst" class="birthday-hero-burst" aria-hidden="true" hidden></canvas>
+            <video id="birthday-reference-hero" class="birthday-reference-hero" aria-hidden="true" muted playsinline preload="auto" hidden>
+                <source src="assets/birthday/birthday-hero-v7-alpha.webm" type="video/webm">
+            </video>
+            <img id="birthday-reference-hero-fallback" class="birthday-reference-hero" src="assets/birthday/birthday-hero-v7-alpha.webp" alt="" aria-hidden="true" hidden>
             <div class="birthday-reveal-glow" aria-hidden="true"></div>
             <div class="birthday-reveal-wave" aria-hidden="true"></div>
             <!-- Birthday Love Letter: shown before the countdown. The
@@ -414,7 +414,60 @@ I love you. ❤️</p>
             </div>
 
             <div class="birthday-reveal-stage">
-                <p class="birthday-reveal-final" hidden>Happy Birthday, My Love ❤️</p>
+                <p class="birthday-reveal-final" id="birthday-permanent-title" aria-label="Happy Birthday,Janeman ❤️" hidden>
+                    <span class="birthday-reveal-title-prefix"><i class="birthday-title-character" aria-hidden="true" data-title-character>H</i><i class="birthday-title-character" aria-hidden="true" data-title-character>a</i><i class="birthday-title-character" aria-hidden="true" data-title-character>p</i><i class="birthday-title-character" aria-hidden="true" data-title-character>p</i><i class="birthday-title-character" aria-hidden="true" data-title-character>y</i><span class="birthday-title-space" aria-hidden="true"> </span><i class="birthday-title-character" aria-hidden="true" data-title-character>B</i><i class="birthday-title-character" aria-hidden="true" data-title-character>i</i><i class="birthday-title-character" aria-hidden="true" data-title-character>r</i><i class="birthday-title-character" aria-hidden="true" data-title-character>t</i><i class="birthday-title-character" aria-hidden="true" data-title-character>h</i><i class="birthday-title-character" aria-hidden="true" data-title-character>d</i><i class="birthday-title-character" aria-hidden="true" data-title-character>a</i><i class="birthday-title-character" aria-hidden="true" data-title-character>y</i><i class="birthday-title-character" aria-hidden="true" data-title-character>,</i></span>
+                    <span class="birthday-reveal-title-name"><i class="birthday-title-character" aria-hidden="true" data-title-character>J</i><i class="birthday-title-character" aria-hidden="true" data-title-character>a</i><i class="birthday-title-character" aria-hidden="true" data-title-character>n</i><i class="birthday-title-character" aria-hidden="true" data-title-character>e</i><i class="birthday-title-character" aria-hidden="true" data-title-character>m</i><i class="birthday-title-character" aria-hidden="true" data-title-character>a</i><i class="birthday-title-character" aria-hidden="true" data-title-character>n</i><i class="birthday-title-character birthday-title-heart" aria-hidden="true" data-title-character>❤️</i></span>
+                </p>
+                <div class="birthday-reveal-hero-balloon" id="birthday-reveal-hero-balloon" hidden aria-hidden="true">
+                    <svg viewBox="0 0 220 214" aria-hidden="true" focusable="false">
+                        <defs>
+                            <linearGradient id="birthday-hero-heart" x1=".12" y1=".04" x2=".9" y2=".98">
+                                <stop offset="0" stop-color="#b9f8ff" stop-opacity=".9" />
+                                <stop offset=".25" stop-color="#368fb1" stop-opacity=".78" />
+                                <stop offset=".62" stop-color="#092d59" stop-opacity=".92" />
+                                <stop offset="1" stop-color="#03132f" stop-opacity=".98" />
+                            </linearGradient>
+                            <linearGradient id="birthday-hero-rim" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0" stop-color="#e7ffff" stop-opacity=".94" />
+                                <stop offset=".45" stop-color="#5de6ef" stop-opacity=".5" />
+                                <stop offset="1" stop-color="#7f8fe3" stop-opacity=".22" />
+                            </linearGradient>
+                            <radialGradient id="birthday-hero-sheen" cx="26%" cy="18%" r="60%">
+                                <stop offset="0" stop-color="#f5ffff" stop-opacity=".9" />
+                                <stop offset=".35" stop-color="#a7f7ff" stop-opacity=".26" />
+                                <stop offset="1" stop-color="#fff" stop-opacity="0" />
+                            </radialGradient>
+                            <filter id="birthday-hero-text-shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#020d28" flood-opacity=".9" /></filter>
+                        </defs>
+                        <path class="birthday-reveal-hero-heart" d="M110 191C92 173 27 124 27 68 27 35 49 17 75 17c16 0 29 9 35 22 6-13 19-22 35-22 26 0 48 18 48 51 0 56-65 105-83 123Z" />
+                        <path class="birthday-reveal-hero-rim" d="M110 191C92 173 27 124 27 68 27 35 49 17 75 17c16 0 29 9 35 22 6-13 19-22 35-22 26 0 48 18 48 51 0 56-65 105-83 123Z" />
+                        <path class="birthday-reveal-hero-sheen" d="M110 191C92 173 27 124 27 68 27 35 49 17 75 17c16 0 29 9 35 22 6-13 19-22 35-22 26 0 48 18 48 51 0 56-65 105-83 123Z" />
+                        <g class="birthday-reveal-hero-diamonds"><path d="m70 54 3 7 7 3-7 3-3 7-3-7-7-3 7-3z" /><path d="m151 65 2 5 5 2-5 2-2 5-2-5-5-2 5-2z" /><circle cx="160" cy="104" r="2" /><circle cx="72" cy="116" r="1.7" /></g>
+                        <g class="birthday-reveal-hero-copy" filter="url(#birthday-hero-text-shadow)"><text x="110" y="93">Happy Birthday</text><text class="birthday-reveal-hero-copy-name" x="110" y="121">Malkin</text></g>
+                        <path class="birthday-reveal-hero-knot" d="m102 190 8 14 8-14" />
+                        <path class="birthday-reveal-hero-ribbon" d="M110 204c-6 10-12 13-18 12m18-12c6 10 12 13 18 12" />
+                    </svg>
+                    <span class="birthday-reveal-hero-string" aria-hidden="true"></span>
+                </div>
+                <div class="birthday-reveal-bow-launcher" id="birthday-reveal-bow-launcher" hidden aria-hidden="true">
+                    <svg viewBox="0 0 180 120" focusable="false" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="birthday-bow-metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0df" /><stop offset=".45" stop-color="#dba3a6" /><stop offset="1" stop-color="#8dbfc8" /></linearGradient>
+                            <linearGradient id="birthday-arrow-metal" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#d8fbfb" /><stop offset=".7" stop-color="#fffff2" /><stop offset="1" stop-color="#f4beca" /></linearGradient>
+                        </defs>
+                        <path class="birthday-bow-limb" d="M42 12C17 32 17 88 42 108" />
+                        <path class="birthday-bow-core" d="M42 12C57 32 57 88 42 108" />
+                        <path class="birthday-bow-string" d="M42 12 67 60 42 108" />
+                        <g class="birthday-bow-nocked-arrow">
+                            <path class="birthday-arrow-shaft" d="M54 60h101" />
+                            <path class="birthday-arrow-tip" d="m148 49 22 11-22 11" />
+                            <path class="birthday-arrow-feather" d="m67 60-15-12m15 12-15 12" />
+                        </g>
+                        <circle class="birthday-bow-nock-spark" cx="67" cy="60" r="3" />
+                    </svg>
+                </div>
+                <p class="birthday-reveal-burst-message" aria-label="Happy Birthday Meri pyari biwi" hidden><span class="birthday-burst-line"><i class="birthday-burst-word" style="--word-index:0">Happy</i><i class="birthday-burst-word" style="--word-index:1">Birthday</i></span><strong class="birthday-burst-line"><i class="birthday-burst-word" style="--word-index:2">Meri</i><i class="birthday-burst-word" style="--word-index:3">pyari</i><i class="birthday-burst-word" style="--word-index:4">biwi</i></strong></p>
+                <div class="birthday-reveal-heart" aria-hidden="true" hidden></div>
                 <!-- Live age: filled by js/birthday-reveal.js from the
                      real clock (born 21 Sep 2007, 01:30:00 IST - UTC 2007-09-20T20:00:00.000Z) -->
                 <div class="birthday-reveal-age" hidden>
@@ -447,12 +500,20 @@ I love you. ❤️</p>
                         <span class="birthday-reveal-age-unit">Seconds</span>
                     </p>
                 </div>
+                <div class="birthday-reveal-wish-area">
+                    <button type="button" class="birthday-reveal-wish" hidden>
+                        <span>Ek wish maango ?</span>
+                    </button>
+                    <div class="birthday-reveal-candles" id="birthday-reveal-candles" aria-hidden="true"></div>
+                </div>
+                <button type="button" class="birthday-reveal-heart-advance" hidden>
+                    Aage Badho
+                </button>
                 <button type="button" class="birthday-reveal-continue"
                         id="birthday-reveal-continue" hidden>
                     Aage Badho <span class="birthday-reveal-continue-heart" aria-hidden="true">❤️</span>
                 </button>
             </div>
-            <div class="birthday-reveal-candles" id="birthday-reveal-candles" aria-hidden="true"></div>
             <div class="birthday-reveal-balloons" id="birthday-reveal-balloons" aria-hidden="true"></div>
 
         </div>

@@ -3756,11 +3756,9 @@ h1, h2, h3 {
     transition-duration: 1.2s;
 }
 
-/* ---- The romantic gate before the letter can open ----
-   A small question, four answers, and the locked "Kholo ❤️" CTA
-   live in the letter scene. The letter stays closed until the
-   correct answer is picked and the unlocked CTA is pressed.
-   Premium glass language, part of the letter - never a quiz. */
+/* ---- The playful three-question gate before the letter can open ----
+   A persistent MAIN/TUM pair lives in the letter scene. Kholo appears
+   only after the final right answer. Premium glass language, never a quiz. */
 
 .letter-question {
     position: relative;
@@ -3786,6 +3784,28 @@ h1, h2, h3 {
     transform: translateY(0);
 }
 
+.letter-question.is-transitioning .letter-question-text,
+.letter-question.is-transitioning .letter-question-title,
+.letter-question.is-transitioning .letter-answers {
+    opacity: 0;
+    filter: blur(5px);
+    transform: translateY(-14px);
+    transition: opacity 0.28s var(--ease-soft), filter 0.28s var(--ease-soft), transform 0.28s var(--ease-out);
+}
+
+.letter-question.is-entering .letter-question-text,
+.letter-question.is-entering .letter-question-title,
+.letter-question.is-entering .letter-answers {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(16px);
+}
+
+.letter-question.is-entering .letter-answers {
+    transform: translateY(10px) scale(0.97);
+    transition-delay: 100ms;
+}
+
 /* The question fades away like the invitation once the letter
    opens - it belongs to the closed-letter moment only. */
 .letter-scene.is-open .letter-question {
@@ -3793,7 +3813,7 @@ h1, h2, h3 {
 }
 
 /* Optional only on the first three post-password messages after the
-   date gate has genuinely been completed. */
+   letter gate has genuinely been completed. */
 .opening-skip-btn {
     position: absolute;
     z-index: 12;
@@ -3858,6 +3878,7 @@ h1, h2, h3 {
     line-height: 1.5;
     color: #ffe9c9;
     text-shadow: 0 0 22px rgba(255, 209, 145, 0.35);
+    transition: opacity 0.42s var(--ease-soft), filter 0.42s var(--ease-soft), transform 0.42s var(--ease-out);
 }
 
 .letter-question-title {
@@ -3868,9 +3889,33 @@ h1, h2, h3 {
     line-height: 1.5;
     letter-spacing: 0.02em;
     color: var(--text-secondary);
+    white-space: pre-line;
+    transition: opacity 0.42s var(--ease-soft), filter 0.42s var(--ease-soft), transform 0.42s var(--ease-out);
 }
 
-/* Four answers in a two-column grid - stack-free, premium */
+.letter-answer-ack {
+    min-height: 1.5rem;
+    margin: -0.35rem 0;
+    font-family: var(--font-display);
+    font-size: clamp(0.9rem, 3.8vw, 1.05rem);
+    font-style: italic;
+    color: #ffe5b3;
+    text-shadow: 0 0 18px rgba(255, 209, 145, 0.42);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.2s var(--ease-soft), transform 0.2s var(--ease-out), visibility 0s linear 0.2s;
+}
+
+.letter-answer-ack.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    transition-delay: 0s;
+}
+
+/* The MAIN/TUM pair keeps two balanced home slots. */
 .letter-answers {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -3878,6 +3923,14 @@ h1, h2, h3 {
     width: 100%;
     max-width: 460px;
     outline: none;
+    transition: opacity 0.36s var(--ease-soft), transform 0.36s var(--ease-out), filter 0.36s var(--ease-soft);
+}
+
+.letter-answers.is-exiting {
+    opacity: 0;
+    filter: blur(5px);
+    transform: translateY(-8px) scale(0.98);
+    pointer-events: none;
 }
 
 .letter-answer {
@@ -3889,7 +3942,7 @@ h1, h2, h3 {
     font-family: var(--font-body);
     font-size: clamp(0.82rem, 3.4vw, 0.95rem);
     line-height: 1.35;
-    color: #e8eefc;
+    color: #eef1fa;
     background: rgba(255, 255, 255, 0.045);
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: var(--radius-full);
@@ -3898,7 +3951,7 @@ h1, h2, h3 {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(10px) scale(0.97);
     transition:
         opacity 0.7s var(--ease-soft),
         transform 0.7s var(--ease-out),
@@ -3908,15 +3961,83 @@ h1, h2, h3 {
         color var(--duration-fast) var(--ease-out);
 }
 
+.letter-answer[data-choice="main"] {
+    color: #f8ead4;
+    background: rgba(228, 184, 112, 0.10);
+    border-color: rgba(237, 202, 137, 0.38);
+    box-shadow:
+        0 8px 20px rgba(5, 10, 24, 0.34),
+        0 0 16px rgba(231, 183, 107, 0.10),
+        inset 0 1px 0 rgba(255, 244, 222, 0.12);
+}
+
+.letter-answer[data-choice="tum"] {
+    color: #f8e2e5;
+    background: rgba(205, 137, 157, 0.10);
+    border-color: rgba(223, 165, 181, 0.38);
+    box-shadow:
+        0 8px 20px rgba(5, 10, 24, 0.34),
+        0 0 16px rgba(210, 139, 160, 0.10),
+        inset 0 1px 0 rgba(255, 235, 239, 0.12);
+}
+
 .letter-answer:nth-child(1) { --i: 0; }
 .letter-answer:nth-child(2) { --i: 1; }
-.letter-answer:nth-child(3) { --i: 2; }
-.letter-answer:nth-child(4) { --i: 3; }
 
 .letter-question.is-in .letter-answer {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     transition-delay: calc(var(--i) * 90ms + 180ms);
+}
+
+.letter-question.is-in .letter-answer[data-choice="main"]:not(.is-selected):not(.is-correct):not(.is-runaway) {
+    animation: letter-answer-main-ambient 3.8s var(--ease-soft) infinite alternate;
+}
+
+.letter-question.is-in .letter-answer[data-choice="tum"]:not(.is-selected):not(.is-correct):not(.is-runaway) {
+    animation: letter-answer-tum-ambient 3.8s var(--ease-soft) 0.6s infinite alternate;
+}
+
+@keyframes letter-answer-main-ambient {
+    from {
+        background: rgba(228, 184, 112, 0.08);
+        box-shadow:
+            0 8px 20px rgba(5, 10, 24, 0.34),
+            0 0 12px rgba(231, 183, 107, 0.08),
+            inset 0 1px 0 rgba(255, 244, 222, 0.10);
+    }
+    to {
+        background: rgba(228, 184, 112, 0.13);
+        box-shadow:
+            0 8px 20px rgba(5, 10, 24, 0.34),
+            0 0 22px rgba(231, 183, 107, 0.16),
+            inset 0 1px 0 rgba(255, 244, 222, 0.16);
+    }
+}
+
+@keyframes letter-answer-tum-ambient {
+    from {
+        background: rgba(205, 137, 157, 0.08);
+        box-shadow:
+            0 8px 20px rgba(5, 10, 24, 0.34),
+            0 0 12px rgba(210, 139, 160, 0.08),
+            inset 0 1px 0 rgba(255, 235, 239, 0.10);
+    }
+    to {
+        background: rgba(205, 137, 157, 0.13);
+        box-shadow:
+            0 8px 20px rgba(5, 10, 24, 0.34),
+            0 0 22px rgba(210, 139, 160, 0.16),
+            inset 0 1px 0 rgba(255, 235, 239, 0.16);
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .letter-question.is-in .letter-answer[data-choice]:not(.is-runaway):not(.is-selected):not(.is-correct):hover {
+        transform: translateY(-1px) scale(1);
+        filter: brightness(1.08);
+        transition-delay: 0s;
+    }
 }
 
 .letter-answer:focus-visible {
@@ -3949,18 +4070,19 @@ h1, h2, h3 {
     text-shadow: 0 0 12px rgba(255, 209, 145, 0.8);
 }
 
-/* A wrong guess: subtle shake, nothing is locked */
-.letter-answer.is-wrong {
-    border-color: rgba(255, 132, 122, 0.65);
-    box-shadow: 0 0 22px rgba(255, 120, 100, 0.22);
-    animation: letter-answer-shake 0.5s var(--ease-out);
+.letter-answer.is-runaway {
+    --run-x: 0px;
+    --run-y: 0px;
+    --run-rotate: 0deg;
+    --run-scale: 1;
+    will-change: transform;
+    transition: transform 0.38s cubic-bezier(0.16, 0.82, 0.28, 1) !important;
+    transition-delay: 0s !important;
 }
 
-@keyframes letter-answer-shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    55% { transform: translateX(4px); }
-    80% { transform: translateX(-2px); }
+/* This is the single in-scene transform authority for a runaway answer. */
+.letter-question.is-in .letter-answer.is-runaway {
+    transform: translate3d(var(--run-x), var(--run-y), 0) rotate(var(--run-rotate)) scale(var(--run-scale));
 }
 
 /* Once the answer is right, the question settles and the answers
@@ -4004,28 +4126,22 @@ h1, h2, h3 {
         color var(--duration-fast) var(--ease-out);
 }
 
-/* The CTA enters with the question, already visible but LOCKED */
-.letter-question.is-in .letter-cta {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    transition-delay: 520ms;
-}
-
-/* Playful dodge: short, smooth, always inside the scene */
-.letter-cta.is-dodging {
-    transition: transform 0.28s var(--ease-out) !important;
+.letter-cta[hidden] {
+    display: none;
 }
 
 /* Unlocked: premium pop + glow + gentle breathing */
 .letter-cta.is-unlocked {
+    opacity: 1;
+    transform: translateY(0) scale(1);
     color: #fdf6e9;
     background: rgba(255, 214, 150, 0.12);
     border-color: rgba(255, 222, 150, 0.65);
     box-shadow:
         0 0 34px rgba(255, 209, 145, 0.35),
         inset 0 1px 0 rgba(255, 255, 255, 0.22);
-    animation: cta-unlock-in 0.8s var(--ease-out) both,
-        cta-breathe 3.6s var(--ease-soft) 0.8s infinite;
+    animation: cta-unlock-in 0.46s var(--ease-out) both,
+        cta-breathe 3.6s var(--ease-soft) 0.46s infinite;
 }
 
 @keyframes cta-unlock-in {
@@ -5675,4 +5791,919 @@ h1, h2, h3 {
         padding: 1rem 3rem;
         font-size: 0.9rem;
     }
+}
+/* Midnight birthday wish -- scoped to the existing celebration stage. */
+#birthday-reveal.is-celebrating {
+    background: radial-gradient(ellipse at 75% 15%, #111a31 0%, transparent 58%), linear-gradient(165deg, #041519, #060c1b 70%, #080e17);
+    overflow-x: hidden;
+    overflow-y: auto;
+    place-items: start center;
+    pointer-events: auto;
+}
+.is-celebrating .birthday-reveal-sky {
+    background: radial-gradient(ellipse at 25% 25%, #1b59652b, transparent 60%), radial-gradient(ellipse at 80% 65%, #34355520, transparent 55%);
+}
+.is-celebrating .birthday-reveal-sky::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 12% at 30% 64%, #6e9fa70c, transparent), radial-gradient(ellipse at center, transparent 35%, #01081080);
+    pointer-events: none;
+}
+.is-celebrating .birthday-reveal-glow {
+    top: 28%;
+    background: radial-gradient(ellipse, #80d4db20, #407b9610 42%, transparent 70%);
+    filter: none;
+    animation: midnight-light-in 1.1s ease-out both;
+}
+#birthday-reveal.is-celebrating::after {
+    background: radial-gradient(ellipse 65% 19% at 50% 100%, #ce874b20, transparent 75%);
+    z-index: 0;
+}
+.is-celebrating .birthday-reveal-stage {
+    box-sizing: border-box;
+    min-height: max(540px, 100svh);
+    padding: max(76px, env(safe-area-inset-top)) max(48px, env(safe-area-inset-right)) max(136px, calc(116px + env(safe-area-inset-bottom))) max(48px, env(safe-area-inset-left));
+    gap: clamp(22px, 4vh, 40px);
+    width: 100%;
+    overflow: visible;
+}
+.is-celebrating .birthday-reveal-final {
+    max-width: 760px;
+    font-size: clamp(1.85rem, 5.4vw, 3.8rem);
+    line-height: 1.22;
+    text-wrap: balance;
+    background: none;
+    color: #f6eee1;
+    filter: none;
+    text-shadow: 0 1px 1px #a6e0db55, 0 0 24px #8dccce25, 0 4px 16px #0008;
+}
+.is-celebrating .birthday-reveal-age {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    width: min(100%, 690px);
+    max-width: 100%;
+    gap: 18px 0;
+    padding: 22px 0;
+    background: linear-gradient(90deg, transparent, #87c8ce06, transparent);
+    border-bottom: 1px solid #8bcac521;
+}
+.is-celebrating .birthday-reveal-age-row {
+    min-width: 0;
+    padding: 0 4px;
+    color: #e6e9e6;
+    font-size: clamp(1.2rem, 2.5vw, 1.65rem);
+    text-shadow: 0 2px 12px #0006;
+}
+.is-celebrating .birthday-reveal-age-row:nth-child(-n+3) { font-size: clamp(1.6rem, 3vw, 2.3rem); }
+.is-celebrating .birthday-reveal-age-row:not(:first-child) { padding-left: 4px; border-left: 1px solid #96c9cc1c; }
+.is-celebrating .birthday-reveal-age-years .birthday-reveal-age-value { color: #f6eee1; text-shadow: 0 0 16px #a5d7cf20; }
+.is-celebrating .birthday-reveal-age-unit { font-family: var(--font-body); font-size: 0.55rem; letter-spacing: 0.1em; color: #b0c4c7; opacity: 1; }
+.is-celebrating .birthday-reveal-age-row-seconds.is-ticking { opacity: .82; }
+.is-celebrating .birthday-reveal-continue {
+    position: relative;
+    overflow: hidden;
+    z-index: 5;
+    min-height: 52px;
+    margin-top: 0;
+    color: #f5ecdf;
+    background: linear-gradient(160deg, #19343dc9, #0a1827e6);
+    border: 1px solid #8bcbd04d;
+    box-shadow: inset 0 1px #e4f9ee1c, 0 8px 24px #0005;
+    letter-spacing: .09em;
+}
+.is-celebrating .birthday-reveal-continue:focus-visible { outline: 2px solid #c8e8e1; outline-offset: 5px; }
+.is-celebrating .birthday-reveal-continue::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, #ecf8ee18 50%, transparent 70%);
+    transform: translateX(-110%);
+    pointer-events: none;
+}
+.is-celebrating .birthday-reveal-balloons { z-index: 2; }
+.is-celebrating .birthday-reveal-balloon { left: auto; width: var(--size); height: calc(var(--size) * 1.2); }
+.is-celebrating .depth-back { --depth-opacity: .36; --depth-scale: .82; }
+.is-celebrating .depth-middle { --depth-opacity: .56; --depth-scale: .94; }
+.is-celebrating .depth-front { --depth-opacity: .72; --depth-scale: 1; }
+.is-celebrating .birthday-reveal-balloon-fill {
+    background: radial-gradient(ellipse at 28% 22%, #ffffff30, transparent 30%), radial-gradient(ellipse at 36% 30%, var(--c2), var(--c1) 65%, #101826 100%);
+    box-shadow: inset -4px -7px 10px #07122238, 0 8px 16px #0003;
+}
+.is-celebrating .birthday-reveal-balloon-string { height: 45px; background: linear-gradient(#b6c9cc55, #b6c9cc08); }
+.is-celebrating .birthday-reveal-candles {
+    inset: auto 0 0;
+    height: 112px;
+    z-index: 4;
+    overflow: visible;
+    bottom: env(safe-area-inset-bottom);
+    background: radial-gradient(ellipse 45% 60% at 50% 100%, #e4a4621c, transparent 90%);
+}
+.is-celebrating .birthday-reveal-candles::after {
+    content: '';
+    position: absolute;
+    bottom: 16px;
+    left: 5%;
+    right: 5%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e6b78342, transparent);
+    box-shadow: 0 3px 12px #e6b78318;
+}
+.is-celebrating .birthday-reveal-candle { width: 12px; bottom: 17px; }
+.is-celebrating .birthday-reveal-candle-body { background: linear-gradient(90deg, #958378, #efe0ca 34%, #ccbaa3 65%, #87786f); box-shadow: inset 0 1px #fff1, 0 0 12px #e7af6520; }
+.is-celebrating .birthday-reveal-candle-flame { border-radius: 60% 40% 48% 52% / 72% 68% 32% 28%; box-shadow: 0 0 9px 3px #ffbf7266, 0 0 22px 7px #ff9e3820; }
+
+/* The approved wish sequence stays inside the existing celebration. */
+.is-celebrating .birthday-reveal-stage {
+    min-height: 100svh;
+    padding: max(68px, env(safe-area-inset-top)) max(48px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(48px, env(safe-area-inset-left));
+    gap: clamp(14px, 2.5vh, 26px);
+}
+/* Reserve hero positions during entrance; hidden controls remain inert. */
+#birthday-reveal.is-celebrating .birthday-reveal-final[hidden],
+#birthday-reveal.is-celebrating .birthday-reveal-continue[hidden] { display: block !important; visibility: hidden; }
+#birthday-reveal.is-celebrating .birthday-reveal-age[hidden] { display: grid !important; visibility: hidden; }
+.is-celebrating .birthday-reveal-final { position: relative; isolation: isolate; }
+.is-celebrating .birthday-reveal-final::after {
+    content: ''; position: absolute; inset: -12px; z-index: -1;
+    pointer-events: none; opacity: 0;
+    background: radial-gradient(ellipse, #c5789228, transparent 65%);
+}
+.birthday-reveal-remnants { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.birthday-reveal-remnants i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #dc9aae; box-shadow: 0 0 6px #e6789960; opacity: 0; }
+.birthday-reveal-constellation { flex: 0 0 auto; width: min(220px, 70%); height: clamp(80px, 13vh, 115px); margin-bottom: -22px; pointer-events: none; }
+.birthday-reveal-constellation svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.birthday-reveal-constellation path { fill: none; stroke: #adc9c6; stroke-width: .65; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; }
+.birthday-reveal-constellation circle { fill: #f0e8d9; opacity: .12; }
+.birthday-reveal-constellation circle:nth-child(4n) { fill: #caa4b1; }
+.is-celebrating .birthday-reveal-age { position: relative; width: min(100%, 480px); grid-template-columns: repeat(12, minmax(0, 1fr)); border-bottom: 0; row-gap: 24px; }
+.is-celebrating .birthday-reveal-age-row { grid-column: span 3; }
+.is-celebrating .birthday-reveal-age-row:nth-child(-n+3) { grid-column: span 4; }
+.is-celebrating .birthday-reveal-age-row:nth-child(4) { border-left: 0; }
+.is-celebrating .birthday-reveal-age::after {
+    content: ''; position: absolute; top: 53%; left: 8%; right: 8%; height: 1px;
+    background: linear-gradient(90deg, transparent, #b0d8d32c, transparent); pointer-events: none; transform-origin: left;
+}
+.is-celebrating .birthday-reveal-age-row-seconds { position: relative; }
+.is-celebrating .birthday-reveal-age-row-seconds::after { content: ''; position: absolute; bottom: -7px; width: 16px; height: 1px; background: #b3d6cc; opacity: .1; transition: opacity .25s ease; }
+.is-celebrating .birthday-reveal-age-row-seconds.is-ticking::after { opacity: .45; }
+.birthday-reveal-wish-area { display: none; }
+.is-celebrating .birthday-reveal-wish-area { display: block; position: relative; width: min(100%, 420px); min-height: 148px; flex-shrink: 0; }
+.birthday-reveal-wish {
+    position: absolute; inset: 0; z-index: 5; width: 100%; border: 0; border-radius: 20px;
+    padding: 8px 4px 110px; background: transparent; color: #e7d8c1;
+    font-family: var(--font-display); font-size: clamp(1rem, 3.4vw, 1.2rem); line-height: 1.4;
+    text-shadow: 0 0 14px #e4b77c24; cursor: pointer; pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
+}
+.birthday-reveal-wish[aria-disabled="true"] { cursor: default; }
+.birthday-reveal-wish:focus-visible { outline: 1px solid #b5d5d3; outline-offset: 4px; }
+.is-celebrating .birthday-reveal-wish-area .birthday-reveal-candles { top: auto; bottom: 0; height: 104px; width: 100%; }
+.is-celebrating .birthday-reveal-candles { background: none; }
+.is-celebrating .birthday-reveal-candles::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 45% 60% at 50% 100%, #e4a4621c, transparent 90%); opacity: 1; transition: opacity .8s ease; pointer-events: none; }
+.is-wishing .birthday-reveal-candles::before { opacity: .12; }
+#birthday-reveal.is-celebrating.is-wishing::after { opacity: .2; animation: none; transition: opacity .9s ease; }
+.birthday-reveal-spark { position: absolute; top: -8px; left: 50%; width: 2px; height: 2px; border-radius: 50%; background: #f3d4a3; opacity: 0; pointer-events: none; }
+.is-celebrating .depth-back { --depth-opacity: .25; }
+.is-celebrating .depth-middle { --depth-opacity: .5; }
+
+/* Birthday text-heart substage: a transparent normal-flow DOM motion area
+   keeps the hero below the title and clear of all existing controls. */
+.birthday-reveal-heart {
+    display: block;
+    position: relative;
+    z-index: 3;
+    width: min(90vw, 44svh, 370px);
+    aspect-ratio: 1.05 / 1;
+    flex: 0 0 auto;
+    overflow: visible;
+    pointer-events: none;
+    opacity: 0;
+}
+.birthday-heart-master { --heart-scale: .6; position: absolute; top: 50%; left: 50%; width: 450px; height: 450px; transform: translate(-50%, -50%) scale(var(--heart-scale)); transform-origin: center; pointer-events: none; overflow: visible; }
+.birthday-heart-center { position: absolute; z-index: 2; top: 50%; left: 50%; display: grid; justify-items: center; gap: .18em; transform: translate(-50%, -50%); color: #fff1e5; font-family: var(--font-display); font-size: clamp(1rem, 4.1vw, 1.45rem); font-weight: 600; letter-spacing: .055em; line-height: 1; white-space: nowrap; text-shadow: 0 0 8px #f6a9bd82, 0 2px 10px #6fb6c055; pointer-events: none; }
+.birthday-heart-center-meri, .birthday-heart-center-malkin { display: block; opacity: 0; transform: translateY(8px) scale(.96); }
+.birthday-heart-center-meri { letter-spacing: .24em; font-size: .68em; color: #ffd8e4; transform: translate(-8px, 8px); }
+.birthday-heart-center-malkin { font-size: 1.08em; letter-spacing: .08em; filter: blur(4px); }
+.birthday-heart-center-trace { position: relative; width: 0; height: .5em; margin-top: -.1em; border-bottom: 1px solid #ffe7c5; border-radius: 0 0 65% 42%; transform: rotate(-2deg); box-shadow: 0 2px 8px #f3b8c580; }
+.birthday-heart-center-trace::after { content: ''; position: absolute; right: -2px; bottom: -3px; width: 3px; height: 3px; border-radius: 50%; background: #fff2d9; box-shadow: 0 0 7px #fff2d9; opacity: 0; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-meri { animation: birthday-heart-center-meri .56s var(--ease-out) .12s both; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-malkin { animation: birthday-heart-center-malkin .78s var(--ease-out) .38s both; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-trace { animation: birthday-heart-center-trace .46s ease-out 1.2s both; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-trace::after { animation: birthday-heart-center-spark .24s ease-out 1.56s both; }
+.birthday-reveal-heart.is-center-immediate .birthday-heart-center-meri, .birthday-reveal-heart.is-center-immediate .birthday-heart-center-malkin { animation: none; opacity: 1; transform: none; }
+.birthday-reveal-heart.is-center-immediate .birthday-heart-center-trace { animation: none; width: 4.8em; }
+.birthday-heart-item, .birthday-heart-horizontal, .birthday-heart-vertical { position: absolute; inset: 0 auto auto 0; width: 1px; height: 1px; }
+.birthday-heart-horizontal, .birthday-heart-vertical { will-change: transform; animation-play-state: paused; animation-fill-mode: both; }
+.birthday-heart-horizontal { animation: birthday-heart-horizontal 10s ease-in-out infinite alternate; animation-delay: var(--heart-delay); }
+.birthday-heart-vertical { animation: birthday-heart-vertical 20s linear infinite; animation-delay: var(--heart-delay); }
+.birthday-heart-master.is-active .birthday-heart-horizontal, .birthday-heart-master.is-active .birthday-heart-vertical { animation-play-state: running; }
+.birthday-heart-master.is-reduced .birthday-heart-horizontal, .birthday-heart-master.is-reduced .birthday-heart-vertical, .birthday-heart-master.is-paused .birthday-heart-horizontal, .birthday-heart-master.is-paused .birthday-heart-vertical { animation-play-state: paused; }
+.birthday-heart-text { position: absolute; display: block; transform: translate(-50%, -50%) rotate(-30deg); transform-origin: center; color: #f6b8cb; font-family: var(--font-body), Arial, sans-serif; font-size: 9.5px; font-weight: 500; letter-spacing: .015em; line-height: 1; white-space: nowrap; opacity: var(--heart-opacity); text-shadow: 0 0 3px #fff6, 0 0 6px #ef83aa99; }
+.birthday-reveal-heart-advance {
+    position: relative;
+    z-index: 5;
+    min-height: 52px;
+    margin: 0;
+    padding: .85rem 2.1rem;
+    border: 1px solid #c99eaa69;
+    border-radius: 999px;
+    color: #f7ece3;
+    background: linear-gradient(160deg, #45303fc9, #171525e6);
+    box-shadow: inset 0 1px #fff0f01c, 0 8px 24px #0005;
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 3.4vw, 1.15rem);
+    font-weight: 600;
+    letter-spacing: .09em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.birthday-reveal-stage .birthday-reveal-heart-advance.is-in { pointer-events: auto; }
+.birthday-reveal-heart-advance[aria-disabled="true"],
+.birthday-reveal-heart-advance:disabled { cursor: default; opacity: .66; }
+.birthday-reveal-heart-advance:focus-visible { outline: 2px solid #f0d9df; outline-offset: 5px; }
+
+/* Hidden age/final controls normally reserve entrance space. During the heart
+   scene they must leave flow so the moving text is the hero rather than a gap. */
+#birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-age[hidden],
+#birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-continue[hidden] {
+    display: none !important;
+    visibility: hidden;
+}
+#birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-stage {
+    padding-inline: max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-left));
+    gap: clamp(12px, 2vh, 20px);
+}
+#birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-wish-area { display: none; }
+#birthday-reveal.is-celebrating[data-birthday-stage="age"] .birthday-reveal-heart,
+#birthday-reveal.is-celebrating[data-birthday-stage="age-ready"] .birthday-reveal-heart { display: none; }
+
+@media (min-width: 768px) {
+    .birthday-reveal-heart { width: min(48vw, 55svh, 550px); }
+}
+
+/* Heart-opening substage: one tactile balloon opens the celebration before
+   the already-approved 100-instance text heart is allowed into view. */
+#birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-final[hidden] {
+    display: none !important;
+    visibility: hidden;
+}
+#birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-stage {
+    justify-content: flex-start;
+    padding-top: max(76px, 10svh, env(safe-area-inset-top));
+}
+.birthday-reveal-hero-balloon[hidden] { display: none !important; }
+.birthday-reveal-hero-balloon {
+    position: relative;
+    z-index: 5;
+    display: block;
+    width: clamp(156px, 46vw, 212px);
+    aspect-ratio: 1 / 1.22;
+    margin: clamp(40px, 11svh, 104px) auto 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #ffe9ed;
+    cursor: pointer;
+    opacity: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+.birthday-reveal-hero-balloon svg { display: block; width: 100%; height: calc(100% - 20px); overflow: visible; filter: drop-shadow(0 15px 18px #1207137a) drop-shadow(0 0 22px #ea789350); }
+.birthday-reveal-hero-heart { fill: url(#birthday-hero-heart); stroke: #ffe4ed99; stroke-width: 1.1; }
+.birthday-reveal-hero-sheen { fill: url(#birthday-hero-sheen); pointer-events: none; }
+.birthday-reveal-hero-knot { fill: none; stroke: #f5afc2; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+.birthday-reveal-hero-string { position: absolute; top: calc(100% - 32px); left: 50%; width: 1px; height: 30px; background: linear-gradient(#f7c2cf9c, #f7c2cf0a); transform: translateX(-50%); }
+.birthday-reveal-hero-hint { position: absolute; left: 50%; bottom: -18px; transform: translateX(-50%); color: #f9d8df; font: 500 .72rem/1 var(--font-body); letter-spacing: .16em; text-transform: uppercase; text-shadow: 0 2px 9px #120713; white-space: nowrap; opacity: .8; }
+.birthday-reveal-hero-balloon:focus-visible { outline: 2px solid #ffe3ec; outline-offset: 8px; border-radius: 50%; }
+.birthday-reveal-hero-balloon.is-settled:not(.is-pressed) { opacity: 1; animation: birthday-hero-breathe 2.4s ease-in-out infinite alternate; }
+.birthday-reveal-hero-balloon.is-pressed { animation: birthday-hero-press .13s ease-in both; }
+.birthday-reveal-hero-balloon.is-bursting { pointer-events: none; animation: birthday-hero-burst .66s var(--ease-out) both; }
+.birthday-reveal-hero-burst-piece { position: absolute; top: 45%; left: 50%; width: 8px; height: 8px; opacity: 0; pointer-events: none; transform: translate(-50%, -50%); }
+.birthday-reveal-hero-burst-piece.is-petal { border-radius: 80% 15% 80% 15%; background: #f4aac2; }
+.birthday-reveal-hero-burst-piece.is-heart { width: 9px; height: 9px; background: #ffd4df; transform: translate(-50%, -50%) rotate(45deg); }
+.birthday-reveal-hero-burst-piece.is-heart::before, .birthday-reveal-hero-burst-piece.is-heart::after { content: ''; position: absolute; width: 9px; height: 9px; border-radius: 50%; background: inherit; }
+.birthday-reveal-hero-burst-piece.is-heart::before { top: -4px; left: 0; }
+.birthday-reveal-hero-burst-piece.is-heart::after { top: 0; left: -4px; }
+.birthday-reveal-hero-burst-piece.is-spark { width: 3px; height: 3px; border-radius: 50%; background: #fff3cf; box-shadow: 0 0 8px #ffe4a4; }
+.birthday-reveal-hero-burst-piece.is-ribbon { width: 3px; height: 13px; border-radius: 999px; background: #c29cdb; }
+.birthday-reveal-hero-burst-piece.is-pearl { width: 5px; height: 5px; border-radius: 50%; background: #ffe8db; box-shadow: 0 0 5px #fff1e8; }
+
+.is-celebrating .birthday-reveal-final.is-assembling,
+.is-celebrating .birthday-reveal-final.is-title-settled { opacity: 1; }
+.birthday-reveal-final.is-title-settled .birthday-reveal-title-prefix,
+.birthday-reveal-final.is-title-settled .birthday-reveal-title-name,
+.birthday-reveal-final.is-title-settled .birthday-title-character { opacity: 1; filter: none; transform: none; animation: none !important; }
+.birthday-reveal-title-prefix, .birthday-reveal-title-name { display: block; opacity: 0; filter: blur(3px); }
+.birthday-reveal-title-prefix { color: #f8eee4; font-size: .72em; letter-spacing: .06em; transform: translateY(12px); }
+.birthday-reveal-title-name { margin-top: .08em; color: #ffe4ec; letter-spacing: .035em; transform: translateY(10px) scale(.97); text-shadow: 0 0 20px #ec8eaa55, 0 4px 16px #0008; }
+
+/* Side balloons remain in the outer lanes. Their burst vocabulary is kept
+   abstract: hearts, starlight, ribbon curls, pearls, and spark streaks. */
+.birthday-reveal-fragment.is-heart { width: 6px; height: 6px; border-radius: 1px; background: #f2b3c8; transform: translate(-50%, -50%) rotate(45deg); }
+.birthday-reveal-fragment.is-heart::before, .birthday-reveal-fragment.is-heart::after { content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%; background: inherit; }
+.birthday-reveal-fragment.is-heart::before { top: -3px; left: 0; }
+.birthday-reveal-fragment.is-heart::after { top: 0; left: -3px; }
+.birthday-reveal-fragment.is-star { width: 7px; height: 7px; background: #ffe4ae; clip-path: polygon(50% 0, 61% 38%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 38%); }
+.birthday-reveal-fragment.is-ribbon { width: 3px; height: 12px; border-radius: 999px; background: #b9a0dc; transform: translate(-50%, -50%) rotate(30deg); }
+.birthday-reveal-fragment.is-pearl { width: 5px; height: 5px; background: #fff1df; box-shadow: 0 0 5px #fff0d6; }
+.birthday-reveal-fragment.is-streak { width: 12px; height: 2px; border-radius: 999px; background: linear-gradient(90deg, #ffe7b3, transparent); transform: translate(-50%, -50%) rotate(-28deg); }
+
+@media (prefers-reduced-motion: reduce) {
+    .birthday-reveal-hero-balloon, .birthday-reveal-title-prefix, .birthday-reveal-title-name,
+    .birthday-heart-center-meri, .birthday-heart-center-malkin { opacity: 1; transform: none; filter: none; animation: none !important; }
+    .birthday-heart-center-trace { width: 4.8em; animation: none !important; }
+}
+
+/* Stable heart centre: animations enhance the first reveal but never own the
+   final visual state, which also protects refresh and secure restoration. */
+.birthday-reveal-heart.is-center-resolved .birthday-heart-center-meri,
+.birthday-reveal-heart.is-center-resolved .birthday-heart-center-malkin {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    animation: none;
+}
+.birthday-reveal-heart.is-center-resolved .birthday-heart-center-meri { letter-spacing: .24em; }
+.birthday-reveal-heart.is-center-resolved .birthday-heart-center-malkin {
+    letter-spacing: .055em;
+    color: #fff2ec;
+    background: linear-gradient(105deg, #fff6e8 10%, #ffe2e8 50%, #f5d6d2 88%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 1px 7px #e58da04d, 0 2px 8px #5baabb50;
+}
+.birthday-reveal-heart.is-center-resolved .birthday-heart-center-trace { width: 4.8em; opacity: 1; animation: none; }
+.birthday-reveal-heart.is-center-resolved .birthday-heart-center-trace::after { opacity: .55; animation: none; }
+
+/* The intro shares the heart layout rules, but not its stable snapshot state. */
+#birthday-reveal.is-celebrating[data-birthday-stage="heart-intro"] .birthday-reveal-age[hidden],
+#birthday-reveal.is-celebrating[data-birthday-stage="heart-intro"] .birthday-reveal-continue[hidden],
+#birthday-reveal.is-celebrating[data-birthday-stage="heart-intro"] .birthday-reveal-final[hidden] {
+    display: none !important;
+    visibility: hidden;
+}
+#birthday-reveal.is-celebrating[data-birthday-stage="heart-intro"] .birthday-reveal-stage {
+    justify-content: flex-start;
+    padding-top: max(76px, 10svh, env(safe-area-inset-top));
+    padding-inline: max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-left));
+    gap: clamp(12px, 2vh, 20px);
+}
+#birthday-reveal.is-celebrating[data-birthday-stage="heart-intro"] .birthday-reveal-wish-area { display: none; }
+
+/* A non-clipping scene layer keeps pop pieces visible after their balloon is
+   gone, while staying behind all primary celebration content. */
+.birthday-balloon-effects { position: absolute; inset: 0; z-index: 2.5; pointer-events: none; overflow: visible; }
+.birthday-balloon-effect { position: absolute; z-index: 1; width: 9px; height: 9px; opacity: 0; pointer-events: none; transform: translate(-50%, -50%); }
+.birthday-balloon-effect.is-heart { width: 9px; height: 9px; border-radius: 2px; background: #f3a8c0; transform: translate(-50%, -50%) rotate(45deg); box-shadow: 0 0 7px #ed98b761; }
+.birthday-balloon-effect.is-heart::before, .birthday-balloon-effect.is-heart::after { content: ''; position: absolute; width: 9px; height: 9px; border-radius: 50%; background: inherit; }
+.birthday-balloon-effect.is-heart::before { top: -4px; left: 0; }
+.birthday-balloon-effect.is-heart::after { top: 0; left: -4px; }
+.birthday-balloon-effect.is-star, .birthday-balloon-effect.is-spark { background: #fff0bf; box-shadow: 0 0 10px #ffe2a0aa; clip-path: polygon(50% 0, 61% 38%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 38%); }
+.birthday-balloon-effect.is-spark { width: 6px; height: 6px; background: #d7f4f1; }
+.birthday-balloon-effect.is-pearl { width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #fff, #f5d9bc 58%, #cda88a); box-shadow: 0 0 8px #ffe1bd99; }
+.birthday-balloon-effect.is-ribbon { width: 4px; height: 16px; border-radius: 999px; background: linear-gradient(#efadc1, #8c658f); box-shadow: 0 0 6px #d69bb55c; }
+.birthday-balloon-effect.is-streak { width: 15px; height: 3px; border-radius: 999px; background: linear-gradient(90deg, #f9e2b4, #b8e5e1, transparent); }
+.birthday-balloon-effect.is-petal { width: 10px; height: 14px; border-radius: 85% 15% 85% 15%; background: linear-gradient(145deg, #ffd7e2, #d8759a); box-shadow: 0 0 6px #f1a1b98c; }
+.birthday-balloon-effect.is-hero { z-index: 2; }
+
+/* Stronger latex construction with three restrained silhouettes. */
+.is-celebrating .birthday-reveal-balloon-fill { overflow: visible; border: 1px solid #f7dce21f; box-shadow: inset 4px 5px 10px #fff2, inset -7px -10px 13px #07122262, 0 11px 19px #0007; }
+.is-celebrating .birthday-reveal-balloon-fill::before { content: ''; position: absolute; top: 13%; left: 19%; width: 25%; height: 38%; border-radius: 50%; background: linear-gradient(125deg, #ffffff85, #fff0 76%); transform: rotate(-16deg); }
+.is-celebrating .birthday-reveal-balloon-fill::after { bottom: -5px; width: 8px; height: 8px; border-radius: 1px 1px 5px 5px; transform: translateX(-50%) rotate(45deg); box-shadow: 2px 2px 4px #06101b80; }
+.is-celebrating .shape-pear .birthday-reveal-balloon-fill { border-radius: 54% 54% 50% 50% / 48% 48% 60% 60%; }
+.is-celebrating .shape-round .birthday-reveal-balloon-fill { border-radius: 50%; }
+.is-celebrating .shape-tall .birthday-reveal-balloon-fill { border-radius: 48% 48% 52% 52% / 56% 56% 44% 44%; transform: scaleX(.88); }
+.is-celebrating .shape-tall .birthday-reveal-balloon-string { transform: translateX(-50%) translateY(1px); }
+.is-celebrating .birthday-reveal-balloon-string { width: 1px; height: 49px; background: linear-gradient(#e9c8d088, #abcfd31a); box-shadow: 0 0 2px #e2c9cf50; }
+
+/* Diamond Shine is intentionally the only object on the heart-intro screen. */
+.birthday-reveal-hero-balloon {
+    width: clamp(172px, 52.5vw, 225px);
+    aspect-ratio: 1 / 1.2;
+    margin: clamp(26px, 7svh, 62px) auto 0;
+    cursor: default;
+    pointer-events: none;
+}
+.birthday-reveal-hero-balloon svg { height: calc(100% - 11px); filter: drop-shadow(0 18px 22px #020b217d) drop-shadow(0 0 24px #4dddec52); }
+.birthday-reveal-hero-heart { fill: url(#birthday-hero-heart); stroke: none; }
+.birthday-reveal-hero-rim { fill: none; stroke: url(#birthday-hero-rim); stroke-width: 1.4; }
+.birthday-reveal-hero-sheen { fill: url(#birthday-hero-sheen); mix-blend-mode: screen; }
+.birthday-reveal-hero-diamonds { fill: #dfffff; opacity: .72; filter: drop-shadow(0 0 4px #adf5ff); }
+.birthday-reveal-hero-copy { fill: #f7ffff; text-anchor: middle; font-family: var(--font-display); font-size: 14px; font-weight: 600; letter-spacing: .04em; }
+.birthday-reveal-hero-copy-name { fill: #d8faff; font-size: 19px; letter-spacing: .08em; }
+.birthday-reveal-hero-knot { fill: none; stroke: #8cebf1; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+.birthday-reveal-hero-ribbon { fill: none; stroke: #8cc9df; stroke-width: 1.65; stroke-linecap: round; opacity: .86; }
+.birthday-reveal-hero-string { top: calc(100% - 20px); height: 34px; background: linear-gradient(#a5e9ef8f, #a5e9ef08); }
+.birthday-reveal-hero-balloon.is-impact { animation: birthday-hero-impact .1s ease-out both; }
+.birthday-reveal-hero-balloon.is-bursting { animation: birthday-hero-burst .86s var(--ease-out) both; }
+
+.birthday-reveal-arrow-launcher[hidden], .birthday-reveal-burst-message[hidden] { display: none !important; }
+.birthday-reveal-arrow-launcher {
+    position: relative;
+    z-index: 6;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    min-width: 44px;
+    min-height: 44px;
+    margin: 8px auto 0;
+    padding: 4px;
+    border: 1px solid #b9f3f34d;
+    border-radius: 999px;
+    background: radial-gradient(circle, #4fd5e21a, #07172b12 66%, transparent);
+    box-shadow: 0 0 18px #5ce6ef2b, inset 0 1px #e8ffff1c;
+    cursor: pointer;
+    opacity: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+.birthday-reveal-arrow-launcher svg { display: block; width: 52px; height: 38px; overflow: visible; }
+.birthday-arrow-shaft { fill: none; stroke: #e7ffff; stroke-width: 2; stroke-linecap: round; filter: drop-shadow(0 0 3px #8eeff5); }
+.birthday-arrow-tip { fill: none; stroke: #f4b3cb; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px #eaa2bf); }
+.birthday-arrow-feather { fill: none; stroke: #9ceaf0; stroke-width: 1.6; stroke-linecap: round; }
+.birthday-reveal-arrow-launcher.is-ready { opacity: 1; animation: birthday-arrow-idle 2.6s ease-in-out infinite alternate; }
+.birthday-reveal-arrow-launcher.is-launching { opacity: 1; pointer-events: none; animation: birthday-arrow-launch .56s cubic-bezier(.22,.86,.34,1) both; }
+.birthday-reveal-arrow-launcher:focus-visible { outline: 2px solid #e3ffff; outline-offset: 5px; }
+
+.birthday-reveal-burst-message {
+    position: relative;
+    z-index: 5;
+    display: grid;
+    justify-items: center;
+    gap: .12em;
+    margin: clamp(34px, 8svh, 70px) auto 0;
+    color: #fff1e4;
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 6.3vw, 2.2rem);
+    font-weight: 600;
+    line-height: 1.1;
+    text-align: center;
+    text-shadow: 0 2px 12px #4fb7c561, 0 2px 12px #28122188;
+    opacity: 0;
+    pointer-events: none;
+}
+.birthday-reveal-burst-message span { font-size: .68em; letter-spacing: .12em; color: #fff3e5; }
+.birthday-reveal-burst-message strong { color: #ffd6e3; font: inherit; letter-spacing: .04em; }
+.birthday-reveal-burst-message::after { content: ''; width: 4.4em; height: 1px; margin-top: .22em; background: linear-gradient(90deg, transparent, #f9d4c8, #9ce6ea, transparent); box-shadow: 0 0 8px #b9eff0a3; }
+.birthday-reveal-burst-message.is-in { animation: birthday-burst-message-in .82s var(--ease-out) both; }
+.birthday-reveal-burst-message.is-out { animation: birthday-burst-message-out .74s ease-in both; }
+
+.birthday-reveal-trails { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+.birthday-reveal-trail { position: absolute; top: -34%; left: var(--trail-x); display: block; color: #5dc8d1; font: 600 8px/1.85 var(--font-body); letter-spacing: .15em; text-align: center; white-space: nowrap; opacity: .16; text-shadow: 0 0 8px currentColor; animation: birthday-trail-fall var(--trail-duration) linear var(--trail-delay) infinite; }
+.birthday-reveal-trail.is-teal { color: #68aaac; opacity: .12; }.birthday-reveal-trail.is-blue { color: #6f9bc6; opacity: .1; }.birthday-reveal-trail.is-ivory { color: #e9e0c8; opacity: .08; }
+
+@media (max-width: 340px) {
+    .birthday-reveal-hero-balloon { width: clamp(165px, 53vw, 185px); }
+    .birthday-reveal-hero-copy { font-size: 12px; }.birthday-reveal-hero-copy-name { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .birthday-reveal-arrow-launcher.is-ready { animation: none; }
+    .birthday-reveal-burst-message.is-in { opacity: 1; transform: none; animation: none; }
+}
+
+/* The heart-intro is fired from a single scene-level tap; the bow is only
+   a visual launcher. Its transform origin is the nock, so dynamic rotation
+   always keeps the launch point anchored in the bottom-right safe area. */
+.birthday-reveal-bow-launcher[hidden] { display: none !important; }
+.birthday-reveal-bow-launcher {
+    --bow-angle: -135deg;
+    position: absolute;
+    z-index: 6;
+    right: max(18px, calc(env(safe-area-inset-right) + 18px));
+    bottom: max(34px, calc(env(safe-area-inset-bottom) + 34px));
+    width: clamp(128px, 31vw, 154px);
+    aspect-ratio: 3 / 2;
+    opacity: 0;
+    pointer-events: none;
+    transform: rotate(var(--bow-angle));
+    transform-origin: 37.2% 50%;
+    filter: drop-shadow(0 4px 9px #02162d8a) drop-shadow(0 0 10px #81e4e55c);
+}
+.birthday-reveal-bow-launcher svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.birthday-bow-limb { fill: none; stroke: url(#birthday-bow-metal); stroke-width: 6; stroke-linecap: round; filter: drop-shadow(0 0 3px #ffd7d6a0); }
+.birthday-bow-core { fill: none; stroke: #f9d8c7; stroke-opacity: .75; stroke-width: 1.35; stroke-linecap: round; }
+.birthday-bow-string { fill: none; stroke: #c9fbf6; stroke-width: 1.1; stroke-opacity: .82; filter: drop-shadow(0 0 2px #8df1ec); }
+.birthday-bow-nocked-arrow { transform-origin: 67px 60px; }
+.birthday-bow-launcher .birthday-arrow-shaft { fill: none; stroke: url(#birthday-arrow-metal); stroke-width: 2.15; stroke-linecap: round; filter: drop-shadow(0 0 2px #bdfdff); }
+.birthday-bow-launcher .birthday-arrow-tip, .birthday-flight-arrow .birthday-arrow-tip { fill: none; stroke: #f5b4c5; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px #f1a3bd); }
+.birthday-bow-launcher .birthday-arrow-feather, .birthday-flight-arrow .birthday-arrow-feather { fill: none; stroke: #a7f0ed; stroke-width: 1.7; stroke-linecap: round; }
+.birthday-flight-arrow .birthday-arrow-shaft { fill: none; stroke: #ecffff; stroke-width: 2.15; stroke-linecap: round; filter: drop-shadow(0 0 2px #bdfdff); }
+.birthday-bow-nock-spark { fill: #eaffff; opacity: .65; filter: drop-shadow(0 0 4px #9cf5f2); }
+.birthday-reveal-bow-launcher.is-ready { opacity: 1; animation: birthday-bow-enter .72s var(--ease-out) both, birthday-bow-idle 3.4s ease-in-out .76s infinite alternate; }
+.birthday-reveal-bow-launcher.is-releasing { animation: birthday-bow-release .22s ease-out both; }
+.birthday-reveal-bow-launcher.is-arrow-fired .birthday-bow-nocked-arrow { opacity: 0; }
+.birthday-reveal-bow-launcher.is-arrow-fired .birthday-bow-nock-spark { animation: birthday-bow-release-spark .28s ease-out both; }
+.birthday-reveal-bow-launcher.is-fading { animation: birthday-bow-fade .42s ease-out both; }
+
+.birthday-arrow-flight-layer { position: absolute; inset: 0; z-index: 4; overflow: visible; pointer-events: none; }
+.birthday-flight-arrow { position: absolute; z-index: 5; width: clamp(76px, 22vw, 104px); height: auto; overflow: visible; pointer-events: none; transform: translate3d(-50%, -50%, 0); transform-origin: center; filter: drop-shadow(0 0 4px #b7faff); }
+.birthday-flight-trail { fill: none; stroke: #baf7f5; stroke-width: 1.1; stroke-linecap: round; opacity: .68; filter: drop-shadow(0 0 4px #8af5ef); }
+
+@keyframes birthday-bow-enter { from { opacity: 0; transform: translate(28px, 18px) rotate(var(--bow-angle)); } to { opacity: 1; transform: translate(0, 0) rotate(var(--bow-angle)); } }
+@keyframes birthday-bow-idle { from { transform: translateY(0) rotate(var(--bow-angle)); filter: drop-shadow(0 4px 9px #02162d8a) drop-shadow(0 0 8px #81e4e548); } to { transform: translateY(-2px) rotate(var(--bow-angle)); filter: drop-shadow(0 4px 10px #02162d8a) drop-shadow(0 0 14px #b2faf469); } }
+@keyframes birthday-bow-release { 0% { opacity: 1; transform: rotate(var(--bow-angle)) scale(1); } 45% { transform: rotate(var(--bow-angle)) scale(.97); } 100% { opacity: 1; transform: rotate(var(--bow-angle)) scale(1); } }
+@keyframes birthday-bow-release-spark { from { opacity: .95; transform: scale(.65); } to { opacity: 0; transform: scale(2.3); } }
+@keyframes birthday-bow-fade { to { opacity: 0; transform: rotate(var(--bow-angle)) scale(.97); } }
+@media (max-width: 340px) {
+    .birthday-reveal-bow-launcher { right: max(14px, calc(env(safe-area-inset-right) + 14px)); bottom: max(28px, calc(env(safe-area-inset-bottom) + 28px)); width: 112px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .birthday-reveal-bow-launcher.is-ready { animation: none; opacity: 1; }
+}
+
+/* Final birthday-celebration polish: all effects are scene-local and keep the
+   approved text-heart trajectory untouched. */
+.birthday-reveal-hero-balloon { width: clamp(184px, 60vw, 248px); }
+
+.birthday-reveal-trails { z-index: 1; }
+.birthday-reveal-trail { font-size: clamp(8px, 2.35vw, 10px); line-height: 1.72; letter-spacing: .13em; opacity: .2; text-shadow: 0 0 10px currentColor; }
+.birthday-reveal-trail:nth-child(3n) { font-size: clamp(9px, 2.7vw, 11px); opacity: .28; }
+.birthday-reveal-trail:nth-child(4n) { opacity: .1; }
+
+.birthday-balloon-effect.is-flower { width: 9px; height: 9px; border-radius: 50% 10% 50% 10%; background: radial-gradient(circle at 30% 28%, #fffefa, #f6d9e1 45%, #d886a3); box-shadow: 5px 0 #f3c9d5, -5px 0 #f3c9d5, 0 5px #f3c9d5, 0 -5px #f3c9d5, 0 0 11px #ffe8edb0; }
+.birthday-balloon-effect.is-dust { width: 3px; height: 3px; border-radius: 50%; background: #d9ffff; box-shadow: 0 0 9px #b9ffff; }
+.birthday-balloon-effect.is-long { animation-duration: 2.35s; animation-timing-function: cubic-bezier(.16,.72,.23,1); }
+.birthday-balloon-effect.is-side.is-long { animation-duration: 1.5s; }
+.birthday-balloon-effect.is-hero { z-index: 3; }
+
+.birthday-reveal-burst-message.is-born-from-burst {
+    position: absolute; z-index: 6; left: var(--burst-origin-x); top: var(--burst-origin-y);
+    width: min(88vw, 460px); margin: 0; transform: translate(-50%, -50%); isolation: isolate;
+}
+.birthday-reveal-burst-message.is-born-from-burst.is-in { animation: birthday-message-from-burst 1s var(--ease-out) both; }
+.birthday-reveal-burst-message.is-born-from-burst.is-out { animation: birthday-message-to-burst .85s ease-in both; }
+.birthday-reveal-burst-message.is-born-from-burst::before { content: ''; position: absolute; inset: -38% -18%; z-index: -1; background: radial-gradient(circle, #fff2df60 0, #eaa5bd28 30%, #6ee8ee17 52%, transparent 72%); filter: blur(8px); }
+.birthday-reveal-burst-message strong { background: linear-gradient(105deg, #fff8ea 10%, #ffd9e5 52%, #f4ffff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 2px 13px #58c6d86b, 0 0 18px #e48ca36e; }
+
+.birthday-reveal-final.is-born-from-burst {
+    position: relative; z-index: 5; left: auto; top: auto; align-self: center; margin: 0;
+    width: min(92vw, 560px); transform: none; text-align: center; pointer-events: none;
+}
+
+#birthday-reveal.is-celebrating[data-birthday-stage="heart-intro"] .birthday-reveal-heart.is-in { animation: birthday-heart-premium-in .9s var(--ease-out) both; }
+
+.birthday-heart-center { gap: .13em; text-align: center; }
+.birthday-heart-center-spark { position: absolute; top: -1.05em; left: 50%; width: 4px; height: 4px; border-radius: 50%; background: #f8ffff; box-shadow: 0 0 12px 3px #a8f7f5; opacity: 0; transform: translateX(-50%) scale(.3); }
+.birthday-heart-center-stroke { width: 0; height: 1px; order: 1; background: linear-gradient(90deg, transparent, #eafff6, #f8c9d8, transparent); box-shadow: 0 0 8px #c6ffff; }
+.birthday-heart-center-meri, .birthday-heart-center-malkin { position: relative; display: flex; justify-content: center; }
+.birthday-heart-center-meri { order: 2; }
+.birthday-heart-center-malkin { order: 3; }
+.birthday-heart-center-letter { display: inline-block; font-style: normal; opacity: 0; }
+.birthday-heart-center-meri .birthday-heart-center-letter { transform: translateY(7px); }
+.birthday-heart-center-malkin .birthday-heart-center-letter { transform: translateY(8px); filter: blur(3px); background: linear-gradient(105deg, #fff8ea, #ffd5e1 54%, #f4ffff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-spark { animation: birthday-center-spark .32s ease-out both; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-stroke { animation: birthday-center-stroke .42s ease-out .14s both; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-meri .birthday-heart-center-letter { animation: birthday-meri-letter .42s var(--ease-out) calc(.32s + var(--letter-index) * .085s) both; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-malkin .birthday-heart-center-letter { animation: birthday-malkin-letter .6s var(--ease-out) calc(.64s + var(--letter-index) * .085s) both; }
+.birthday-heart-center-trace { order: 4; width: 0; height: .58em; border: 0; border-bottom: 1px solid #ffe8cf; border-radius: 0 0 65% 42%; box-shadow: 0 2px 9px #f2afc886; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-trace { animation: birthday-signature-flourish .48s ease-out 1.24s both; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-trace::after { animation: birthday-signature-spark .3s ease-out 1.66s both; }
+.birthday-reveal-heart.is-center-resolved .birthday-heart-center-letter { opacity: 1; filter: none; transform: none; }
+.birthday-reveal-heart.is-center-resolved .birthday-heart-center-malkin::after { content: ''; position: absolute; inset: -18% -8%; background: linear-gradient(105deg, transparent 38%, #ffffff87 50%, transparent 62%); transform: translateX(-135%); animation: birthday-malkin-sheen 6.2s ease-in-out infinite; pointer-events: none; }
+
+.is-heart-balloon { height: var(--size) !important; filter: drop-shadow(0 9px 14px #040b1694); }
+.is-heart-balloon .birthday-reveal-balloon-fill { inset: 0; border: 1px solid #fff3; border-radius: 0; clip-path: polygon(50% 94%, 9% 56%, 4% 32%, 13% 13%, 30% 8%, 50% 24%, 70% 8%, 87% 13%, 96% 32%, 91% 56%); background: radial-gradient(circle at 31% 22%, #ffffffa6 0 5%, transparent 22%), radial-gradient(circle at 35% 25%, var(--c2), var(--c1) 58%, #080f25 100%); box-shadow: inset 5px 5px 13px #fff3, inset -8px -10px 16px #060b277d, 0 0 16px color-mix(in srgb, var(--c2) 40%, transparent); }
+.is-heart-balloon .birthday-reveal-balloon-fill::before { top: 16%; left: 24%; width: 22%; height: 32%; background: linear-gradient(125deg, #ffffffaa, #fff0 78%); }
+.is-heart-balloon .birthday-reveal-balloon-fill::after { bottom: 4%; width: 8px; height: 8px; background: var(--c2); transform: translateX(-50%) rotate(45deg); }
+.is-heart-balloon .birthday-reveal-balloon-string { top: 92%; height: 46px; background: linear-gradient(#dffdf099, #dffdf008); }
+.variant-rose { --c1:#662b48; --c2:#f3afc3; }.variant-diamond { --c1:#123b62; --c2:#a7f5ff; }.variant-pearl { --c1:#826845; --c2:#fff2cf; }.variant-mauve { --c1:#5b4164; --c2:#e3b8e4; }
+
+@keyframes birthday-message-from-burst { 0% { opacity: 0; filter: blur(10px); transform: translate(-50%, -50%) scale(.6); letter-spacing: .24em; } 65% { opacity: 1; filter: blur(1px); transform: translate(-50%, calc(-50% - 6px)) scale(1.025); } 100% { opacity: 1; filter: blur(0); transform: translate(-50%, -50%) scale(1); letter-spacing: normal; } }
+@keyframes birthday-message-to-burst { from { opacity: 1; filter: blur(0); transform: translate(-50%, -50%) scale(1); } to { opacity: 0; filter: blur(5px); transform: translate(-50%, calc(-50% - 22px)) scale(.82); letter-spacing: .1em; } }
+@keyframes birthday-title-from-burst { from { opacity: 0; filter: blur(10px); transform: translate(calc(-50% + var(--title-travel-x)), calc(-50% + var(--title-travel-y))) scale(.64); } 68% { opacity: 1; filter: blur(1px); } to { opacity: 1; filter: blur(0); transform: translate(-50%, -50%) scale(1); } }
+@keyframes birthday-title-line-one { from { opacity: 0; transform: translateY(8px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes birthday-title-line-two { from { opacity: 0; transform: translateY(12px) scale(.94); filter: blur(5px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes birthday-heart-premium-in { from { opacity: 0; filter: blur(4px); transform: translateY(10px) scale(.93); } to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); } }
+@keyframes birthday-center-spark { from { opacity: 0; transform: translateX(-50%) scale(.25); } 55% { opacity: 1; transform: translateX(-50%) scale(1.4); } to { opacity: .7; transform: translateX(-50%) scale(1); } }
+@keyframes birthday-center-stroke { from { width: 0; opacity: 0; } to { width: 3.4em; opacity: .9; } }
+@keyframes birthday-meri-letter { to { opacity: 1; transform: none; } }
+@keyframes birthday-malkin-letter { 0% { opacity: 0; filter: blur(3px); transform: translateY(8px); } 65% { opacity: 1; filter: blur(0); } 100% { opacity: 1; filter: none; transform: none; } }
+@keyframes birthday-signature-flourish { from { width: 0; opacity: 0; } to { width: 4.8em; opacity: 1; } }
+@keyframes birthday-signature-spark { from { opacity: 0; transform: scale(.3); } 55% { opacity: 1; transform: scale(1.5); } to { opacity: .65; transform: scale(1); } }
+@keyframes birthday-malkin-sheen { 0%, 72% { transform: translateX(-135%); opacity: 0; } 78% { opacity: .8; } 94%, 100% { transform: translateX(135%); opacity: 0; } }
+
+@media (max-width: 340px) { .birthday-reveal-hero-balloon { width: clamp(184px, 60vw, 198px); } .birthday-reveal-trail { font-size: 8px; } }
+@media (prefers-reduced-motion: reduce) {
+    .birthday-reveal-burst-message.is-born-from-burst, .birthday-reveal-final.is-born-from-burst { filter: none; animation: none !important; opacity: 1; transform: translate(-50%, -50%); }
+    .birthday-heart-center-letter, .birthday-heart-center-spark { opacity: 1; transform: none; filter: none; animation: none !important; }
+    .birthday-heart-center-stroke, .birthday-heart-center-trace { width: 4.8em; opacity: 1; animation: none !important; }
+    .birthday-reveal-heart.is-center-resolved .birthday-heart-center-malkin::after { animation: none; }
+}
+
+/* Final vertical birthday field: every visible mark is a glyph in a true
+   falling column, with countdown-like depth, spacing, and cyan hierarchy. */
+.birthday-reveal-trail { display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1; white-space: normal; }
+.birthday-reveal-trail i { display: block; min-width: 1ch; font-style: normal; }
+.birthday-reveal-trail-gap { height: .7em; }
+.birthday-reveal-trail:nth-child(3n) { gap: 3px; }
+.birthday-reveal-trail:nth-child(5n) { font-size: clamp(7px, 2vw, 9px); opacity: .12; }
+
+/* The title is measured in this genuine normal-flow slot before it travels
+   from the burst. The resolved heart stage can therefore never overlap it. */
+.birthday-reveal-final.is-title-measuring { position: relative !important; display: block !important; visibility: hidden !important; opacity: 0 !important; transform: none !important; filter: none !important; }
+#birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-stage { justify-content: flex-start; align-items: center; gap: clamp(14px, 2.5vh, 30px); padding-top: max(72px, env(safe-area-inset-top)); padding-bottom: max(42px, env(safe-area-inset-bottom)); }
+#birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-final { position: relative; order: 1; flex: 0 0 auto; margin: 0; text-align: center; }
+#birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-heart { order: 2; flex: 0 0 auto; margin: 0; }
+#birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-heart-advance { order: 3; margin-top: clamp(2px, .8vh, 10px); }
+
+/* Each message word emerges from the single measured burst centre; the lines
+   only form after the individual glyph groups have settled. */
+.birthday-reveal-burst-message .birthday-burst-line { display: flex; justify-content: center; gap: .28em; width: 100%; }
+.birthday-reveal-burst-message .birthday-burst-line + .birthday-burst-line { margin-top: .12em; }
+.birthday-reveal-burst-message .birthday-burst-word { display: inline-block; font-style: normal; }
+.birthday-reveal-burst-message.is-born-from-burst.is-in .birthday-burst-word { animation: birthday-burst-word-in .78s var(--ease-out) calc(var(--word-index) * .1s) both; }
+.birthday-reveal-burst-message.is-born-from-burst.is-out .birthday-burst-word { animation: birthday-burst-word-out .72s ease-in calc((4 - var(--word-index)) * .045s) both; }
+
+/* Smooth SVG heart bodies replace the former polygonal side hearts. */
+.is-heart-balloon { width: var(--size); height: calc(var(--size) * .97) !important; }
+.birthday-side-heart-svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 9px 14px #0308179a); }
+.birthday-side-heart-body { filter: drop-shadow(0 0 8px color-mix(in srgb, var(--c2) 38%, transparent)); }
+.birthday-side-heart-rim { fill: none; stroke: color-mix(in srgb, var(--c2) 75%, #fff); stroke-width: 1.1; opacity: .68; }
+.birthday-side-heart-knot { fill: none; stroke: var(--c2); stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; opacity: .82; }
+.is-heart-balloon .birthday-reveal-balloon-string { top: 88%; left: 50%; height: 46px; background: linear-gradient(#dcfff09e, #dcfff000); }
+.is-heart-balloon .birthday-reveal-balloon-fill { display: none; }
+
+/* Hero effects are one detached layer with deliberate rear/main/front depth. */
+.birthday-balloon-effect.is-hero.is-rear { z-index: 1; opacity: .72; }
+.birthday-balloon-effect.is-hero.is-main { z-index: 3; }
+.birthday-balloon-effect.is-hero.is-front { z-index: 5; filter: brightness(1.15); }
+.birthday-balloon-effect.is-long { opacity: 0; }
+
+/* The real SVG signature path draws left-to-right with its own travelling
+   endpoint light; this replaces the old simple border underline. */
+.birthday-heart-center-trace { display: block; order: 4; width: 5.8em; height: 1.15em; margin-top: -.1em; border: 0; overflow: visible; }
+.birthday-heart-signature-path { fill: none; stroke: #ffe8d6; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; filter: drop-shadow(0 0 3px #eea3bc); }
+.birthday-heart-signature-spark { fill: #fff8e9; opacity: 0; filter: drop-shadow(0 0 4px #ffd6e6); }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-trace { animation: none; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-signature-path { animation: birthday-signature-path .76s ease-out 1.2s both; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-signature-spark { animation: birthday-signature-traveller .76s ease-out 1.2s both; }
+.birthday-reveal-heart.is-center-resolved .birthday-heart-signature-path { stroke-dashoffset: 0; }
+.birthday-reveal-heart.is-center-resolved .birthday-heart-signature-spark { opacity: .68; }
+.birthday-heart-center-malkin .birthday-heart-center-letter { transform: translateY(10px) scale(.86); filter: blur(8px); text-shadow: 0 2px 7px #173b5366, 0 0 11px #e495aa50; }
+
+@keyframes birthday-burst-word-in { from { opacity: 0; filter: blur(9px); transform: translateY(8px) rotate(-3deg) scale(.64); } to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes birthday-burst-word-out { from { opacity: 1; filter: blur(0); transform: none; } to { opacity: 0; filter: blur(4px); transform: translateY(-13px) rotate(1deg) scale(.9); } }
+@keyframes birthday-signature-path { to { stroke-dashoffset: 0; } }
+@keyframes birthday-signature-traveller { 0% { opacity: 0; transform: translateX(-114px) scale(.3); } 18% { opacity: 1; } 84% { opacity: 1; } 100% { opacity: .72; transform: translateX(0) scale(1.2); } }
+
+@media (max-height: 640px) {
+    #birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-stage { padding-top: max(54px, env(safe-area-inset-top)); gap: 14px; }
+    #birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-final { font-size: clamp(1.5rem, 5vw, 2.1rem); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .birthday-reveal-trail { opacity: .1; animation: none; }
+    .birthday-heart-signature-path { stroke-dashoffset: 0; }
+    .birthday-heart-signature-spark { opacity: .65; }
+}
+
+/* Reference-derived celebration layer: a single canvas controller owns the
+   persistent vertical HAPPYBIRTHDAYBIWI field, independent of countdown. */
+.birthday-reveal-rain { position: absolute; inset: 0; z-index: 1; display: block; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity .36s ease; }
+#birthday-reveal.has-birthday-rain .birthday-reveal-rain { opacity: 1; }
+.birthday-hero-burst { position: absolute; inset: 0; z-index: 2; display: block; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.birthday-reference-hero { position: absolute; inset: 0; z-index: 2; display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; pointer-events: none; }
+.birthday-reference-hero[hidden] { display: none; }
+
+/* Measured tracks travel to an asymmetric apex before their gravity-led exit.
+   This replaces the old evenly spaced/radial hero burst only. */
+.birthday-balloon-effect.is-hero.is-reference-track { opacity: 0; animation: birthday-reference-burst var(--motion-duration) cubic-bezier(.16,.72,.23,1) var(--motion-delay) both; }
+@keyframes birthday-reference-burst {
+    0% { opacity: 0; transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(.28); }
+    7% { opacity: 1; transform: translate(-50%, -50%) translate(var(--motion-mid-x), var(--motion-mid-y)) rotate(calc(var(--effect-rotate) * .24)) scale(.9); }
+    38% { opacity: 1; transform: translate(-50%, -50%) translate(var(--motion-apex-x), var(--motion-apex-y)) rotate(var(--effect-rotate)) scale(1); }
+    82% { opacity: .82; transform: translate(-50%, -50%) translate(var(--motion-end-x), var(--motion-end-y)) rotate(calc(var(--effect-rotate) * 1.65)) scale(.9); }
+    100% { opacity: 0; transform: translate(-50%, -50%) translate(var(--motion-end-x), calc(var(--motion-end-y) + 34px)) rotate(calc(var(--effect-rotate) * 1.9)) scale(.78); }
+}
+
+/* The message retains its exact copy while each word follows the measured
+   inward settling offsets saved in birthday-celebration-motion.js. */
+.birthday-reveal-burst-message.is-born-from-burst.is-in .birthday-burst-word { animation: birthday-reference-word-in .78s var(--ease-out) var(--word-delay) both; }
+.birthday-reveal-burst-message.is-born-from-burst.is-out .birthday-burst-word { animation: birthday-reference-word-out .72s ease-in var(--word-delay) both; }
+@keyframes birthday-reference-word-in { from { opacity: 0; filter: blur(9px); transform: translate(var(--word-from-x), var(--word-from-y)) rotate(var(--word-rotate)) scale(.64); } to { opacity: 1; filter: none; transform: translate(0, 0) rotate(0) scale(1); } }
+@keyframes birthday-reference-word-out { from { opacity: 1; filter: none; transform: translate(0, 0) scale(1); } to { opacity: 0; filter: blur(5px); transform: translate(0, -22px) scale(.82); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .birthday-reveal-rain { opacity: .55; }
+    .birthday-balloon-effect.is-hero.is-reference-track, .birthday-reveal-burst-message.is-born-from-burst.is-in .birthday-burst-word { animation: none; opacity: 1; transform: translate(-50%, -50%); filter: none; }
+}
+
+/* Compressed reference burst: 64 deliberate instances share the measured
+   trajectory families. The sizing tiers preserve the source's rich foreground
+   composition without introducing arbitrary radial confetti. */
+.birthday-balloon-effect.is-hero.is-reference-track { width: var(--piece-size); height: var(--piece-size); box-sizing: border-box; }
+.birthday-balloon-effect.is-reference-track.is-large { filter: brightness(1.14) saturate(1.05) drop-shadow(0 4px 6px #060b2070); }
+.birthday-balloon-effect.is-reference-track.is-medium { filter: brightness(1.04) drop-shadow(0 2px 4px #06102570); }
+.birthday-balloon-effect.is-reference-track.is-small { filter: brightness(.95); }
+.birthday-balloon-effect.is-reference-track.is-rose-cluster { border-radius: 48% 52% 47% 53%; background: radial-gradient(circle at 50% 50%, #fff5df 0 10%, #e998b0 12% 28%, transparent 29%), radial-gradient(circle at 29% 35%, #ffd7e0 0 24%, #c96389 25% 45%, transparent 46%), radial-gradient(circle at 70% 35%, #ffe2e8 0 24%, #c96389 25% 45%, transparent 46%), radial-gradient(circle at 38% 70%, #f7b6c6 0 23%, #a84970 24% 44%, transparent 45%), radial-gradient(circle at 64% 70%, #f7b6c6 0 23%, #a84970 24% 44%, transparent 45%); box-shadow: 0 0 15px #ef9bb37c; }
+.birthday-balloon-effect.is-reference-track.is-jasmine { border-radius: 50%; background: radial-gradient(circle, #f4b96b 0 13%, transparent 14%), radial-gradient(ellipse at 50% 17%, #fffaf0 0 29%, transparent 31%), radial-gradient(ellipse at 83% 50%, #fff9ed 0 29%, transparent 31%), radial-gradient(ellipse at 50% 83%, #fff9ed 0 29%, transparent 31%), radial-gradient(ellipse at 17% 50%, #fff9ed 0 29%, transparent 31%), radial-gradient(ellipse at 26% 25%, #fff4e8 0 27%, transparent 29%), radial-gradient(ellipse at 74% 25%, #fff4e8 0 27%, transparent 29%), radial-gradient(ellipse at 26% 75%, #fff4e8 0 27%, transparent 29%), radial-gradient(ellipse at 74% 75%, #fff4e8 0 27%, transparent 29%); filter: drop-shadow(0 0 7px #fff0d18c); }
+.birthday-balloon-effect.is-reference-track.is-petal-cluster { border-radius: 56% 44% 60% 40%; background: radial-gradient(ellipse at 50% 50%, #ffe5ed 0 15%, transparent 17%), radial-gradient(ellipse at 27% 35%, #f7b4c6 0 32%, transparent 34%), radial-gradient(ellipse at 73% 35%, #f6aec2 0 32%, transparent 34%), radial-gradient(ellipse at 38% 72%, #e789a5 0 32%, transparent 34%), radial-gradient(ellipse at 66% 72%, #e789a5 0 32%, transparent 34%); box-shadow: 0 0 12px #f29bb77d; }
+.birthday-balloon-effect.is-reference-track.is-flower { border-radius: 50%; background: radial-gradient(circle at 50% 50%, #f3b664 0 12%, transparent 14%), radial-gradient(ellipse at 50% 22%, #fff5ed 0 29%, transparent 31%), radial-gradient(ellipse at 78% 50%, #f8c7d4 0 29%, transparent 31%), radial-gradient(ellipse at 50% 78%, #f5aabd 0 29%, transparent 31%), radial-gradient(ellipse at 22% 50%, #ffe5eb 0 29%, transparent 31%); box-shadow: 0 0 10px #ffdbe480; }
+.birthday-balloon-effect.is-reference-track.is-petal { border-radius: 70% 24% 70% 24%; background: linear-gradient(145deg, #fff2f3, #ed9fb8 54%, #ab5579); box-shadow: 0 0 7px #f5a9bd8a; }
+.birthday-balloon-effect.is-reference-track.is-pearl { border-radius: 50%; background: radial-gradient(circle at 31% 25%, #fffdf4 0 12%, #fff0d8 22%, #d9a980 67%, #986e5e); box-shadow: 0 0 10px #ffe4c699; }
+.birthday-balloon-effect.is-reference-track.is-heart { width: var(--piece-size); height: var(--piece-size); border-radius: 0; clip-path: polygon(50% 91%, 9% 56%, 3% 31%, 15% 10%, 33% 7%, 50% 25%, 67% 7%, 85% 10%, 97% 31%, 91% 56%); background: radial-gradient(circle at 33% 22%, #ffe8ef, #f29ab7 48%, #a84d72); box-shadow: 0 0 9px #f098b778; }
+.birthday-balloon-effect.is-reference-track.is-heart::before, .birthday-balloon-effect.is-reference-track.is-heart::after { display: none; }
+.birthday-balloon-effect.is-reference-track.is-ribbon { width: var(--piece-short-side); height: var(--piece-size); border-radius: 60% 40% 55% 45%; background: linear-gradient(90deg, #fff5e8, #f2a4bf 34%, #9adbe1 68%, #d27d9d); box-shadow: 0 0 7px #efabc078; }
+.birthday-balloon-effect.is-reference-track.is-streak { width: var(--piece-size); height: var(--piece-thin-side); border-radius: 999px; background: linear-gradient(90deg, transparent, #fff8df, #aeeef0 62%, transparent); box-shadow: 0 0 10px #baf9f4a8; }
+.birthday-balloon-effect.is-reference-track.is-star, .birthday-balloon-effect.is-reference-track.is-spark { border-radius: 0; background: #fff3c5; box-shadow: 0 0 10px #ffe7a9; clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); }
+.birthday-balloon-effect.is-reference-track.is-spark { background: #d9ffff; box-shadow: 0 0 10px #c5ffff; }
+.birthday-balloon-effect.is-hero.is-reference-track.is-long-fall { animation-duration: var(--motion-duration); }
+
+/* A restrained rupture cue keeps the flash materially connected to the
+   expanding objects: cyan/ivory core, rose rim, and four short light streaks. */
+.birthday-burst-shock { position: absolute; z-index: 4; width: 18px; height: 18px; border: 2px solid #ffd9de; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, #fffdf2 0 13%, #cfffffbb 26%, #ee9bb260 43%, transparent 70%); box-shadow: 0 0 18px 8px #d6ffff88, 0 0 28px 12px #ed9db450; animation: birthday-burst-shock .34s ease-out both; }
+.birthday-burst-shock i { position: absolute; top: 50%; left: 50%; width: 32px; height: 2px; border-radius: 99px; background: linear-gradient(90deg, #fff9e3, #9cecf0, transparent); transform-origin: 0 50%; opacity: .9; }
+.birthday-burst-shock i:nth-child(1) { transform: rotate(18deg); }.birthday-burst-shock i:nth-child(2) { transform: rotate(108deg); }.birthday-burst-shock i:nth-child(3) { transform: rotate(198deg); }.birthday-burst-shock i:nth-child(4) { transform: rotate(288deg); }
+@keyframes birthday-burst-shock { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.24); } 35% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(4.3); } }
+
+/* Text remains embedded in the living burst: the whole two-line form settles
+   below the source while its five words retain distinct measured vectors. */
+.birthday-reveal-burst-message.is-born-from-burst { --message-settle-y: clamp(48px, 8svh, 72px); color: #fff8ed; font-family: var(--font-display); font-weight: 600; text-shadow: 0 2px 10px #4bc6d477, 0 0 17px #e790aa63; }
+.birthday-reveal-burst-message.is-born-from-burst.is-in { animation: birthday-message-embedded-in .82s var(--ease-out) both; }
+.birthday-reveal-burst-message.is-born-from-burst.is-out { animation: birthday-message-embedded-out .64s ease-in both; }
+.birthday-reveal-burst-message.is-born-from-burst::before { inset: -31% -13%; background: radial-gradient(circle, #fff6df87 0, #f0a6bc3b 33%, #76e5ea1f 56%, transparent 74%); }
+.birthday-reveal-burst-message .birthday-burst-word { position: relative; }
+.birthday-reveal-burst-message.is-born-from-burst.is-in .birthday-burst-word { animation: birthday-reference-word-in .64s var(--ease-out) var(--word-delay) both; }
+.birthday-reveal-burst-message.is-born-from-burst.is-out .birthday-burst-word { animation: birthday-reference-word-out .62s ease-in var(--word-delay) both; }
+.birthday-reveal-burst-message.is-born-from-burst.is-out .birthday-burst-word::after { content: ''; position: absolute; left: 18%; right: 18%; bottom: -.17em; height: 1px; opacity: 0; background: linear-gradient(90deg, transparent, #d9ffff, #ffd4de, transparent); box-shadow: 0 0 7px #b9ffff; animation: birthday-word-trace .44s ease-out var(--word-delay) both; }
+@keyframes birthday-message-embedded-in { from { opacity: 0; filter: blur(8px); transform: translate(-50%, -50%) scale(.58); } 64% { opacity: 1; filter: blur(1px); transform: translate(-50%, calc(-50% + var(--message-settle-y) - 5px)) scale(1.02); } to { opacity: 1; filter: none; transform: translate(-50%, calc(-50% + var(--message-settle-y))) scale(1); } }
+@keyframes birthday-message-embedded-out { from { opacity: 1; filter: none; transform: translate(-50%, calc(-50% + var(--message-settle-y))) scale(1); } to { opacity: 0; filter: blur(5px); transform: translate(-50%, calc(-50% + var(--message-settle-y) - 17px)) scale(.9); } }
+@keyframes birthday-reference-word-out { from { opacity: 1; filter: none; transform: translate(0, 0) scale(1); } to { opacity: 0; filter: blur(4px); transform: translate(calc(var(--word-from-x) * -.12), -15px) rotate(calc(var(--word-rotate) * -.45)) scale(.87); } }
+@keyframes birthday-word-trace { 0% { opacity: 0; transform: scaleX(.25); } 38% { opacity: .85; } 100% { opacity: 0; transform: translateY(-9px) scaleX(.58); } }
+
+/* The title picks up a final residual pulse at the same source before the
+   normal-flow title settles; its two existing line delays remain intact. */
+.birthday-reveal-final.is-born-from-burst.is-in::before { content: ''; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; border-radius: 50%; pointer-events: none; background: #fff9e7; box-shadow: 0 0 12px 5px #d9ffff, 0 0 26px 9px #ec9db7; animation: birthday-title-residual .42s ease-out both; }
+@keyframes birthday-title-residual { from { opacity: 0; transform: translate(-50%, -50%) scale(.2); } 35% { opacity: .9; } to { opacity: 0; transform: translate(-50%, -50%) scale(3.6); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .birthday-burst-shock, .birthday-reveal-burst-message.is-born-from-burst.is-in, .birthday-reveal-burst-message.is-born-from-burst.is-out { animation: none; }
+}
+
+/* The rich reference field has an impulse, a visible settle, then a staggered
+   exit. Fifty-four instances remain around the temporary greeting. */
+.birthday-balloon-effect.is-hero.is-reference-track.is-persistent { animation: birthday-persistent-celebration var(--motion-duration) cubic-bezier(.18,.7,.2,1) var(--motion-delay) both; }
+@keyframes birthday-persistent-celebration {
+    0% { opacity: 0; transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(.24); }
+    10% { opacity: 1; transform: translate(-50%, -50%) translate(var(--motion-mid-x), var(--motion-mid-y)) rotate(calc(var(--effect-rotate) * .2)) scale(.82); }
+    22% { opacity: 1; transform: translate(-50%, -50%) translate(var(--motion-apex-x), var(--motion-apex-y)) rotate(calc(var(--effect-rotate) * .7)) scale(1); }
+    31% { opacity: var(--depth-opacity, .9); transform: translate(-50%, -50%) translate(var(--motion-settle-x), var(--motion-settle-y)) rotate(var(--effect-rotate)) scale(1); }
+    70% { opacity: var(--depth-opacity, .9); transform: translate(-50%, -50%) translate(calc(var(--motion-settle-x) + 7px), calc(var(--motion-settle-y) + 12px)) rotate(calc(var(--effect-rotate) + 16deg)) scale(.98); }
+    100% { opacity: 0; transform: translate(-50%, -50%) translate(var(--motion-exit-x), var(--motion-exit-y)) rotate(calc(var(--effect-rotate) + 68deg)) scale(.86); }
+}
+.birthday-balloon-effect.is-reference-track.is-rear { --depth-opacity: .56; }.birthday-balloon-effect.is-reference-track.is-main { --depth-opacity: .84; }.birthday-balloon-effect.is-reference-track.is-front { --depth-opacity: 1; }
+
+/* Recognizable CSS celebration objects: the field has flowers, chocolates,
+   gifts, horns, sweets, lollipops, bows, hearts, ribbons and light details. */
+.birthday-balloon-effect.is-reference-track.is-chocolate { border-radius: 18%; background: linear-gradient(135deg, #7d4b3f 0 12%, #3c1e20 13% 54%, #785042 55% 67%, #2c1619 68%); box-shadow: inset 4px 4px 6px #c8926b3d, inset -4px -4px 6px #1206088a, 0 0 7px #4c212d76; }
+.birthday-balloon-effect.is-reference-track.is-gift { border-radius: 9%; background: linear-gradient(90deg, transparent 42%, #fff0c9 43% 57%, transparent 58%), linear-gradient(#d996aa 0 43%, #fff0c9 44% 56%, #b76989 57%); box-shadow: 0 4px 8px #210e1a73, inset 0 1px #ffeef375; }
+.birthday-balloon-effect.is-reference-track.is-gift::before { content: ''; position: absolute; left: 50%; top: -13%; width: 36%; height: 29%; border: max(2px, var(--piece-thin-side)) solid #ffe9c8; border-radius: 75% 75% 12% 12%; transform: translateX(-50%); }
+.birthday-balloon-effect.is-reference-track.is-party-horn { width: var(--piece-size); height: var(--piece-short-side); clip-path: polygon(0 22%, 76% 0, 100% 50%, 76% 100%, 0 78%, 14% 50%); border-radius: 50%; background: linear-gradient(90deg, #f8bbca, #fef4d6 30%, #72d2d9 58%, #a35e86); box-shadow: 0 0 8px #f6bed07a; }
+.birthday-balloon-effect.is-reference-track.is-wrapped-candy { width: var(--piece-size); height: var(--piece-short-side); border-radius: 46%; background: repeating-linear-gradient(135deg, #e883a6 0 22%, #fff0d8 23% 42%, #73d4d7 43% 62%); box-shadow: 0 0 7px #f8adc17d; }
+.birthday-balloon-effect.is-reference-track.is-wrapped-candy::before, .birthday-balloon-effect.is-reference-track.is-wrapped-candy::after { content: ''; position: absolute; top: 18%; width: 24%; height: 64%; background: inherit; filter: brightness(.85); }.birthday-balloon-effect.is-reference-track.is-wrapped-candy::before { left: -16%; clip-path: polygon(100% 0, 0 24%, 0 76%, 100% 100%); }.birthday-balloon-effect.is-reference-track.is-wrapped-candy::after { right: -16%; clip-path: polygon(0 0, 100% 24%, 100% 76%, 0 100%); }
+.birthday-balloon-effect.is-reference-track.is-lollipop { border-radius: 50%; background: repeating-conic-gradient(from 15deg, #f9c2d1 0 12deg, #fff1d6 13deg 25deg, #93dfe0 26deg 37deg); box-shadow: 0 0 8px #ffd4de9a; }
+.birthday-balloon-effect.is-reference-track.is-lollipop::after { content: ''; position: absolute; z-index: -1; width: max(2px, var(--piece-thin-side)); height: 88%; left: 58%; top: 72%; background: linear-gradient(#fff8e6, #d6bfa7); transform: rotate(17deg); transform-origin: top; }
+.birthday-balloon-effect.is-reference-track.is-bow { border-radius: 45%; background: radial-gradient(circle at 50% 50%, #fff3d7 0 13%, #d67d9c 14% 28%, transparent 30%), radial-gradient(ellipse at 20% 48%, #f7b2c6 0 45%, transparent 47%), radial-gradient(ellipse at 80% 48%, #85d9dd 0 45%, transparent 47%); filter: drop-shadow(0 0 7px #f3b4c27a); }
+
+/* Reference greeting: the whole two-line composition is briefly perceptible
+   at 11% scale, then grows as one premium title inside the celebration field. */
+.birthday-reveal-burst-message.is-born-from-burst { --message-settle-y: clamp(44px, 7svh, 66px); font-family: var(--font-display); font-size: clamp(1.62rem, 7.2vw, 2.52rem); font-weight: 600; letter-spacing: .012em; text-shadow: 0 3px 7px #241222b5, 0 0 14px #e4abbd75; }
+.birthday-reveal-burst-message.is-born-from-burst span { color: #fff4d8; font-size: .72em; letter-spacing: .09em; }.birthday-reveal-burst-message.is-born-from-burst strong { background: linear-gradient(105deg, #fff7e7 5%, #e7b16d 40%, #ffe6ed 65%, #fff7e7 95%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 2px 8px #2d1720ac, 0 0 15px #f2b1c276; }
+.birthday-reveal-burst-message.is-born-from-burst.is-in { animation: birthday-reference-greeting-grow .68s cubic-bezier(.18,.86,.25,1) both; }
+.birthday-reveal-burst-message.is-born-from-burst.is-out { animation: birthday-reference-greeting-out .58s ease-in both; }
+.birthday-reveal-burst-message.is-born-from-burst.is-in .birthday-burst-word, .birthday-reveal-burst-message.is-born-from-burst.is-out .birthday-burst-word { animation: none; opacity: 1; filter: none; transform: none; }
+.birthday-reveal-burst-message.is-born-from-burst.is-out .birthday-burst-word::after { display: none; }
+@keyframes birthday-reference-greeting-grow { 0% { opacity: .18; filter: blur(5px); transform: translate(-50%, -50%) scale(.11); } 58% { opacity: 1; filter: blur(.5px); transform: translate(-50%, calc(-50% + var(--message-settle-y) - 3px)) scale(1.035); } 100% { opacity: 1; filter: none; transform: translate(-50%, calc(-50% + var(--message-settle-y))) scale(1); } }
+@keyframes birthday-reference-greeting-out { from { opacity: 1; filter: none; transform: translate(-50%, calc(-50% + var(--message-settle-y))) scale(1); } to { opacity: 0; filter: blur(4px); transform: translate(-50%, calc(-50% + var(--message-settle-y) - 15px)) scale(.88); } }
+.birthday-greeting-accent { position: absolute; z-index: 5; width: 4px; height: 4px; border-radius: 50%; background: #fff3c9; box-shadow: 0 0 8px 2px #ffe7aa, 0 0 11px #b9ffff; pointer-events: none; animation: birthday-greeting-accent 1.55s ease-out var(--accent-delay) both; }
+@keyframes birthday-greeting-accent { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.25); } 32% { opacity: .95; transform: translate(calc(-50% + var(--accent-x)), calc(-50% + var(--accent-y))) scale(1); } 75% { opacity: .72; } 100% { opacity: 0; transform: translate(calc(-50% + var(--accent-x)), calc(-50% + var(--accent-y) - 9px)) scale(.65); } }
+
+/* Final reference-informed correction: a contained champagne wash and a
+   three-phase persistent field keep the birthday centre alive through the
+   complete temporary greeting without changing the midnight base scene. */
+.birthday-celebration-wash { position: absolute; z-index: 0; inset: -13%; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at 50% 46%, #fff6d9a8 0 13%, #f8d5bc62 31%, #aeeff02c 53%, transparent 72%), radial-gradient(ellipse at 50% 54%, #f4a8bd28, transparent 62%); filter: blur(8px); animation: birthday-celebration-wash 4.35s ease-out both; }
+@keyframes birthday-celebration-wash { 0%, 5% { opacity: 0; transform: scale(.72); } 18% { opacity: .78; transform: scale(1); } 54% { opacity: .72; transform: scale(1.06); } 78% { opacity: .33; } 100% { opacity: 0; transform: scale(1.14); } }
+
+.birthday-balloon-effect.is-hero.is-reference-track.is-persistent { animation: birthday-persistent-celebration var(--motion-duration) cubic-bezier(.17,.74,.22,1) var(--motion-delay) both; }
+@keyframes birthday-persistent-celebration {
+    0% { opacity: 0; transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(.26); }
+    8% { opacity: .92; transform: translate(-50%, -50%) translate(var(--motion-mid-x), var(--motion-mid-y)) rotate(calc(var(--effect-rotate) * .16)) scale(.76); }
+    15% { opacity: 1; transform: translate(-50%, -50%) translate(var(--motion-apex-x), var(--motion-apex-y)) rotate(calc(var(--effect-rotate) * .48)) scale(1); }
+    17% { opacity: var(--depth-opacity, .9); transform: translate(-50%, -50%) translate(var(--motion-settle-x), var(--motion-settle-y)) rotate(calc(var(--effect-rotate) * .72)) scale(1); }
+    58% { opacity: var(--depth-opacity, .9); transform: translate(-50%, -50%) translate(calc(var(--motion-settle-x) + 5px), calc(var(--motion-settle-y) + 9px)) rotate(calc(var(--effect-rotate) + 15deg)) scale(.985); }
+    76% { opacity: var(--depth-opacity, .9); transform: translate(-50%, -50%) translate(calc(var(--motion-settle-x) + 11px), calc(var(--motion-settle-y) + 42px)) rotate(calc(var(--effect-rotate) + 29deg)) scale(.96); }
+    100% { opacity: 0; transform: translate(-50%, -50%) translate(var(--motion-exit-x), var(--motion-exit-y)) rotate(calc(var(--effect-rotate) + 64deg)) scale(.84); }
+}
+.birthday-balloon-effect.is-reference-track.is-rear { --depth-opacity: .78; }
+.birthday-balloon-effect.is-reference-track.is-main { --depth-opacity: .90; }
+.birthday-balloon-effect.is-reference-track.is-front { --depth-opacity: 1; }
+
+/* The whole message is one small-to-large composition: its children never
+   counter-scale or fly independently. */
+.birthday-reveal-burst-message.is-born-from-burst { --message-settle-y: clamp(36px, 6.4svh, 58px); width: min(94vw, 580px); font-family: var(--font-display); font-size: clamp(2.05rem, 9.8vw, 3.55rem); font-weight: 700; line-height: .92; letter-spacing: -.018em; text-align: center; }
+.birthday-reveal-burst-message.is-born-from-burst .birthday-burst-line { display: flex; justify-content: center; width: 100%; }
+.birthday-reveal-burst-message.is-born-from-burst .birthday-burst-line:first-child { gap: .18em; font-size: 1.13em !important; color: transparent; letter-spacing: -.038em; background: linear-gradient(180deg, #fffdf1 0 12%, #f8e6bc 20%, #d7a45d 51%, #fff1cd 72%, #c18442 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-stroke: .35px #fff8df8c; text-shadow: 0 -1px 0 #fff8e9, 0 2px 0 #573321, 0 4px 0 #3c231b, 0 7px 10px #1e1216b8, 0 0 16px #e99aaa73; }
+.birthday-reveal-burst-message.is-born-from-burst strong.birthday-burst-line { gap: .20em; margin-top: .20em; font-family: Georgia, 'Times New Roman', serif; font-size: .55em; font-style: italic; font-weight: 600; letter-spacing: .035em; color: #fff1d8; text-shadow: 0 -1px 0 #fff8e9, 0 2px 0 #5b3525, 0 5px 10px #20131ab8, 0 0 14px #e49ab273; }
+.birthday-reveal-burst-message.is-born-from-burst.is-in { animation: birthday-reference-greeting-grow .78s cubic-bezier(.18,.86,.25,1) both; }
+.birthday-reveal-burst-message.is-born-from-burst.is-out { animation: birthday-reference-greeting-out .56s ease-in both; }
+.birthday-reveal-burst-message.is-born-from-burst.is-in .birthday-burst-word, .birthday-reveal-burst-message.is-born-from-burst.is-out .birthday-burst-word { animation: none !important; opacity: 1; filter: none; transform: none; }
+@keyframes birthday-reference-greeting-grow { 0% { opacity: .15; filter: blur(5px); transform: translate(-50%, -50%) scale(.11); } 20% { opacity: .45; filter: blur(4px); transform: translate(-50%, calc(-50% + 12px)) scale(.25); } 55% { opacity: .9; filter: blur(1px); transform: translate(-50%, calc(-50% + 36px)) scale(.70); } 82% { opacity: 1; filter: blur(0); transform: translate(-50%, calc(-50% + var(--message-settle-y) - 2px)) scale(1.035); } 100% { opacity: 1; filter: none; transform: translate(-50%, calc(-50% + var(--message-settle-y))) scale(1); } }
+@keyframes birthday-reference-greeting-out { from { opacity: 1; filter: none; transform: translate(-50%, calc(-50% + var(--message-settle-y))) scale(1); } to { opacity: 0; filter: blur(4px); transform: translate(-50%, calc(-50% + var(--message-settle-y) - 15px)) scale(.88); } }
+.birthday-greeting-accent { background: #fff4ca; box-shadow: 0 0 7px 2px #ffe6a9, 0 0 11px #d4fbff; }
+
+/* Final scoped celebration pass: retain the midnight scene, make Diamond
+   Shine dominant, and keep all new animation local to the reveal layer. */
+.birthday-reveal-hero-balloon { width: clamp(220px, 66vw, 268px); }
+.birthday-reveal-hero-balloon svg { filter: drop-shadow(0 20px 24px #020b21a8) drop-shadow(0 0 30px #7aeaf06b); }
+.birthday-reveal-hero-rim { stroke-width: 1.8; filter: drop-shadow(0 0 4px #d9ffff90); }
+.birthday-reveal-hero-copy { filter: drop-shadow(0 2px 3px #071226) drop-shadow(0 0 5px #fff2d080); }
+.birthday-reveal-hero-copy text { fill: #fff8df; font-weight: 700; letter-spacing: .025em; }
+.birthday-reveal-arrow-launcher, .birthday-reveal-bow-launcher { transform: scale(1.08); transform-origin: center; }
+@media (max-width: 340px) { .birthday-reveal-hero-balloon { width: clamp(212px, 66vw, 228px); } }
+
+/* No wash, fog plate, or broad halo behind the temporary greeting. */
+.birthday-celebration-wash { display: none !important; }
+.birthday-reveal-burst-message.is-born-from-burst::before { content: none !important; }
+
+/* Centre-origin burst: first impulse lands at 320ms, then a 1.05s slow drift
+   continues outward before gravity and small lateral drift take over. */
+.birthday-balloon-effect.is-hero.is-reference-track {
+    width: var(--piece-size); height: var(--piece-size); opacity: 0;
+    animation: birthday-romantic-centre-burst var(--motion-duration) cubic-bezier(.18,.72,.22,1) var(--motion-delay) both !important;
+}
+@keyframes birthday-romantic-centre-burst {
+    0% { opacity: 0; transform: translate(-50%, -50%) translate3d(0, 0, 0) rotate(0deg) scale(.12); }
+    4% { opacity: .96; transform: translate(-50%, -50%) translate3d(var(--motion-impulse-x), var(--motion-impulse-y), 0) rotate(calc(var(--effect-rotate) * .12)) scale(.48); }
+    10% { opacity: var(--depth-opacity, .95); transform: translate(-50%, -50%) translate3d(var(--motion-mid-x), var(--motion-mid-y), 0) rotate(calc(var(--effect-rotate) * .35)) scale(.78); }
+    25% { opacity: var(--depth-opacity, .95); transform: translate(-50%, -50%) translate3d(var(--motion-slow-x), var(--motion-slow-y), 0) rotate(calc(var(--effect-rotate) * .62)) scale(1); }
+    44% { opacity: var(--depth-opacity, .95); transform: translate(-50%, -50%) translate3d(var(--motion-apex-x), var(--motion-apex-y), 0) rotate(calc(var(--effect-rotate) * .88)) scale(1); }
+    70% { opacity: var(--depth-opacity, .95); transform: translate(-50%, -50%) translate3d(var(--motion-drift-x), var(--motion-drift-y), 0) rotate(calc(var(--effect-rotate) + 22deg)) scale(.96); }
+    89% { opacity: .78; transform: translate(-50%, -50%) translate3d(calc(var(--motion-end-x) - 6px), calc(var(--motion-end-y) - 34px), 0) rotate(calc(var(--effect-rotate) + 48deg)) scale(.88); }
+    100% { opacity: 0; transform: translate(-50%, -50%) translate3d(var(--motion-end-x), var(--motion-end-y), 0) rotate(calc(var(--effect-rotate) + 72deg)) scale(.76); }
+}
+
+/* The rupture is built while the hero waits. The cache stays non-clipping and
+   inert until one container class activates the precomputed transforms. */
+.birthday-hero-burst-cache { position: absolute; inset: 0; overflow: visible; pointer-events: none; contain: layout style; }
+.birthday-hero-burst-cache .is-prebuilt { visibility: hidden; animation: none !important; will-change: auto; }
+.birthday-hero-burst-cache.is-active .is-prebuilt { visibility: visible; will-change: transform, opacity; }
+.birthday-hero-burst-cache.is-active .birthday-balloon-effect.is-hero.is-reference-track { animation: birthday-romantic-centre-burst var(--motion-duration) cubic-bezier(.18,.72,.22,1) var(--motion-delay) both !important; }
+.birthday-hero-burst-cache.is-active .birthday-burst-shock { animation: birthday-burst-shock .34s ease-out both !important; }
+
+/* The temporary burst retains its flowers, sweets and palette, without the
+   per-piece compositing filters and shadows that stall lower-end GPUs. */
+.birthday-hero-burst-cache .birthday-balloon-effect.is-reference-track,
+.birthday-hero-burst-cache .birthday-balloon-effect.is-reference-track.is-large,
+.birthday-hero-burst-cache .birthday-balloon-effect.is-reference-track.is-medium,
+.birthday-hero-burst-cache .birthday-balloon-effect.is-reference-track.is-small,
+.birthday-hero-burst-cache .birthday-balloon-effect.is-reference-track.is-jasmine,
+.birthday-hero-burst-cache .birthday-balloon-effect.is-reference-track.is-bow { filter: none !important; box-shadow: none !important; }
+.birthday-hero-burst-cache .birthday-balloon-effect.is-reference-track::before,
+.birthday-hero-burst-cache .birthday-balloon-effect.is-reference-track::after { filter: none !important; box-shadow: none !important; }
+
+/* One complete two-line greeting follows a restrained orbital curve rather
+   than a generic fade or independent word assembly. */
+.birthday-reveal-burst-message.is-born-from-burst {
+    --message-settle-y: clamp(34px, 6vh, 56px); font-size: clamp(2rem, 9.4vw, 3.35rem);
+    color: #fff3d4; text-shadow: 0 1px 0 #fff8e8, 0 3px 7px #351d20d9, 0 0 12px #d991aa72;
+}
+.birthday-reveal-burst-message.is-born-from-burst.is-in { animation: birthday-greeting-orbit .86s cubic-bezier(.15,.84,.22,1) both !important; }
+.birthday-reveal-burst-message.is-born-from-burst.is-out { animation: birthday-greeting-orbit-out .56s ease-in both !important; }
+.birthday-reveal-burst-message.is-born-from-burst .birthday-burst-word { animation: none !important; opacity: 1; filter: none; transform: none; }
+@keyframes birthday-greeting-orbit {
+    0% { opacity: 0; filter: blur(6px); transform: translate(calc(-50% - 13px), calc(-50% + 17px)) rotate(-104deg) scale(.12); }
+    32% { opacity: .68; filter: blur(3px); transform: translate(calc(-50% + 20px), calc(-50% - 9px)) rotate(-49deg) scale(.39); }
+    64% { opacity: 1; filter: blur(1px); transform: translate(calc(-50% - 6px), calc(-50% + var(--message-settle-y) - 7px)) rotate(-14deg) scale(.83); }
+    84% { opacity: 1; filter: none; transform: translate(calc(-50% + 2px), calc(-50% + var(--message-settle-y) - 2px)) rotate(2deg) scale(1.025); }
+    100% { opacity: 1; filter: none; transform: translate(-50%, calc(-50% + var(--message-settle-y))) rotate(0) scale(1); }
+}
+@keyframes birthday-greeting-orbit-out { from { opacity: 1; transform: translate(-50%, calc(-50% + var(--message-settle-y))) scale(1); } to { opacity: 0; filter: blur(3px); transform: translate(calc(-50% + 4px), calc(-50% + var(--message-settle-y) - 19px)) rotate(-3deg) scale(.91); } }
+.birthday-greeting-accent { background: #fff2c5; box-shadow: 0 0 7px 2px #ffdca2, 0 0 10px #c989a0; animation: birthday-greeting-orbit-accent 1.28s ease-out var(--accent-delay) both !important; }
+@keyframes birthday-greeting-orbit-accent { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.15); } 38% { opacity: .92; transform: translate(calc(-50% + var(--accent-x) * .68), calc(-50% + var(--accent-y) * .68 - 7px)) scale(1); } 74% { opacity: .6; transform: translate(calc(-50% + var(--accent-x)), calc(-50% + var(--accent-y))) scale(.8); } 100% { opacity: 0; transform: translate(calc(-50% + var(--accent-x)), calc(-50% + var(--accent-y) - 11px)) scale(.45); } }
+
+/* Every permanent-title glyph owns a unique, fixed vector and shuffled delay. */
+.birthday-title-character { display: inline-block; font-style: normal; opacity: 1; }
+.birthday-title-space { display: inline-block; width: .25em; }
+.birthday-reveal-final.is-born-from-burst.is-assembling .birthday-reveal-title-prefix,
+.birthday-reveal-final.is-born-from-burst.is-assembling .birthday-reveal-title-name { opacity: 1; filter: none; transform: none; animation: none !important; }
+.birthday-reveal-final.is-born-from-burst.is-assembling .birthday-title-character { opacity: 0; animation: birthday-title-character-arrive .52s cubic-bezier(.16,.84,.22,1) var(--char-delay) both; }
+@keyframes birthday-title-character-arrive { from { opacity: 0; filter: blur(5px); transform: translate(var(--char-x), var(--char-y)) rotate(var(--char-rotate)) scale(.78); } 76% { opacity: 1; filter: blur(0); transform: translate(-1px, 1px) rotate(0) scale(1.025); } to { opacity: 1; filter: none; transform: none; } }
+.birthday-reveal-final.is-born-from-burst.is-assembling::after { background: radial-gradient(ellipse, #ffe4bc28 0 24%, #d98aa31c 42%, transparent 71%); animation: birthday-title-unified-glow .5s ease-out 1.2s both; }
+.birthday-title-heart { color: #e99aae; text-shadow: 0 0 10px #e27f9c99; }
+
+/* Meri/Malkin: independent mixed-direction arrivals; warm ivory and
+   champagne/blush remain primary, with cyan only as a separation shadow. */
+.birthday-heart-center-meri .birthday-heart-center-letter,
+.birthday-heart-center-malkin .birthday-heart-center-letter { opacity: 0; filter: blur(5px); transform: translate(var(--letter-x), var(--letter-y)) rotate(var(--letter-rotate)) scale(.82); }
+.birthday-heart-center-meri .birthday-heart-center-letter { color: #fff2d4; text-shadow: 0 1px 4px #9d647170, 0 0 6px #fff4d470; }
+.birthday-heart-center-malkin .birthday-heart-center-letter { background: linear-gradient(105deg, #fff5d9 8%, #dba85d 47%, #f6b8c8 84%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 1px 4px #b77a8866, 0 0 7px #5baabb38; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-center-letter { animation: birthday-heart-letter-arrive .58s cubic-bezier(.16,.84,.23,1) var(--letter-delay) both !important; }
+@keyframes birthday-heart-letter-arrive { from { opacity: 0; filter: blur(5px); transform: translate(var(--letter-x), var(--letter-y)) rotate(var(--letter-rotate)) scale(.82); } 80% { opacity: 1; filter: blur(0); transform: translate(-1px, 1px) rotate(0) scale(1.02); } to { opacity: 1; filter: none; transform: none; } }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-signature-path { animation-delay: 1.5s !important; }
+.birthday-reveal-heart.is-center-revealed .birthday-heart-signature-spark { animation-delay: 1.5s !important; }
+.birthday-reveal-heart.is-center-resolved .birthday-heart-center-letter { opacity: 1; filter: none; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    .birthday-balloon-effect.is-hero.is-reference-track, .birthday-reveal-burst-message.is-born-from-burst.is-in,
+    .birthday-reveal-final.is-born-from-burst.is-assembling .birthday-title-character,
+    .birthday-reveal-heart.is-center-revealed .birthday-heart-center-letter { animation: none !important; opacity: 1; filter: none; transform: none; }
 }

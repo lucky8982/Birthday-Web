@@ -1252,6 +1252,7 @@ Tiny screens: compress everything so nothing overflows
     .letter-question,
     .letter-question-text,
     .letter-question-title,
+    .letter-answer-ack,
     .letter-answer,
     .letter-cta,
     .experience-back-btn,
@@ -1294,6 +1295,10 @@ Tiny screens: compress everything so nothing overflows
         filter: none !important;
     }
 
+    .letter-question.is-in .letter-answer.is-runaway {
+        transform: translate3d(var(--run-x), var(--run-y), 0) rotate(var(--run-rotate)) scale(var(--run-scale)) !important;
+    }
+
     /* The unlocked CTA appears instantly, fully clickable */
     .letter-cta.is-unlocked {
         opacity: 1 !important;
@@ -1301,8 +1306,8 @@ Tiny screens: compress everything so nothing overflows
         pointer-events: auto !important;
     }
 
-    /* Wrong answers: no shake, only a calm border hint */
-    .letter-answer.is-wrong {
+    /* Runaway answers reposition without motion under reduced motion. */
+    .letter-answer.is-runaway {
         animation: none !important;
     }
 
@@ -1336,5 +1341,66 @@ Tiny screens: compress everything so nothing overflows
         transform: none !important;
         filter: none !important;
         clip-path: none !important;
+    }
+}
+/* Living time: three calendar units above four clock units on phones. */
+@media (max-width: 767px) {
+    #birthday-reveal.is-celebrating { padding: 0; min-height: 0; }
+    .is-celebrating .birthday-reveal-stage { max-width: 100%; }
+    .is-celebrating .birthday-reveal-age { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+    .is-celebrating .birthday-reveal-age-row { grid-column: span 3; }
+    .is-celebrating .birthday-reveal-age-row:nth-child(-n+3) { grid-column: span 4; }
+    .is-celebrating .birthday-reveal-age-row:nth-child(4) { border-left: 0; }
+    .is-celebrating .birthday-reveal-age-unit { font-size: .5rem; letter-spacing: .04em; }
+}
+@media (max-height: 600px) {
+    .is-celebrating .birthday-reveal-stage { gap: 18px; padding-top: max(64px, env(safe-area-inset-top)); }
+    .is-celebrating .birthday-reveal-final { font-size: clamp(1.65rem, 5vw, 2.3rem); }
+    .is-celebrating .birthday-reveal-age { padding: 14px 0; gap: 12px 0; }
+}
+@media (max-height: 539px) {
+    /* Short screens scroll the normal-flow celebration composition. */
+    #birthday-reveal.is-celebrating { display: block; }
+}
+@media (max-width: 767px) {
+    .is-celebrating .birthday-reveal-balloon:nth-child(odd) { left: -12px !important; }
+    .is-celebrating .birthday-reveal-balloon:nth-child(even) { right: -12px !important; }
+}
+
+/* Wish and candles travel together when a short viewport needs scrolling. */
+@media (max-width: 767px) {
+    .is-celebrating .birthday-reveal-stage { padding-bottom: max(24px, env(safe-area-inset-bottom)); gap: clamp(14px, 2.4vh, 22px); }
+    .is-celebrating .birthday-reveal-age { row-gap: 24px; }
+    .is-celebrating .birthday-reveal-wish-area { min-height: 144px; }
+}
+@media (max-height: 600px) {
+    .is-celebrating .birthday-reveal-stage { justify-content: flex-start; }
+    .birthday-reveal-constellation { height: 80px; }
+}
+
+/* Text heart: preserve a single aspect ratio, prioritise reachability over
+   a forced one-screen composition on short phones. */
+@media (max-width: 767px) {
+    #birthday-reveal.is-celebrating[data-birthday-stage="heart-intro"] .birthday-reveal-stage,
+    #birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-stage,
+    #birthday-reveal.is-celebrating[data-birthday-stage="heart-ready"] .birthday-reveal-stage {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .birthday-reveal-heart { width: min(90vw, 44svh, 370px); }
+}
+
+@media (max-width: 340px) {
+    .birthday-reveal-heart { width: min(90vw, 44svh, 288px); }
+    .birthday-reveal-heart-advance { min-height: 48px; padding: .72rem 1.45rem; }
+}
+
+@media (max-height: 600px) {
+    #birthday-reveal.is-celebrating[data-birthday-stage="heart-intro"] .birthday-reveal-stage,
+    #birthday-reveal.is-celebrating[data-birthday-stage="heart"] .birthday-reveal-stage,
+    #birthday-reveal.is-celebrating[data-birthday-stage="heart-ready"] .birthday-reveal-stage {
+        gap: 12px;
+        padding-top: max(56px, env(safe-area-inset-top));
     }
 }

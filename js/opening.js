@@ -12,11 +12,10 @@
               reveals the next line of the story -> the
               final emotional passage reveals itself word
               by word -> the sealed love letter scene
-              appears with a romantic question: the four
-              answers and the "Kholo ❤️" CTA arrive, the
-              CTA stays locked (it playfully dodges taps)
-              until the right answer is picked, then it
-              unlocks and opens the existing letter ->
+              appears with a playful three-question MAIN/TUM
+              lock. The existing "Kholo ❤️" CTA appears only
+              after all three right answers, then it opens the
+              existing letter ->
 the next tap hands over to the full-screen
                Birthday Reveal (5 -> 4 -> 3 -> 2 -> 1 ->
                "Happy Birthday, My Love ❤️" -> live age ->
@@ -60,6 +59,22 @@ const WORD_STEP = 95;  // ms between words in the emotional passage
 const WORD_ANIM = 700; // ms each word takes to settle in
 const AUTO_ADVANCE_MS = 10000;
 
+const LETTER_QUESTIONS = [
+    {
+        lead: 'Baby, sach sach batana… 😌❤️',
+        text: 'Main tumhe zyada tang karta hu 😏\nYa tum zyada nakhre karti ho 👀',
+        correct: 'main',
+    },
+    {
+        text: 'Bina wajah zyada attitude kaun dikhata hai? 😌👀',
+        correct: 'tum',
+    },
+    {
+        text: 'Fight ke time baat nahi karungi/karunga bolkar kon bich se hi chala jaata he',
+        correct: 'main',
+    },
+];
+
 
 /* ============================================================
    Class: OpeningCinematic
@@ -83,6 +98,9 @@ export class OpeningCinematic {
         this.letterInvite = null;
         this.letterMessage = null;
         this.questionEl = null;
+        this.questionText = null;
+        this.questionTitle = null;
+        this.answerAck = null;
         this.answersEl = null;
         this.cta = null;
 
@@ -127,11 +145,18 @@ export class OpeningCinematic {
         this.state = 'idle';     // 'idle' | 'message' | 'letter' | 'exiting'
         this.messageIndex = -1;  // current story message index
         this.letterOpened = false; // the sealed letter was opened
-        this.letterUnlocked = false; // the right answer unlocked the CTA
-        this.letterReady = false;   // question/answers/CTA finished entering
+        this.letterUnlocked = false; // the final right answer unlocked the CTA
+        this.letterReady = false;   // question controls finished entering
         this.selectedAnswer = null; // the picked answer (correct one wins)
+        this.questionIndex = 0;
+        this.questionTransitioning = false;
+        this.runawayOffsets = new Map();
+        this.runawayTarget = -1;
+        this.runawayHistory = [];
+        this.runawayMotion = 0;
+        this.suppressAnswerClick = null;
+        this.suppressAnswerUntil = 0;
         this.letterOpeningEvent = null; // the CTA event that opened the letter
-        this.dodge = 0;             // CTA dodge direction counter
         this.timers = [];
         this.autoAdvanceTimer = null;
         this._letterRun = 0;
@@ -151,6 +176,7 @@ export class OpeningCinematic {
         this._onTap = (event) => this.advance(event);
         this._onKey = (e) => this.onKey(e);
         this._onAnswer = (e) => this.onAnswer(e);
+        this._onAnswerPointerDown = (e) => this.onAnswerPointerDown(e);
         this._onCta = (e) => this.onCta(e);
     }
 
@@ -170,6 +196,9 @@ export class OpeningCinematic {
         this.letterInvite = $('#letter-invite');
         this.letterMessage = $('#letter-message');
         this.questionEl = $('#letter-question');
+        this.questionText = this.questionEl?.querySelector('.letter-question-text');
+        this.questionTitle = this.questionEl?.querySelector('.letter-question-title');
+        this.answerAck = $('#letter-answer-ack');
         this.answersEl = $('#letter-answers');
         this.cta = $('#letter-cta');
 
@@ -182,6 +211,7 @@ export class OpeningCinematic {
         // The answers are one delegation point (no per-option
         // listeners, so they can never double up).
         this.answersEl?.addEventListener('click', this._onAnswer);
+        this.answersEl?.addEventListener('pointerdown', this._onAnswerPointerDown, { passive: false });
 
         // The continue CTA below the answers: its click never
         // bubbles to the scene, so it cannot double-navigate.
@@ -250,7 +280,7 @@ export class OpeningCinematic {
      * are ignored.
      */
     advance(event) {
-        if (event?.target?.closest?.('#letter-cta')) return;
+        if (event?.target?.closest?.('#letter-cta, .letter-answer')) return;
         if (this.busy || this.finished || !this.started) return;
 
         this.clearAutoAdvance();
@@ -403,9 +433,9 @@ export class OpeningCinematic {
     /**
      * Reveal the letter scene: the story is fully gone, the sky
      * stays alive, and a closed, sealed letter floats with a short
-     * invitation below it. A romantic question + four answers and
-     * the locked "Kholo ❤️" CTA enter together - the letter only
-     * opens once the correct answer is picked and the CTA pressed.
+     * invitation below it. A playful MAIN/TUM lock enters with the
+     * scene; Kholo appears after all three right answers and opens
+     * the existing letter exactly as before.
      */
     showLetter() {
         const scene = this.letterScene;
@@ -422,14 +452,17 @@ export class OpeningCinematic {
         this.letterUnlocked = false;
         this.letterReady = false;
         this.selectedAnswer = null;
+        this.questionIndex = 0;
+        this.questionTransitioning = false;
         this.busy = true;
 
         // The letter-gate is on screen: the Back button stays hidden
         // here, but the scene is persisted for refresh restoration.
         this._fireStage('love-letter');
 
-        // Every visit starts clean: no picked answer, locked CTA.
+        // Every visit starts the small lock from its first question.
         this.resetLetterUi();
+        this.renderQuestion();
 
         scene.setAttribute('aria-hidden', 'false');
         scene.classList.add('is-visible');
@@ -440,9 +473,7 @@ export class OpeningCinematic {
 
         this.settle(scene, this.reduced ? 0 : DURATIONS.letterSceneIn, () => {
             this.busy = false;
-            // The question, the answers and the locked CTA all have
-            // their own staggered entrance - only then may answers
-            // be picked and the CTA dodge.
+            // The two answers have settled and can now be picked.
             this.later(this.reduced ? 0 : 750, () => {
                 this.letterReady = true;
             });
@@ -462,7 +493,7 @@ export class OpeningCinematic {
         this.letterOpened = true;
         this.letterOpeningEvent = event;
         this.busy = true;
-        // The Back control belongs to the date-question gate only.
+        // The Back control belongs to the letter lock only.
         // Once KHOLO is accepted, the original letter-opening scene
         // owns the screen without global navigation controls.
         this._fireStage('none');
@@ -491,48 +522,323 @@ export class OpeningCinematic {
 
     /* ---- The romantic question gate (inside the letter scene) ---- */
 
-    /**
-     * One tap on any answer: highlight it. The right answer
-     * ("01 December 2023") settles the question and unlocks the
-     * CTA; a wrong answer shakes softly and is free to retry.
-     */
+    /** The one delegated answer path for click and keyboard input. */
     onAnswer(e) {
         const opt = e.target.closest('.letter-answer');
         if (!opt || !this.answersEl) return;
-
-        // Never bubble to the scene: the letter cannot open from
-        // tapping an option, and the overlay cannot double-advance.
         e.stopPropagation();
+        if (!this.canAnswer()) return;
 
-        if (this.state !== 'letter' || !this.letterReady || this.letterUnlocked || this.busy) return;
+        const question = this.currentQuestion();
+        const choice = opt.dataset.choice;
+        if (!question || !choice) return;
 
-        const correct = opt.getAttribute('data-correct') === 'true';
-        opt.classList.add('is-selected');
-        opt.setAttribute('aria-pressed', 'true');
-
-        if (correct) {
-            this.letterUnlocked = true;
-            this.selectedAnswer = opt;
-            opt.classList.add('is-correct');
-            this.questionEl?.classList.add('is-settled');
-            this.unlockCta();
-        } else {
-            opt.classList.add('is-wrong');
-            // Nothing is locked: the wrong pick can be tried again.
-            this.later(this.reduced ? 0 : 650, () => {
-                opt.classList.remove('is-selected', 'is-wrong');
-                opt.setAttribute('aria-pressed', 'false');
-            });
+        // A compatibility click can arrive after pointerdown has moved this
+        // button. It is still an explicitly wrong answer and must stop here.
+        if (choice !== question.correct) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if (this.isSuppressedWrongClick(opt)) {
+                this.suppressAnswerClick = null;
+                return;
+            }
+            this.suppressWrongClick(opt);
+            this.runawayAnswer(opt);
+            return;
         }
+
+        e.preventDefault();
+        this.acceptCorrectAnswer(opt);
     }
 
-    /** The right answer was picked: unlock the "Kholo ❤️" CTA */
+    /** Catch an incorrect touch before it can become a click. */
+    onAnswerPointerDown(e) {
+        const opt = e.target.closest('.letter-answer');
+        if (!opt) return;
+        e.stopPropagation();
+        if (!this.canAnswer()) return;
+
+        const question = this.currentQuestion();
+        const choice = opt.dataset.choice;
+        if (!question || !choice || choice === question.correct) return;
+
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.suppressWrongClick(opt);
+        this.runawayAnswer(opt, e.clientX, e.clientY);
+    }
+
+    suppressWrongClick(opt) {
+        this.suppressAnswerClick = opt;
+        this.suppressAnswerUntil = performance.now() + 800;
+    }
+
+    isSuppressedWrongClick(opt) {
+        return this.suppressAnswerClick === opt && performance.now() < this.suppressAnswerUntil;
+    }
+
+    currentQuestion() {
+        return LETTER_QUESTIONS[this.questionIndex] || null;
+    }
+
+    canAnswer() {
+        return this.state === 'letter'
+            && this.letterReady
+            && !this.letterUnlocked
+            && !this.busy
+            && !this.questionTransitioning
+            && Boolean(this.currentQuestion());
+    }
+
+    /** Populate the persistent two-button shell from the current quest. */
+    renderQuestion() {
+        const question = this.currentQuestion();
+        if (!question) return;
+
+        this.resetRunawayPositions();
+        this.questionText.textContent = question.lead || '';
+        this.questionText.hidden = !question.lead;
+        this.questionTitle.textContent = question.text;
+        this.hideAnswerAck(true);
+        this.questionEl?.classList.remove('is-transitioning', 'is-entering', 'is-settled');
+        this.answersEl?.classList.remove('is-exiting');
+        this.answersEl?.removeAttribute('aria-busy');
+        this.answersEl?.querySelectorAll('.letter-answer').forEach((btn) => {
+            btn.classList.remove('is-selected', 'is-correct');
+            btn.setAttribute('aria-pressed', 'false');
+            btn.disabled = false;
+        });
+    }
+
+    /** Accept a correct answer once, then let the next quest take its place. */
+    acceptCorrectAnswer(opt) {
+        if (!this.canAnswer()) return;
+
+        this.questionTransitioning = true;
+        this.letterReady = false;
+        this.selectedAnswer = opt;
+        opt.classList.add('is-selected', 'is-correct');
+        opt.setAttribute('aria-pressed', 'true');
+        this.answersEl?.setAttribute('aria-busy', 'true');
+        this.answersEl?.querySelectorAll('.letter-answer').forEach((btn) => {
+            btn.disabled = true;
+        });
+
+        const run = this._letterRun;
+        this.later(this.reduced ? 0 : 200, () => {
+            if (run !== this._letterRun || !this.questionTransitioning) return;
+            this.resetRunawayPositions();
+            this.questionEl?.classList.add('is-transitioning');
+            this.later(this.reduced ? 0 : 280, () => {
+                if (run !== this._letterRun || !this.questionTransitioning) return;
+
+                this.showAnswerAck();
+                this.later(this.reduced ? 0 : 500, () => {
+                    if (run !== this._letterRun || !this.questionTransitioning) return;
+                    this.hideAnswerAck();
+                    this.later(this.reduced ? 0 : 160, () => {
+                        if (run !== this._letterRun || !this.questionTransitioning) return;
+
+                        if (this.questionIndex === LETTER_QUESTIONS.length - 1) {
+                            this.letterUnlocked = true;
+                            this.questionEl?.classList.add('is-settled');
+                            this.answersEl?.classList.add('is-exiting');
+                            this.unlockCta();
+                            this.questionTransitioning = false;
+                            this.letterReady = true;
+                            return;
+                        }
+
+                        this.questionIndex += 1;
+                        this.renderQuestion();
+                        if (this.reduced) {
+                            this.questionTransitioning = false;
+                            this.letterReady = true;
+                            return;
+                        }
+
+                        this.questionEl?.classList.add('is-entering');
+                        void this.questionEl?.offsetWidth;
+                        requestAnimationFrame(() => {
+                            if (run === this._letterRun) this.questionEl?.classList.remove('is-entering');
+                        });
+                        this.later(460, () => {
+                            if (run !== this._letterRun || !this.questionTransitioning) return;
+                            this.questionTransitioning = false;
+                            this.letterReady = true;
+                        });
+                    });
+                });
+            });
+        });
+    }
+
+    showAnswerAck() {
+        if (!this.answerAck) return;
+        this.answerAck.textContent = 'Sahi jawab ❤️';
+        void this.answerAck.offsetWidth;
+        this.answerAck.classList.add('is-visible');
+    }
+
+    hideAnswerAck(immediate = false) {
+        if (!this.answerAck) return;
+        this.answerAck.classList.remove('is-visible');
+        if (immediate) this.answerAck.textContent = '';
+    }
+
+    /** Send an incorrect answer to a distant but controlled safe zone. */
+    runawayAnswer(opt, pointerX, pointerY) {
+        if (!opt || !this.canAnswer() || !this.letterScene || opt.dataset.choice === this.currentQuestion()?.correct) return;
+
+        const current = this.runawayOffsets.get(opt) || { x: 0, y: 0 };
+        const rect = opt.getBoundingClientRect();
+        const homeLeft = rect.left - current.x;
+        const homeTop = rect.top - current.y;
+        const currentLeft = rect.left;
+        const currentTop = rect.top;
+        const viewport = window.visualViewport;
+        const viewLeft = viewport?.offsetLeft ?? 0;
+        const viewTop = viewport?.offsetTop ?? 0;
+        const viewRight = viewLeft + (viewport?.width ?? window.innerWidth);
+        const viewBottom = viewTop + (viewport?.height ?? window.innerHeight);
+        const gateRect = this.questionEl?.getBoundingClientRect() || this.letterScene.getBoundingClientRect();
+        const cardRect = this.letterCard?.getBoundingClientRect();
+        const horizontalMargin = 18;
+        const verticalMargin = 22;
+        const left = Math.max(viewLeft + horizontalMargin, gateRect.left - 18);
+        const top = Math.max(viewTop + verticalMargin, (cardRect?.bottom ?? gateRect.top) + 12);
+        const right = Math.min(viewRight - horizontalMargin - rect.width, gateRect.right + 18 - rect.width);
+        const bottom = Math.min(viewBottom - verticalMargin - rect.height,
+            gateRect.bottom + Math.min(150, Math.max(72, (viewBottom - viewTop) * 0.18)) - rect.height);
+        const clamp = (value, min, max) => Math.min(Math.max(value, min), Math.max(min, max));
+        const sourceX = Number.isFinite(pointerX) ? pointerX : rect.left + rect.width / 2;
+        const sourceY = Number.isFinite(pointerY) ? pointerY : rect.top + rect.height / 2;
+        const obstacles = [
+            this.questionText,
+            this.questionTitle,
+            this.letterCard,
+            this.answersEl?.querySelector(`[data-choice="${this.currentQuestion()?.correct}"]`),
+        ].filter(Boolean).map((el) => el.getBoundingClientRect());
+        const overlapsObstacle = (x, y) => obstacles.some((obstacle) => {
+            const gap = 12;
+            return x < obstacle.right + gap
+                && x + rect.width > obstacle.left - gap
+                && y < obstacle.bottom + gap
+                && y + rect.height > obstacle.top - gap;
+        });
+        const safeWidth = Math.max(0, right - left);
+        const safeHeight = Math.max(0, bottom - top);
+        const preferredTravel = Math.min(130, Math.max(80, (viewRight - viewLeft) * 0.25));
+        const minimumTravel = Math.min(preferredTravel, Math.hypot(safeWidth, safeHeight) * 0.58);
+        const zones = [
+            { x: 0.08, y: 0.08, row: 0, col: 0 }, // upper left
+            { x: 0.50, y: 0.03, row: 0, col: 1 }, // upper center
+            { x: 0.92, y: 0.08, row: 0, col: 2 }, // upper right
+            { x: 0.05, y: 0.48, row: 1, col: 0 }, // mid left
+            { x: 0.95, y: 0.48, row: 1, col: 2 }, // mid right
+            { x: 0.12, y: 0.90, row: 2, col: 0 }, // lower left
+            { x: 0.50, y: 0.97, row: 2, col: 1 }, // lower center
+            { x: 0.88, y: 0.90, row: 2, col: 2 }, // lower right
+        ];
+        const zoneRoutes = [
+            [0, 7, 3, 2, 5, 4, 6, 1], // Q1: upper side first
+            [4, 5, 2, 3, 7, 0, 6, 1], // Q2: right side first
+            [5, 2, 6, 4, 0, 7, 3, 1], // Q3: lower-left first
+        ];
+        const zoneRoute = zoneRoutes[this.questionIndex] || zoneRoutes[0];
+        const preferredZone = zoneRoute[Math.min(this.runawayHistory.length, zoneRoute.length - 1)];
+        const zoneCandidates = zones.map((zone, index) => ({
+            ...zone,
+            index,
+            x: clamp(left + safeWidth * zone.x, left, right),
+            y: clamp(top + safeHeight * zone.y, top, bottom),
+        }));
+        const isSafe = (candidate, requiredTravel) => !overlapsObstacle(candidate.x, candidate.y)
+            && Math.hypot(candidate.x - currentLeft, candidate.y - currentTop) >= requiredTravel;
+        const candidates = zoneCandidates.filter((candidate) => isSafe(candidate, minimumTravel)
+            && !this.runawayHistory.includes(candidate.index));
+        const safeFallbacks = zoneCandidates.filter((candidate) => isSafe(candidate, minimumTravel * 0.7));
+        const relaxedFallbacks = zoneCandidates.filter((candidate) => isSafe(candidate, minimumTravel * 0.35));
+        const visibleFallbacks = zoneCandidates.filter((candidate) => !overlapsObstacle(candidate.x, candidate.y));
+        const lastZone = zones[this.runawayTarget];
+        const targetPool = candidates.length ? candidates : (safeFallbacks.length ? safeFallbacks
+            : (relaxedFallbacks.length ? relaxedFallbacks : (visibleFallbacks.length ? visibleFallbacks : zoneCandidates)));
+        const target = targetPool
+            .map((candidate) => ({
+                ...candidate,
+                score: Math.hypot(candidate.x + rect.width / 2 - sourceX, candidate.y + rect.height / 2 - sourceY)
+                    + Math.hypot(candidate.x - currentLeft, candidate.y - currentTop) * 1.25
+                    + (candidate.index === preferredZone ? 700 : 0)
+                    + Math.max(0, 7 - zoneRoute.indexOf(candidate.index)) * 22
+                    - (this.runawayHistory.includes(candidate.index) ? 1000 : 0)
+                    - (lastZone && Math.abs(candidate.row - lastZone.row) + Math.abs(candidate.col - lastZone.col) < 2 ? 160 : 0),
+            }))
+            .sort((a, b) => b.score - a.score)[0];
+        if (!target) return;
+
+        this.runawayTarget = target.index;
+        this.runawayHistory = [...this.runawayHistory, target.index].slice(-3);
+        const offset = { x: target.x - homeLeft, y: target.y - homeTop };
+        this.runawayOffsets.set(opt, offset);
+        const motion = ++this.runawayMotion;
+        const run = this._letterRun;
+        const commitTarget = () => {
+            if (run !== this._letterRun || motion !== this.runawayMotion || !opt.classList.contains('is-runaway')) return;
+            opt.style.setProperty('--run-x', `${offset.x}px`);
+            opt.style.setProperty('--run-y', `${offset.y}px`);
+            opt.style.setProperty('--run-rotate', `${target.index % 2 ? -1.5 : 1.5}deg`);
+            requestAnimationFrame(() => {
+                if (run === this._letterRun && motion === this.runawayMotion) {
+                    opt.style.setProperty('--run-scale', '1');
+                }
+            });
+            this.later(this.reduced ? 0 : 400, () => {
+                if (run === this._letterRun && motion === this.runawayMotion) {
+                    opt.classList.remove('is-escaping');
+                }
+            });
+        };
+
+        if (opt.classList.contains('is-runaway')) {
+            opt.classList.add('is-escaping');
+            opt.style.setProperty('--run-scale', '0.98');
+            commitTarget();
+            return;
+        }
+
+        // Commit the home pose before the destination variables change so the
+        // first escape always interpolates instead of jumping to its endpoint.
+        opt.style.setProperty('--run-x', '0px');
+        opt.style.setProperty('--run-y', '0px');
+        opt.style.setProperty('--run-rotate', '0deg');
+        opt.style.setProperty('--run-scale', '0.98');
+        opt.classList.add('is-runaway', 'is-escaping');
+        void opt.offsetWidth;
+        requestAnimationFrame(() => {
+            requestAnimationFrame(commitTarget);
+        });
+    }
+
+    resetRunawayPositions() {
+        this.runawayOffsets.clear();
+        this.runawayTarget = -1;
+        this.runawayHistory = [];
+        this.runawayMotion += 1;
+        this.suppressAnswerClick = null;
+        this.suppressAnswerUntil = 0;
+        this.answersEl?.querySelectorAll('.letter-answer').forEach((btn) => {
+            btn.classList.remove('is-runaway', 'is-escaping');
+            btn.style.removeProperty('--run-x');
+            btn.style.removeProperty('--run-y');
+            btn.style.removeProperty('--run-rotate');
+            btn.style.removeProperty('--run-scale');
+        });
+    }
+
     unlockCta() {
         if (!this.cta) return;
 
-        // Dodge stops immediately; the button becomes stable.
-        this.cta.classList.remove('is-dodging');
-        this.cta.style.transform = '';
+        this.cta.hidden = false;
         this.cta.setAttribute('aria-disabled', 'false');
         this.cta.tabIndex = 0;
         void this.cta.offsetWidth;
@@ -541,59 +847,17 @@ export class OpeningCinematic {
     }
 
     /**
-     * The CTA click: while locked it playfully dodges away (the
-     * press is not accepted); once unlocked it opens the existing
-     * letter. The click never bubbles, so the scene's own tap
-     * listener cannot fire a second time.
+     * The unlocked CTA opens the existing letter. The click never
+     * bubbles, so the scene's own tap listener cannot fire a second time.
      */
     onCta(e) {
         e?.stopPropagation?.();
 
-        if (this.state !== 'letter' || this.letterOpened) return;
-
-        if (!this.letterUnlocked || !this.letterReady) {
-            e?.preventDefault?.();
-            this.dodgeCta();
-            return;
-        }
+        if (this.state !== 'letter' || this.letterOpened || !this.letterUnlocked || !this.letterReady) return;
 
         e?.preventDefault?.();
         e?.stopImmediatePropagation?.();
         this.openLetter(e);
-    }
-
-    /**
-     * A short, smooth dodge - a different direction each attempt,
-     * always clamped inside the scene so it never leaves the
-     * viewport. Never random-chaotic, never fast.
-     */
-    dodgeCta() {
-        if (this.reduced || !this.cta || !this.overlay) return;
-
-        const r = this.cta.getBoundingClientRect();
-        const maxX = Math.max(0, this.overlay.clientWidth - r.width);
-        const maxY = Math.max(0, this.overlay.clientHeight - r.height);
-
-        const dir = this.dodge % 4;
-        this.dodge += 1;
-        const dirX = [1, -1, 1, -1];
-        const dirY = [-1, -1, 1, 1];
-        const mag = Math.min(72, Math.max(26, Math.min(maxX, maxY) * 0.14));
-
-        const dx = Math.min(maxX, Math.max(-maxX, dirX[dir] * mag * (0.85 + Math.random() * 0.3)));
-        const dy = Math.min(maxY, Math.max(-maxY, dirY[dir] * mag * (0.5 + Math.random() * 0.3)));
-
-        this.cta.classList.add('is-dodging');
-        this.cta.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) rotate(' + (dir % 2 === 0 ? 2 : -2) + 'deg)';
-
-        // Return gently after the dodge - unless the CTA was
-        // unlocked in the meantime (then it stays stable).
-        this.later(440, () => {
-            if (!this.letterUnlocked && this.cta) {
-                this.cta.classList.remove('is-dodging');
-                this.cta.style.transform = '';
-            }
-        });
     }
 
     /** Every letter-scene visit starts with a clean slate */
@@ -601,19 +865,25 @@ export class OpeningCinematic {
         this._letterRun += 1;
         this.letterOpeningEvent = null;
         this.letterScene?.classList.remove('is-message');
+        this.hideAnswerAck(true);
         if (this.answersEl) {
             this.answersEl.querySelectorAll('.letter-answer').forEach((btn) => {
-                btn.classList.remove('is-selected', 'is-correct', 'is-wrong');
+                btn.classList.remove('is-selected', 'is-correct');
                 btn.setAttribute('aria-pressed', 'false');
+                btn.disabled = false;
             });
         }
+        this.resetRunawayPositions();
         if (this.cta) {
-            this.cta.classList.remove('is-unlocked', 'is-dodging');
+            this.cta.hidden = true;
+            this.cta.classList.remove('is-unlocked');
             this.cta.style.transform = '';
             this.cta.setAttribute('aria-disabled', 'true');
             this.cta.tabIndex = -1;
         }
-        this.dodge = 0;
+        this.answersEl?.classList.remove('is-exiting');
+        this.questionIndex = 0;
+        this.questionTransitioning = false;
     }
 
     scheduleAutoAdvance() {
@@ -634,7 +904,7 @@ export class OpeningCinematic {
         }
     }
 
-    /** Fast-forward only the early messages to the existing date gate. */
+    /** Fast-forward only the early messages to the existing letter gate. */
     resumeAtDateGate() {
         if (!this.overlay || !this.letterScene) return;
 
@@ -693,6 +963,7 @@ export class OpeningCinematic {
         this.selectedAnswer = null;
 
         this.resetLetterUi();
+        this.renderQuestion();
 
         // The layer re-enters over the app (the reveal is already
         // hidden by the time Back is pressed).
@@ -887,6 +1158,7 @@ destroy() {
         this.overlay?.removeEventListener('click', this._onTap);
         this.overlay?.removeEventListener('keydown', this._onKey);
         this.answersEl?.removeEventListener('click', this._onAnswer);
+        this.answersEl?.removeEventListener('pointerdown', this._onAnswerPointerDown);
         this.cta?.removeEventListener('click', this._onCta);
         this.overlay = null;
         this.starsEl = null;
@@ -900,6 +1172,9 @@ destroy() {
         this.letterInvite = null;
         this.letterMessage = null;
         this.questionEl = null;
+        this.questionText = null;
+        this.questionTitle = null;
+        this.answerAck = null;
         this.answersEl = null;
         this.cta = null;
     }
@@ -919,7 +1194,6 @@ destroy() {
         this.letterUnlocked = false;
         this.letterReady = false;
         this.selectedAnswer = null;
-        this.dodge = 0;
         this.beginFired = false;
 
         this.clearTimers();
@@ -953,7 +1227,6 @@ destroy() {
         this.letterUnlocked = false;
         this.letterReady = false;
         this.selectedAnswer = null;
-        this.dodge = 0;
         this.beginFired = false;
         this.revealStage = 'none';
     }
