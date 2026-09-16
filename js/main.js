@@ -50,6 +50,8 @@ const app = {
     revealStage: 'none',  // last reveal stage reported by BirthdayReveal
     revealRun: 0,         // reveal run id - bumped to invalidate stale callbacks
     memoryOpened: false,  // true once the surprise scene is on screen
+    memoryTransition: false, // true only while Birthday -> Memory is being prepared
+    pendingMemoryStage: null, // lane stage reported before the handoff is committed
     postMemoryRun: 0,     // invalidates post-memory handoff timers
     revealStarted: false, // true once the birthday reveal has been triggered
     effectsStarted: false,// true once background effects run
@@ -156,6 +158,10 @@ function invalidateNavigation() {
     app.navigationRun += 1;
     for (const timer of app.navigationTimers) clearTimeout(timer);
     app.navigationTimers.clear();
+    // A navigation change cancels a pending Birthday -> Memory preparation.
+    // The async handoff verifies navigationRun before it can commit later.
+    app.memoryTransition = false;
+    app.pendingMemoryStage = null;
     return app.navigationRun;
 }
 
@@ -582,6 +588,12 @@ function initApp() {
     // the global button hidden - the lane owns its own Back/Next controls.
     app.memoryLane.onState = (stage) => {
         if (app.cleaned || app.inactivityLoggingOut) return;
+        // enter()/restoreCurrentPosition() reports synchronously. Do not
+        // persist a Memory route until its scene has actually been activated.
+        if (app.memoryTransition) {
+            app.pendingMemoryStage = stage;
+            return;
+        }
         if (stage === 'intro') {
             setBackState('memory-landing');
         } else if (stage === 'final') {
@@ -754,6 +766,10 @@ function initApp() {
         // follow the scene (letter / countdown / final). The run id
         // lets stale callbacks from canceled runs be ignored.
         app.birthdayReveal.onStage = (stage) => updateBackState(stage, app.revealRun);
+        // BirthdayReveal asks this guarded callback to prepare Memory Lane
+        // before it fades its own layer. A false result keeps Live Age on
+        // screen and re-arms Continue instead of ever exposing a blank scene.
+        app.birthdayReveal.onForward = () => openMemoryScene();
         app.countdown = new ParticleCountdown();
     } catch (error) {
         console.warn('Birthday reveal unavailable, continuing without it.', error);
@@ -911,9 +927,9 @@ function startReveal({ forceCountdown = false } = {}) {
         if (app.cleaned || run !== app.revealRun) return;
         await app.birthdayReveal?.play();
 
-        // Only the run that started this reveal may open Memory Lane.
+        // BirthdayReveal's Continue callback performs the guarded handoff
+        // before its own exit. This completion only confirms that run ended.
         if (app.cleaned || run !== app.revealRun) return;
-        openMemoryScene();
     }).catch((error) => console.error('[FLOW] birthday handoff failed', error));
 }
 
@@ -927,25 +943,61 @@ async function waitForAppVisible() {
     }
 }
 
-function openMemoryScene({ restoreMemoryPosition = false } = {}) {
-    if (app.cleaned || app.memoryOpened) return;
-    invalidateNavigation();
-    app.memoryOpened = true;
-    // 'memory-landing' (Our Memories intro) - the global Back button
-    // is visible here and returns to the reveal final; the lane's own
-    // stage hook flips the state once a chapter starts.
-    setBackState('memory-landing');
+async function openMemoryScene({ restoreMemoryPosition = false } = {}) {
+    if (app.cleaned) return false;
+    if (app.memoryOpened) return true;
+    if (app.memoryTransition) return false;
 
-    // The surprise scene takes the stage
+    const navigationRun = invalidateNavigation();
+    app.memoryTransition = true;
+    app.pendingMemoryStage = null;
     const scene2 = document.querySelector('#scene-2');
-    if (scene2) {
-        scene2.hidden = false;
-        scene2.classList.add('is-visible', 'is-active');
-    }
+    const lane = app.memoryLane;
 
-    // Always reset to the hidden surprise state ("something waiting")
-    app.memoryLane?.enter({ restore: restoreMemoryPosition });
-    if (restoreMemoryPosition) app.memoryLane?.restoreCurrentPosition();
+    try {
+        if (!scene2 || !lane || typeof lane.enter !== 'function') {
+            throw new Error('Memory Lane controller or scene is unavailable.');
+        }
+
+        // Prepare first. Its state hook is deliberately held until the root
+        // is visibly active, so a failed initializer cannot persist `memory`.
+        lane.enter({ restore: restoreMemoryPosition });
+        if (restoreMemoryPosition) lane.restoreCurrentPosition?.();
+        if (app.cleaned || navigationRun !== app.navigationRun) return false;
+
+        scene2.hidden = false;
+        scene2.removeAttribute('aria-hidden');
+        scene2.classList.remove('is-leaving');
+        scene2.classList.add('is-visible', 'is-active');
+
+        app.memoryOpened = true;
+        app.memoryTransition = false;
+        const stage = app.pendingMemoryStage || lane.state;
+        app.pendingMemoryStage = null;
+        // Commit only after the scene has been prepared and activated.
+        setBackState(stage === 'intro' ? 'memory-landing' : 'memory');
+        return true;
+    } catch (error) {
+        console.error('[FLOW] Memory Lane activation failed', error);
+        if (scene2) {
+            scene2.hidden = true;
+            scene2.setAttribute('aria-hidden', 'true');
+            scene2.classList.remove('is-visible', 'is-active', 'is-leaving');
+        }
+        app.memoryOpened = false;
+        app.memoryTransition = false;
+        app.pendingMemoryStage = null;
+
+        if (!app.cleaned && navigationRun === app.navigationRun) {
+            app.revealStarted = true;
+            app.revealStage = 'age-ready';
+            setBackState('birthday-reveal');
+            // During a Continue handoff the Birthday layer is still visible.
+            // A refresh restore has no active layer, so restore it directly.
+            if (!app.birthdayReveal?.playing) void app.birthdayReveal?.showFinal();
+        }
+        return false;
+    }
 }
 
 function showPostMemoryMessage({ animate = true } = {}) {
@@ -1162,7 +1214,27 @@ function updateBackState(stage, run) {
 /** One press of the global Back button - restore the previous scene */
 async function handleBack() {
     if (app.cleaned) return;
+    const wasMemoryTransition = app.memoryTransition;
     invalidateNavigation();
+
+    if (wasMemoryTransition) {
+        // The Birthday layer has not exited yet during an atomic handoff. If
+        // this was a restore attempt it may be hidden, so showFinal() is only
+        // needed when no Live Age scene is already playing.
+        app.memoryOpened = false;
+        app.revealRun += 1;
+        app.revealStarted = true;
+        app.revealStage = 'age-ready';
+        const scene2 = document.querySelector('#scene-2');
+        if (scene2) {
+            scene2.hidden = true;
+            scene2.setAttribute('aria-hidden', 'true');
+            scene2.classList.remove('is-visible', 'is-active', 'is-leaving');
+        }
+        setBackState('birthday-reveal');
+        if (!app.birthdayReveal?.playing) void app.birthdayReveal?.showFinal();
+        return;
+    }
 
     if (app.backState === 'love-letter') {
         // Date gate -> the true first main page (#entry-lock). This only
@@ -1264,7 +1336,7 @@ async function handleBack() {
         return;
     }
 
-    if (app.backState === 'memory-landing' || app.backState === 'post-memory') {
+    if (app.backState === 'memory-landing' || app.backState === 'memory' || app.backState === 'post-memory') {
         // Back -> Birthday Reveal final/age screen (the stage that
         // handed over to Memory Lane) - never the Love Letter, never
         // a restart, never Memory #1. Order matters:
@@ -1272,7 +1344,7 @@ async function handleBack() {
         //    can never open Memory Lane behind the final stage.
         // 2. Record the reveal state so the snapshot and the restore
         //    logic match what is on screen.
-        const run = (app.revealRun += 1);
+        app.revealRun += 1;
         app.memoryOpened = false;
         app.revealStarted = true;
         app.revealStage = 'age-ready';
@@ -1286,16 +1358,15 @@ async function handleBack() {
         }
         // Also hide the game if it was somehow visible.
         try { app.secretGame?.destroy(); } catch {}
-        // 4. Re-play the final stage (title + live age + continue).
-        //    The button stays visible the whole time - Back again
-        //    from the reveal final returns to the open letter
-        //    message, as always. Only this run may hand back to
-        //    Memory Lane.
+        // 4. Restore the settled final stage. Its Continue action owns the
+        //    next guarded handoff; do not chain this restoration to Memory.
         setBackState('birthday-reveal');
-        Promise.resolve(app.birthdayReveal?.showFinal()).then(() => {
-            if (app.cleaned || run !== app.revealRun) return;
-            openMemoryScene();
-        });
+        // A Back press can land during BirthdayReveal's successful fade-out.
+        // Cancel that stale exit before restoring Live Age, otherwise its
+        // completion would hide the freshly restored scene.
+        await app.birthdayReveal?.cancel();
+        if (app.cleaned) return;
+        void app.birthdayReveal?.showFinal();
         return;
     }
 

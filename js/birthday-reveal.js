@@ -164,18 +164,25 @@ export class BirthdayReveal {
         this._onIntroLayout = () => this._cacheHeroGeometry();
         this.heroTimers = new Set();
         this._resolveLetter = null;
+        this._letterReadStorageKey = 'hbm.birthdayLetterRead';
+        this._letterReadInMemory = false;
         this._canceled = false; // set by destroy(): stop any running sequence
         this._run = 0; // monotonic run token; invalidated by cancel()/destroy()
         this._onContinue = () => this._continue();
         this._onLetterContinue = () => this._letterContinue();
         // Toggles .is-at-end on the letter stage when the message is
-        // scrolled to its end (removes the bottom fade cue). Passive,
-        // single listener, attached once - never per play().
+        // scrolled to its end (removes the bottom fade cue). The first
+        // completed read also unlocks the CTA. Passive, single listener,
+        // attached once - never per play().
         this._onLetterScroll = () => {
             const body = this.letterBody;
             if (!body) return;
             const remaining = body.scrollHeight - body.scrollTop - body.clientHeight;
-            this.letterStage?.classList.toggle('is-at-end', remaining < 24);
+            const atEnd = remaining <= 24;
+            this.letterStage?.classList.toggle('is-at-end', atEnd);
+            if (atEnd && this.letterStage?.classList.contains('is-read-locked')) {
+                this._unlockLetter({ persist: true });
+            }
         };
         this.letterBody?.addEventListener('scroll', this._onLetterScroll, { passive: true });
 
@@ -189,6 +196,9 @@ export class BirthdayReveal {
         // 'letter' (letter on screen), 'countdown' (numbers showing)
         // and 'final' (title + age + continue on screen).
         this.onStage = null;
+        // Optional async handoff owned by main.js. It is called only after
+        // the single-use Continue click and before this layer is exited.
+        this.onForward = null;
         this.heart = new BirthdayHeart(this.heartEl, { reduced: this.reduced }).init();
         this.rain = new BirthdayRain(this.layer, { reduced: this.reduced });
         this.burst = null; // The reference-derived alpha plate owns hero playback.
@@ -299,7 +309,7 @@ export class BirthdayReveal {
         }, this.reduced ? 150 : 600);
     }
 
-    async _startCelebration(run, stage = 'heart-intro', { restored = false } = {}) {
+    async _startCelebration(run, stage = 'heart-intro', { restored = false, immediate = false } = {}) {
         this._stopEffects();
         this.layer?.classList.remove('is-effects-stopped');
         for (const el of [this.final, this.age, this.continueBtn, this.heartAdvanceBtn]) this._hide(el);
@@ -310,13 +320,13 @@ export class BirthdayReveal {
         else this.balloonsEl?.replaceChildren();
         // The birthday Canvas field persists through the entire celebration.
         if (['heart', 'age', 'age-ready'].includes(stage)) this._spawnWishSky();
-        await sleep(this.reduced ? 0 : 820);
+        await sleep(this.reduced || immediate ? 0 : 820);
         if (this._canceled || run !== this._run) return;
         if (['hero-burst', 'greeting', 'title-assembly'].includes(stage)) {
             await this._restoreTransientCelebration(run, stage);
             return;
         }
-        await (stage === 'age' || stage === 'age-ready' ? this._showAgeStage(run, { completed: stage === 'age-ready' }) : this._showHeartStage(run, { restored }));
+        await (stage === 'age' || stage === 'age-ready' ? this._showAgeStage(run, { completed: stage === 'age-ready', immediate }) : this._showHeartStage(run, { restored }));
     }
 
     async _restoreTransientCelebration(run, stage) {
@@ -910,13 +920,13 @@ export class BirthdayReveal {
         await this._showAgeStage(run, { titleVisible: true });
     }
 
-    async _showAgeStage(run, { titleVisible = false, completed = false } = {}) {
+    async _showAgeStage(run, { titleVisible = false, completed = false, immediate = false } = {}) {
         const stage = completed || this._wishMade ? 'age-ready' : 'age';
         this.layer?.setAttribute('data-birthday-stage', stage);
         this._fireStage(stage);
 
-        const settleTitle = this.reduced ? 120 : 1100;
-        const settleAge = this.reduced ? 120 : 900;
+        const settleTitle = immediate ? 0 : (this.reduced ? 120 : 1100);
+        const settleAge = immediate ? 0 : (this.reduced ? 120 : 900);
 
         // 1. "Happy Birthday, My Love ❤️" - the emotional centerpiece.
         if (!titleVisible) {
@@ -941,7 +951,7 @@ export class BirthdayReveal {
         if (stage === 'age-ready') this.layer?.classList.add('is-wishing', 'is-wish-complete');
 
         // Let the fully unfolded age breathe before the invitation.
-        await this._wait(this.reduced ? 120 : 1100);
+        await this._wait(immediate ? 0 : (this.reduced ? 120 : 1100));
         if (this._canceled || run !== this._run) return;
 
         // 3. The ONLY way forward: the user presses "Aage Badho ❤️".
@@ -957,21 +967,40 @@ export class BirthdayReveal {
             await this._wait(this.reduced ? 120 : 500);
             if (this._canceled || run !== this._run) return;
         }
-        this._show(this.continueBtn);
-        if (this.continueBtn) this.continueBtn.focus({ preventScroll: true });
-        await this._waitForContinue();
-        if (this._canceled || run !== this._run) return;
+        let loveMessageShown = false;
+        while (!this._canceled && run === this._run) {
+            this._show(this.continueBtn);
+            if (this.continueBtn) this.continueBtn.focus({ preventScroll: true });
+            await this._waitForContinue();
+            if (this._canceled || run !== this._run) return;
 
-        // Future love-message insertion point: a message scene (or
-        // several) can be awaited here without rewriting the
-        // sequence. Skipped until a stage is configured.
-        if (typeof this.loveMessageStage === 'function') {
-            await this.loveMessageStage();
+            // Future love-message insertion point: a message scene (or
+            // several) can be awaited here without rewriting the
+            // sequence. Skipped until a stage is configured.
+            if (!loveMessageShown && typeof this.loveMessageStage === 'function') {
+                await this.loveMessageStage();
+                loveMessageShown = true;
+            }
+            if (this._canceled || run !== this._run) return;
+
+            let handoffSucceeded = true;
+            if (typeof this.onForward === 'function') {
+                try {
+                    handoffSucceeded = await this.onForward();
+                } catch (error) {
+                    console.error('[BIRTHDAY] Memory handoff failed', error);
+                    handoffSucceeded = false;
+                }
+            }
+            if (this._canceled || run !== this._run) return;
+            if (handoffSucceeded !== false) {
+                // Exit only after Memory Lane has accepted the handoff.
+                await this._exit(run);
+                return;
+            }
+            // Failed preparation leaves this settled Live Age stage intact
+            // and re-arms the one-shot Continue listener for a later retry.
         }
-        if (this._canceled || run !== this._run) return;
-
-        // Exit: stop the clock, fade the scene out and resolve.
-        await this._exit(run);
     }
 
     /* Interrupt the running sequence (used by the global Back button
@@ -982,7 +1011,7 @@ export class BirthdayReveal {
     async cancel() {
         this._run += 1; // invalidate any in-flight play()/showFinal() chain
         this._canceled = true;
-        this._letterContinue();
+        this._letterContinue({ force: true });
         this._advanceHeart(this._run);
         this._continue();
         if (this.ageTimer) {
@@ -996,7 +1025,7 @@ export class BirthdayReveal {
        visitor returns from Memory Lane. Replays the celebration
        scenery and the stage entrances, then waits for the continue
        button again - the same way the first visit did. */
-    async showStage(stage = 'age') {
+    async showStage(stage = 'age', { immediate = false } = {}) {
         if (!this.layer || this.playing) return;
         const restoredStage = stage === 'heart-ready' ? 'age-ready' : ['heart-intro', 'hero-burst', 'greeting', 'title-assembly', 'heart', 'age', 'age-ready'].includes(stage) ? stage : 'age-ready';
         const run = (this._run += 1);
@@ -1006,11 +1035,13 @@ export class BirthdayReveal {
         this.layer.hidden = false;
         this.layer.removeAttribute('aria-hidden');
         this.layer.classList.add('is-visible');
-        await this._startCelebration(run, restoredStage, { restored: restoredStage === 'heart' });
+        await this._startCelebration(run, restoredStage, { restored: restoredStage === 'heart', immediate });
     }
 
     async showFinal() {
-        return this.showStage('age-ready');
+        // A Back restore must return directly to the stable Live Age scene,
+        // without replaying the preceding Birthday cinematic entrances.
+        return this.showStage('age-ready', { immediate: true });
     }
 
     async restoreHeart() {
@@ -1056,13 +1087,60 @@ export class BirthdayReveal {
        have their own staggered entrance (see animation.css). */
     _showLetter() {
         if (!this.letterStage) return;
+        this._resetLetterGate();
+        const letterAlreadyRead = this._hasReadLetter();
+        if (!letterAlreadyRead) this._lockLetter();
         this.letterStage.hidden = false;
         this.letterStage.removeAttribute('aria-hidden');
         this.letterStage.classList.add('is-in');
-        this.letterStage.classList.remove('is-at-end');
-        if (this.letterBtn) this.letterBtn.disabled = false;
         this._onLetterScroll(); // initial bottom-fade state
-        this.letterBtn?.focus({ preventScroll: true });
+        if (letterAlreadyRead) this.letterBtn?.focus({ preventScroll: true });
+    }
+
+    _hasReadLetter() {
+        if (this._letterReadInMemory) return true;
+        try {
+            const isRead = window.localStorage?.getItem(this._letterReadStorageKey) === '1';
+            if (isRead) this._letterReadInMemory = true;
+            return isRead;
+        } catch {
+            // Private/restricted storage should not prevent the reveal. The
+            // in-memory flag still preserves this browser run after unlock.
+            return false;
+        }
+    }
+
+    _lockLetter() {
+        this.letterStage?.classList.add('is-read-locked');
+        if (!this.letterBtn) return;
+        if (document.activeElement === this.letterBtn) this.letterBtn.blur();
+        this.letterBtn.disabled = true;
+        this.letterBtn.setAttribute('tabindex', '-1');
+    }
+
+    _unlockLetter({ persist = false } = {}) {
+        if (!this.letterStage?.classList.contains('is-read-locked')) return;
+        this.letterStage.classList.remove('is-read-locked');
+        this.letterStage.classList.add('is-read-unlocked');
+        if (this.letterBtn) {
+            this.letterBtn.disabled = false;
+            this.letterBtn.removeAttribute('tabindex');
+        }
+        if (!persist || this._letterReadInMemory) return;
+        this._letterReadInMemory = true;
+        try {
+            window.localStorage?.setItem(this._letterReadStorageKey, '1');
+        } catch {
+            // Keep the in-memory completion state when storage is blocked.
+        }
+    }
+
+    _resetLetterGate() {
+        this.letterStage?.classList.remove('is-at-end', 'is-read-locked', 'is-read-unlocked');
+        if (!this.letterBtn) return;
+        if (document.activeElement === this.letterBtn) this.letterBtn.blur();
+        this.letterBtn.disabled = false;
+        this.letterBtn.removeAttribute('tabindex');
     }
 
     /* Resolves when the letter button is pressed. Single-use listener,
@@ -1080,7 +1158,8 @@ export class BirthdayReveal {
         });
     }
 
-    _letterContinue() {
+    _letterContinue({ force = false } = {}) {
+        if (!force && this.letterStage?.classList.contains('is-read-locked')) return;
         const resolve = this._resolveLetter;
         if (!resolve) return;
         this._resolveLetter = null;
@@ -1101,6 +1180,7 @@ export class BirthdayReveal {
         this.letterStage.classList.remove('is-in', 'is-leaving');
         this.letterStage.setAttribute('aria-hidden', 'true');
         this.letterStage.hidden = true;
+        this._resetLetterGate();
     }
 
     _spawnStars() {
@@ -1196,16 +1276,17 @@ export class BirthdayReveal {
         this._stopEffects();
         // Resolve any pending letter wait so a re-entry (Back button
         // -> play() again) never hangs on a stale click promise.
-        this._letterContinue();
+        this._letterContinue({ force: true });
 
         this._hide(this.final);
         this._hide(this.age);
         this._hide(this.continueBtn);
         if (this.letterStage) {
-            this.letterStage.classList.remove('is-in', 'is-leaving', 'is-at-end');
+            this.letterStage.classList.remove('is-in', 'is-leaving');
             this.letterStage.setAttribute('aria-hidden', 'true');
             this.letterStage.hidden = true;
         }
+        this._resetLetterGate();
         if (this.sky) this.sky.innerHTML = '';
         if (this.candlesEl) this.candlesEl.innerHTML = '';
         if (this.balloonsEl) this.balloonsEl.innerHTML = '';
@@ -1339,12 +1420,13 @@ export class BirthdayReveal {
         this._run += 1; // invalidate any in-flight play()/showFinal() chain
         // Resolve any pending waits (letter button / continue button)
         // so a re-entry never hangs on a stale click promise.
-        this._letterContinue();
+        this._letterContinue({ force: true });
         this._continue();
         if (this.ageTimer) clearInterval(this.ageTimer);
         this.ageTimer = null;
         this.heart.destroy();
         this.rain.destroy();
+        this._resetLetterGate();
         this.letterBody?.removeEventListener('scroll', this._onLetterScroll);
     }
 }

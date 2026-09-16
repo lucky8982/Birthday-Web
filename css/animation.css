@@ -3302,6 +3302,24 @@
         letter-btn-breathe 4.6s ease-in-out 2.4s infinite;
 }
 
+/* On a first read, retain the CTA's space but keep it completely out of
+   sight and interaction until the scroll body reaches its true end. */
+.birthday-reveal-letter.is-read-locked .birthday-reveal-letter-btn {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    animation: none;
+}
+
+/* The unlocked CTA arrives quietly: a short fade and a small lift, then
+   resumes the existing resting glow. */
+.birthday-reveal-letter.is-read-unlocked .birthday-reveal-letter-btn {
+    visibility: visible;
+    animation:
+        letter-btn-unlock 0.52s var(--ease-out) both,
+        letter-btn-breathe 4.6s ease-in-out 0.62s infinite;
+}
+
 /* The letter leaves the visual stack completely before the
    countdown starts (matches the 550ms hide in JS): the scene
    fades and blurs away while the card gently scales up. */
@@ -3586,6 +3604,17 @@
     100% {
         opacity: 1;
         transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes letter-btn-unlock {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 

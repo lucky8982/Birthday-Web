@@ -3756,11 +3756,9 @@ h1, h2, h3 {
     transition-duration: 1.2s;
 }
 
-/* ---- The romantic gate before the letter can open ----
-   A small question, four answers, and the locked "Kholo ❤️" CTA
-   live in the letter scene. The letter stays closed until the
-   correct answer is picked and the unlocked CTA is pressed.
-   Premium glass language, part of the letter - never a quiz. */
+/* ---- The playful three-question gate before the letter can open ----
+   A persistent MAIN/TUM pair lives in the letter scene. Kholo appears
+   only after the final right answer. Premium glass language, never a quiz. */
 
 .letter-question {
     position: relative;
@@ -3786,6 +3784,28 @@ h1, h2, h3 {
     transform: translateY(0);
 }
 
+.letter-question.is-transitioning .letter-question-text,
+.letter-question.is-transitioning .letter-question-title,
+.letter-question.is-transitioning .letter-answers {
+    opacity: 0;
+    filter: blur(5px);
+    transform: translateY(-14px);
+    transition: opacity 0.28s var(--ease-soft), filter 0.28s var(--ease-soft), transform 0.28s var(--ease-out);
+}
+
+.letter-question.is-entering .letter-question-text,
+.letter-question.is-entering .letter-question-title,
+.letter-question.is-entering .letter-answers {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(16px);
+}
+
+.letter-question.is-entering .letter-answers {
+    transform: translateY(10px) scale(0.97);
+    transition-delay: 100ms;
+}
+
 /* The question fades away like the invitation once the letter
    opens - it belongs to the closed-letter moment only. */
 .letter-scene.is-open .letter-question {
@@ -3793,7 +3813,7 @@ h1, h2, h3 {
 }
 
 /* Optional only on the first three post-password messages after the
-   date gate has genuinely been completed. */
+   letter gate has genuinely been completed. */
 .opening-skip-btn {
     position: absolute;
     z-index: 12;
@@ -3858,6 +3878,7 @@ h1, h2, h3 {
     line-height: 1.5;
     color: #ffe9c9;
     text-shadow: 0 0 22px rgba(255, 209, 145, 0.35);
+    transition: opacity 0.42s var(--ease-soft), filter 0.42s var(--ease-soft), transform 0.42s var(--ease-out);
 }
 
 .letter-question-title {
@@ -3868,9 +3889,33 @@ h1, h2, h3 {
     line-height: 1.5;
     letter-spacing: 0.02em;
     color: var(--text-secondary);
+    white-space: pre-line;
+    transition: opacity 0.42s var(--ease-soft), filter 0.42s var(--ease-soft), transform 0.42s var(--ease-out);
 }
 
-/* Four answers in a two-column grid - stack-free, premium */
+.letter-answer-ack {
+    min-height: 1.5rem;
+    margin: -0.35rem 0;
+    font-family: var(--font-display);
+    font-size: clamp(0.9rem, 3.8vw, 1.05rem);
+    font-style: italic;
+    color: #ffe5b3;
+    text-shadow: 0 0 18px rgba(255, 209, 145, 0.42);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.2s var(--ease-soft), transform 0.2s var(--ease-out), visibility 0s linear 0.2s;
+}
+
+.letter-answer-ack.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    transition-delay: 0s;
+}
+
+/* The MAIN/TUM pair keeps two balanced home slots. */
 .letter-answers {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -3878,6 +3923,14 @@ h1, h2, h3 {
     width: 100%;
     max-width: 460px;
     outline: none;
+    transition: opacity 0.36s var(--ease-soft), transform 0.36s var(--ease-out), filter 0.36s var(--ease-soft);
+}
+
+.letter-answers.is-exiting {
+    opacity: 0;
+    filter: blur(5px);
+    transform: translateY(-8px) scale(0.98);
+    pointer-events: none;
 }
 
 .letter-answer {
@@ -3889,7 +3942,7 @@ h1, h2, h3 {
     font-family: var(--font-body);
     font-size: clamp(0.82rem, 3.4vw, 0.95rem);
     line-height: 1.35;
-    color: #e8eefc;
+    color: #eef1fa;
     background: rgba(255, 255, 255, 0.045);
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: var(--radius-full);
@@ -3898,7 +3951,7 @@ h1, h2, h3 {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(10px) scale(0.97);
     transition:
         opacity 0.7s var(--ease-soft),
         transform 0.7s var(--ease-out),
@@ -3908,15 +3961,83 @@ h1, h2, h3 {
         color var(--duration-fast) var(--ease-out);
 }
 
+.letter-answer[data-choice="main"] {
+    color: #f8ead4;
+    background: rgba(228, 184, 112, 0.10);
+    border-color: rgba(237, 202, 137, 0.38);
+    box-shadow:
+        0 8px 20px rgba(5, 10, 24, 0.34),
+        0 0 16px rgba(231, 183, 107, 0.10),
+        inset 0 1px 0 rgba(255, 244, 222, 0.12);
+}
+
+.letter-answer[data-choice="tum"] {
+    color: #f8e2e5;
+    background: rgba(205, 137, 157, 0.10);
+    border-color: rgba(223, 165, 181, 0.38);
+    box-shadow:
+        0 8px 20px rgba(5, 10, 24, 0.34),
+        0 0 16px rgba(210, 139, 160, 0.10),
+        inset 0 1px 0 rgba(255, 235, 239, 0.12);
+}
+
 .letter-answer:nth-child(1) { --i: 0; }
 .letter-answer:nth-child(2) { --i: 1; }
-.letter-answer:nth-child(3) { --i: 2; }
-.letter-answer:nth-child(4) { --i: 3; }
 
 .letter-question.is-in .letter-answer {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     transition-delay: calc(var(--i) * 90ms + 180ms);
+}
+
+.letter-question.is-in .letter-answer[data-choice="main"]:not(.is-selected):not(.is-correct):not(.is-runaway) {
+    animation: letter-answer-main-ambient 3.8s var(--ease-soft) infinite alternate;
+}
+
+.letter-question.is-in .letter-answer[data-choice="tum"]:not(.is-selected):not(.is-correct):not(.is-runaway) {
+    animation: letter-answer-tum-ambient 3.8s var(--ease-soft) 0.6s infinite alternate;
+}
+
+@keyframes letter-answer-main-ambient {
+    from {
+        background: rgba(228, 184, 112, 0.08);
+        box-shadow:
+            0 8px 20px rgba(5, 10, 24, 0.34),
+            0 0 12px rgba(231, 183, 107, 0.08),
+            inset 0 1px 0 rgba(255, 244, 222, 0.10);
+    }
+    to {
+        background: rgba(228, 184, 112, 0.13);
+        box-shadow:
+            0 8px 20px rgba(5, 10, 24, 0.34),
+            0 0 22px rgba(231, 183, 107, 0.16),
+            inset 0 1px 0 rgba(255, 244, 222, 0.16);
+    }
+}
+
+@keyframes letter-answer-tum-ambient {
+    from {
+        background: rgba(205, 137, 157, 0.08);
+        box-shadow:
+            0 8px 20px rgba(5, 10, 24, 0.34),
+            0 0 12px rgba(210, 139, 160, 0.08),
+            inset 0 1px 0 rgba(255, 235, 239, 0.10);
+    }
+    to {
+        background: rgba(205, 137, 157, 0.13);
+        box-shadow:
+            0 8px 20px rgba(5, 10, 24, 0.34),
+            0 0 22px rgba(210, 139, 160, 0.16),
+            inset 0 1px 0 rgba(255, 235, 239, 0.16);
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .letter-question.is-in .letter-answer[data-choice]:not(.is-runaway):not(.is-selected):not(.is-correct):hover {
+        transform: translateY(-1px) scale(1);
+        filter: brightness(1.08);
+        transition-delay: 0s;
+    }
 }
 
 .letter-answer:focus-visible {
@@ -3949,18 +4070,19 @@ h1, h2, h3 {
     text-shadow: 0 0 12px rgba(255, 209, 145, 0.8);
 }
 
-/* A wrong guess: subtle shake, nothing is locked */
-.letter-answer.is-wrong {
-    border-color: rgba(255, 132, 122, 0.65);
-    box-shadow: 0 0 22px rgba(255, 120, 100, 0.22);
-    animation: letter-answer-shake 0.5s var(--ease-out);
+.letter-answer.is-runaway {
+    --run-x: 0px;
+    --run-y: 0px;
+    --run-rotate: 0deg;
+    --run-scale: 1;
+    will-change: transform;
+    transition: transform 0.38s cubic-bezier(0.16, 0.82, 0.28, 1) !important;
+    transition-delay: 0s !important;
 }
 
-@keyframes letter-answer-shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    55% { transform: translateX(4px); }
-    80% { transform: translateX(-2px); }
+/* This is the single in-scene transform authority for a runaway answer. */
+.letter-question.is-in .letter-answer.is-runaway {
+    transform: translate3d(var(--run-x), var(--run-y), 0) rotate(var(--run-rotate)) scale(var(--run-scale));
 }
 
 /* Once the answer is right, the question settles and the answers
@@ -4004,28 +4126,22 @@ h1, h2, h3 {
         color var(--duration-fast) var(--ease-out);
 }
 
-/* The CTA enters with the question, already visible but LOCKED */
-.letter-question.is-in .letter-cta {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    transition-delay: 520ms;
-}
-
-/* Playful dodge: short, smooth, always inside the scene */
-.letter-cta.is-dodging {
-    transition: transform 0.28s var(--ease-out) !important;
+.letter-cta[hidden] {
+    display: none;
 }
 
 /* Unlocked: premium pop + glow + gentle breathing */
 .letter-cta.is-unlocked {
+    opacity: 1;
+    transform: translateY(0) scale(1);
     color: #fdf6e9;
     background: rgba(255, 214, 150, 0.12);
     border-color: rgba(255, 222, 150, 0.65);
     box-shadow:
         0 0 34px rgba(255, 209, 145, 0.35),
         inset 0 1px 0 rgba(255, 255, 255, 0.22);
-    animation: cta-unlock-in 0.8s var(--ease-out) both,
-        cta-breathe 3.6s var(--ease-soft) 0.8s infinite;
+    animation: cta-unlock-in 0.46s var(--ease-out) both,
+        cta-breathe 3.6s var(--ease-soft) 0.46s infinite;
 }
 
 @keyframes cta-unlock-in {
@@ -11776,6 +11892,7 @@ Tiny screens: compress everything so nothing overflows
     .letter-question,
     .letter-question-text,
     .letter-question-title,
+    .letter-answer-ack,
     .letter-answer,
     .letter-cta,
     .experience-back-btn,
@@ -11818,6 +11935,10 @@ Tiny screens: compress everything so nothing overflows
         filter: none !important;
     }
 
+    .letter-question.is-in .letter-answer.is-runaway {
+        transform: translate3d(var(--run-x), var(--run-y), 0) rotate(var(--run-rotate)) scale(var(--run-scale)) !important;
+    }
+
     /* The unlocked CTA appears instantly, fully clickable */
     .letter-cta.is-unlocked {
         opacity: 1 !important;
@@ -11825,8 +11946,8 @@ Tiny screens: compress everything so nothing overflows
         pointer-events: auto !important;
     }
 
-    /* Wrong answers: no shake, only a calm border hint */
-    .letter-answer.is-wrong {
+    /* Runaway answers reposition without motion under reduced motion. */
+    .letter-answer.is-runaway {
         animation: none !important;
     }
 

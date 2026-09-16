@@ -17,8 +17,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/index-ClOlb9sW.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-UJppgsE0.css">
+  <script type="module" crossorigin src="/assets/index-JB3dDKa9.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BKZba6Zg.css">
 </head>
 <div>
     <!-- ============================================
@@ -261,24 +261,18 @@
                     </p>
                 </div>
 
-                <!-- The romantic gate before the letter can open: a small
-                     question, four answers, and the locked "Kholo ❤️" CTA.
-                     The letter stays closed until the correct answer is
-                     picked and the unlocked CTA is pressed. -->
+                <!-- The romantic three-question gate before the letter can
+                     open. Its copy and correct choices are supplied by the
+                     opening controller; Kholo appears only after the lock. -->
                 <div class="letter-question" id="letter-question" aria-hidden="true">
-                    <p class="letter-question-text">
-                        Baby, ek chhota sa sawaal hai... ❤️
-                    </p>
-                    <p class="letter-question-title">
-                        Hamari story ki pehli baat kis din hui thi?
-                    </p>
-                    <div class="letter-answers" id="letter-answers" tabindex="-1" role="group" aria-label="Choose the day our story began">
-                        <button type="button" class="letter-answer" data-correct="false" aria-pressed="false">09 August 2023</button>
-                        <button type="button" class="letter-answer" data-correct="true" aria-pressed="false">01 December 2023 ❤️</button>
-                        <button type="button" class="letter-answer" data-correct="false" aria-pressed="false">28 December 2023</button>
-                        <button type="button" class="letter-answer" data-correct="false" aria-pressed="false">01 January 2024</button>
+                    <p class="letter-question-text"></p>
+                    <p class="letter-question-title" aria-live="polite"></p>
+                    <p class="letter-answer-ack" id="letter-answer-ack" aria-live="polite"></p>
+                    <div class="letter-answers" id="letter-answers" tabindex="-1" role="group" aria-label="Choose MAIN or TUM">
+                        <button type="button" class="letter-answer" data-choice="main" aria-label="Choose MAIN" aria-pressed="false">MAIN</button>
+                        <button type="button" class="letter-answer" data-choice="tum" aria-label="Choose TUM" aria-pressed="false">TUM</button>
                     </div>
-                    <button type="button" class="letter-cta" id="letter-cta" aria-disabled="true" tabindex="-1">
+                    <button type="button" class="letter-cta" id="letter-cta" aria-disabled="true" tabindex="-1" hidden>
                         Kholo <span class="cta-heart" aria-hidden="true">❤️</span>
                     </button>
                 </div>
