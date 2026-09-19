@@ -438,6 +438,7 @@
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
     .loading-screen,
+    .loading-waiting-photo,
     .loading-logo,
     .loading-title .title-line,
     .title-heart,
@@ -572,24 +573,21 @@
 
 /* The chapter itself arrives like a curtain rising - premium cinematic entrance */
 .memory-chapter.is-active {
-    animation: chapter-scene-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: chapter-scene-in 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes chapter-scene-in {
     from {
         opacity: 0;
         transform: scale(1.05) translateY(20px);
-        filter: blur(10px);
     }
     60% {
         opacity: 0.8;
         transform: scale(1.01) translateY(-4px);
-        filter: blur(2px);
     }
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
-        filter: blur(0);
     }
 }
 
@@ -602,110 +600,95 @@
    Premium: smoother, more emotional exits.
    ============================================================ */
 .memory-chapter.chapter-exit-fade {
-    animation: chapter-exit-fade 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation: chapter-exit-fade 0.52s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes chapter-exit-fade {
     from {
         opacity: 1;
-        filter: blur(0);
     }
     50% {
         opacity: 0.6;
-        filter: blur(2px);
     }
     to {
         opacity: 0;
         transform: scale(0.98);
-        filter: blur(8px);
     }
 }
 
 .memory-chapter.chapter-exit-left {
-    animation: chapter-exit-left 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation: chapter-exit-left 0.52s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes chapter-exit-left {
     from {
         opacity: 1;
         transform: translateX(0);
-        filter: blur(0);
     }
     50% {
         opacity: 0.5;
         transform: translateX(-35px);
-        filter: blur(3px);
     }
     to {
         opacity: 0;
         transform: translateX(-80px);
-        filter: blur(10px);
     }
 }
 
 .memory-chapter.chapter-exit-zoom {
-    animation: chapter-exit-zoom 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation: chapter-exit-zoom 0.52s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes chapter-exit-zoom {
     from {
         opacity: 1;
         transform: scale(1);
-        filter: blur(0);
     }
     50% {
         opacity: 0.5;
         transform: scale(0.95);
-        filter: blur(3px);
     }
     to {
         opacity: 0;
         transform: scale(0.88);
-        filter: blur(12px);
     }
 }
 
 .memory-chapter.chapter-exit-up {
-    animation: chapter-exit-up 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation: chapter-exit-up 0.52s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes chapter-exit-up {
     from {
         opacity: 1;
         transform: translateY(0);
-        filter: blur(0);
     }
     50% {
         opacity: 0.5;
         transform: translateY(-28px);
-        filter: blur(3px);
     }
     to {
         opacity: 0;
         transform: translateY(-64px);
-        filter: blur(10px);
     }
 }
 
 .memory-chapter.chapter-exit-blur {
-    animation: chapter-exit-blur 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation: chapter-exit-blur 0.52s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 @keyframes chapter-exit-blur {
     from {
         opacity: 1;
         transform: scale(1);
-        filter: blur(0);
     }
     50% {
         opacity: 0.5;
         transform: scale(1.01);
-        filter: blur(6px);
     }
     to {
         opacity: 0;
         transform: scale(1.03);
-        filter: blur(18px);
     }
 }
 
@@ -2694,31 +2677,6 @@
     font-style: italic;
     animation: m25-quote 1.1s var(--ease-out) both;
 }
-.memory-message-block.message-memory-25.is-in .memory-message::before {
-    content: '\201C';
-    position: absolute;
-    left: -0.55em;
-    top: -0.35em;
-    font-size: 2.6em;
-    font-family: var(--font-display);
-    color: var(--blue-300);
-    opacity: 0;
-    animation: m25-mark 0.7s var(--ease-soft) 0.15s both;
-}
-.memory-message-block.message-memory-25.is-in .memory-message::after {
-    content: '\201D';
-    position: absolute;
-    right: -0.5em;
-    bottom: -0.5em;
-    font-size: 2.6em;
-    font-family: var(--font-display);
-    color: var(--green-300);
-    opacity: 0;
-    animation: m25-mark 0.7s var(--ease-soft) 0.35s both;
-}
-.memory-message-block.message-memory-25.is-in .memory-message {
-    position: relative;
-}
 @keyframes m25-quote {
     from {
         opacity: 0;
@@ -2729,17 +2687,6 @@
         transform: translateY(0);
     }
 }
-@keyframes m25-mark {
-    from {
-        opacity: 0;
-        transform: scale(0.4);
-    }
-    to {
-        opacity: 0.85;
-        transform: scale(1);
-    }
-}
-
 /* 26 - slow cinematic rise */
 .memory-message-block.message-memory-26.is-in {
     animation: m26-rise 1.6s var(--ease-out) both;
@@ -3825,19 +3772,28 @@
 
 .memory-message-block.message-letter .memory-letter-para.is-in,
 .memory-message-block.message-letter .memory-letter-sign.is-in {
-    animation: letter-para-in 1s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    animation: letter-para-in 0.58s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* Delayed boot state: a small, calm pulse rather than a fabricated progress
+   sequence. It is also suppressed by the existing reduced-motion block. */
+.loading-waiting-photo {
+    animation: waiting-photo-breathe 3.6s var(--ease-soft) infinite alternate;
+}
+
+@keyframes waiting-photo-breathe {
+    from { transform: scale(0.97); filter: saturate(0.92); }
+    to { transform: scale(1.03); filter: saturate(1.08); }
 }
 
 @keyframes letter-para-in {
     from {
         opacity: 0;
         transform: translateY(18px);
-        filter: blur(5px);
     }
     to {
         opacity: 1;
         transform: translateY(0);
-        filter: blur(0);
     }
 }
 /* Celebration-only choreography; no changes to countdown or letter motion. */

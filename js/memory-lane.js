@@ -38,9 +38,9 @@ import { $, prefersReducedMotion } from './utils.js';
 const PHOTO_MEMORIES = [
     {
         id: 1,
-        title: 'Birthday Girl',
+        title: 'Meri Shararti Baby',
         image: 'assets/images/memories/dummy-photo-01.jpg',
-        message: 'Happy Birthday Baby Mene tumhe bachman se to nahi dekha Lekin abhi jis tarha se me tumhe jaanta hu us hisab se to tum bahut shararti rahi hogi.',
+        message: 'Happy Birthday, Baby. Maine tumhe bachpan se to nahi dekha, lekin abhi jis tarah se me tumhe jaanta hu, us hisaab se to tum bahut shararti rahi hogi.',
         titleAnimation: 'title-memory-01',
         photoAnimation: 'photo-memory-01',
         messageAnimation: 'message-memory-01',
@@ -53,7 +53,7 @@ const PHOTO_MEMORIES = [
         id: 2,
         title: 'Meri Pyari Chipkali',
         image: 'assets/images/memories/dummy-photo-02.jpg',
-        message: 'Tumhari vo shararte tumhara chanchalpan vo aaj bhi tumhare andar he Jo mene bachpan me to nahi dekha lekin aaj jarur dekh raha hu .',
+        message: 'Tumhari vo sharartein, tumhara chanchalpan, vo aaj bhi tumhare andar he jo maine bachpan me to nahi dekha, lekin aaj zaroor dekh raha hu.',
         titleAnimation: 'title-memory-02',
         photoAnimation: 'photo-memory-02',
         messageAnimation: 'message-memory-02',
@@ -64,9 +64,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 3,
-        title: 'Mera Pyara Baby',
+        title: 'Meri Pyari Baby',
         image: 'assets/images/memories/dummy-photo-03.JPG',
-        message: 'Tum Bahut pyari ho baby tum jab se meri life me aai ho ek alag hi duniya basa li he mene tumhare sath or me puri jindagi tumhare sath jina chahta hu.',
+        message: 'Tum bahut pyari ho baby. Tum jab se meri life me aai ho, ek alag hi duniya basa li he maine tumhare sath aur me puri zindagi tumhare sath jeena chahta hu.',
         titleAnimation: 'title-memory-03',
         photoAnimation: 'photo-memory-03',
         messageAnimation: 'message-memory-03',
@@ -77,9 +77,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 4,
-        title: 'Pahli Mulakat',
+        title: 'Pehli Mulakat',
         image: 'assets/images/memories/dummy-photo-04.JPG',
-        message: 'Biwi tumhe yaad he hamari pahli mulakat jab hum raste me jaa rahe the or mene tumse kaha tha hum vaha pr Photo khicenge lekin tumne mana kr diya tha Lekin hamene vaha pr kitnisari photos khici thi.',
+        message: 'Biwi, tumhe yaad he hamari pehli mulakat, jab hum raste me jaa rahe the aur maine tumse kaha tha hum vaha par photo khinchenge, lekin tumne mana kr diya tha. Lekin humne vaha par kitni saari photos khinchi thi.',
         titleAnimation: 'title-memory-04',
         photoAnimation: 'photo-memory-04',
         messageAnimation: 'message-memory-04',
@@ -90,9 +90,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 5,
-        title: 'Third Mulakat',
+        title: 'Teesri Mulakat',
         image: 'assets/images/memories/dummy-photo-05.JPG',
-        message: 'Baby tumhe pata he iss din me tumse itna dar raha tha, Lekin manme me bus yahi soch raha tha ki kaas ye din ye pal yahi ruk jaaye kabhi khatam hi naa ho.',
+        message: 'Baby, tumhe pata he iss din me tumse itna dar raha tha. Lekin mann mein main bas yahi soch raha tha ki kaash ye din, ye pal yahi ruk jaaye, kabhi khatam hi naa ho.',
         titleAnimation: 'title-memory-05',
         photoAnimation: 'photo-memory-05',
         messageAnimation: 'message-memory-05',
@@ -103,9 +103,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 6,
-        title: 'Fifth Mulakat',
+        title: 'Paanchvi Mulakat',
         image: 'assets/images/memories/dummy-photo-06.JPG',
-        message: 'Ye mulakat to tumhe yaad hi hogi baby iss mulakat ne humare rishte ko ek nayi pahchan di thi jisse hamara rishta or gahra ho gaya tha.',
+        message: 'Ye mulakat to tumhe yaad hi hogi, baby. Iss mulakat ne humare rishte ko ek nayi pahchan di thi, jisse hamara rishta aur gehra ho gaya tha.',
         titleAnimation: 'title-memory-06',
         photoAnimation: 'photo-memory-06',
         messageAnimation: 'message-memory-06',
@@ -116,9 +116,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 7,
-        title: 'Seventh Mulakat',
+        title: 'Saatvi Mulakat',
         image: 'assets/images/memories/dummy-photo-07.JPG',
-        message: 'Iss mulakat ne to hamri puri life ko hi change kar diye hamara ek dusre ke liye pyar or wishwas ko hi jaga diya or tumhe meri biwi bana diya.',
+        message: 'Iss mulakat ne to hamari puri life ko hi change kar diya, hamare ek dusre ke liye pyar aur vishwas ko hi jaga diya aur tumhe meri biwi bana diya.',
         titleAnimation: 'title-memory-07',
         photoAnimation: 'photo-memory-07',
         messageAnimation: 'message-memory-07',
@@ -129,9 +129,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 8,
-        title: 'Tumhare Ye cute reaction',
+        title: 'Tumhare Ye Pyare Reactions',
         image: 'assets/images/memories/dummy-photo-08.JPG',
-        message: 'Baby tum jo itne payare pyare face banati ho naa kitni pyari lagti ho yaar bahut payeri lagti ho mere samne jab tum ese reaction deti ho to Me to sub bhul jaata hu mera gussa sub kuch.',
+        message: 'Baby, tum jo itne pyare pyare face banati ho naa, kitni pyari lagti ho yaar. Bahut pyari lagti ho mere samne. Jab tum aise reactions deti ho, to me to sab bhul jaata hu, mera gussa sab kuch.',
         titleAnimation: 'title-memory-08',
         photoAnimation: 'photo-memory-08',
         messageAnimation: 'message-memory-08',
@@ -142,9 +142,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 9,
-        title: 'New Dress up',
+        title: 'Meri Shirt Wali Yaad',
         image: 'assets/images/memories/dummy-photo-09.JPG',
-        message: 'Us din tumne jab mera shirt pahna tha naa vo shirt me jab bhi pahanta hu mujhe uss din ki yaad aati he tum kitni pyari lag rahi thi baby.',
+        message: 'Us din tumne jab meri shirt pahni thi naa, vo shirt me jab bhi pehenta hu, mujhe uss din ki yaad aati he. Tum kitni pyari lag rahi thi, baby.',
         titleAnimation: 'title-memory-09',
         photoAnimation: 'photo-memory-09',
         messageAnimation: 'message-memory-09',
@@ -155,9 +155,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 10,
-        title: 'Garbha Queen',
+        title: 'Garba Queen',
         image: 'assets/images/memories/dummy-photo-10.JPG',
-        message: 'Baby me bahut regrate karta hu ki hum itne pass ho kr bhi mene kabhi tumhe iss look me nahi dekh paaya tumhari 7th se 10th tk ki setaniya.',
+        message: 'Baby, me bahut regret karta hu ki hum itne paas ho kr bhi maine kabhi tumhe iss look me nahi dekh paaya, tumhari 7th se 10th tk ki setaniya.',
         titleAnimation: 'title-memory-10',
         photoAnimation: 'photo-memory-10',
         messageAnimation: 'message-memory-10',
@@ -168,9 +168,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 11,
-        title: 'New Look',
+        title: 'Tumhara Naya Look',
         image: 'assets/images/memories/dummy-photo-11.JPG',
-        message: 'Iss dress me bhi tum kya lagti ho baby tumhara ek new look bahar aata he iss dress me to vese to tum har dress me hi perfect lagti ho lekin iss dress me to tumhara pura face hi change ho jaata he.',
+        message: 'Iss dress me bhi tum kya lagti ho, baby. Tumhara ek naya look bahar aata he iss dress me. Vese to tum har dress me hi perfect lagti ho, lekin iss dress me to tumhara pura face hi change ho jaata he.',
         titleAnimation: 'title-memory-11',
         photoAnimation: 'photo-memory-11',
         messageAnimation: 'message-memory-11',
@@ -181,9 +181,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 12,
-        title: 'Choti Magar Majedar',
+        title: 'Chhoti Magar Mazedaar',
         image: 'assets/images/memories/dummy-photo-12.JPG',
-        message: 'Ye mulakat to bahut hi pyari thi baby bhale hi choti se thi lekin hamne jo memoris create ki thi vo to hum kabhi nahi bhulenge hamari masti.',
+        message: 'Ye mulakat to bahut hi pyari thi, baby. Bhale hi chhoti si thi, lekin hamne jo memories create ki thi, vo to hum kabhi nahi bhulenge, hamari masti.',
         titleAnimation: 'title-memory-12',
         photoAnimation: 'photo-memory-12',
         messageAnimation: 'message-memory-12',
@@ -196,7 +196,7 @@ const PHOTO_MEMORIES = [
         id: 13,
         title: 'Big Boss Cafe',
         image: 'assets/images/memories/dummy-photo-13.jpg',
-        message: 'Iss mulakat ke liye hum kya kya soch kr gaye the lekin kya nikla ye mulakat bhi badi hi mazedar thi short cabin me alag hi experions tha.',
+        message: 'Iss mulakat ke liye hum kya kya soch kr gaye the, lekin kya nikla, ye mulakat bhi badi hi mazedar thi. Short cabin me alag hi experience tha.',
         titleAnimation: 'title-memory-13',
         photoAnimation: 'photo-memory-13',
         messageAnimation: 'message-memory-13',
@@ -209,7 +209,7 @@ const PHOTO_MEMORIES = [
         id: 14,
         title: 'Palak Paneer',
         image: 'assets/images/memories/dummy-photo-14.jpg',
-        message: 'Ye mulakat to tumhe yaad hi hogi Pure 8 mahine baad hum mile the usme bhi tum mere liye jo palak paneer lai thi uski to baat hi alag thi baby.',
+        message: 'Ye mulakat to tumhe yaad hi hogi. Pure 8 mahine baad hum mile the. Usme bhi tum mere liye jo palak paneer lai thi, uski to baat hi alag thi baby.',
         titleAnimation: 'title-memory-14',
         photoAnimation: 'photo-memory-14',
         messageAnimation: 'message-memory-14',
@@ -220,9 +220,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 15,
-        title: 'Hamari masti',
+        title: 'Hamari Masti',
         image: 'assets/images/memories/dummy-photo-15.jpg',
-        message: 'Iss mulakat me hum ne jo bachpana dikhaya tha kitna maza aaya tha baby humari ladai hamri masti ek alag hi yaade ban gai he.',
+        message: 'Iss mulakat me humne jo bachpana dikhaya tha, kitna maza aaya tha baby. Humari ladai, hamari masti ek alag hi yaadein ban gai he.',
         titleAnimation: 'title-memory-15',
         photoAnimation: 'photo-memory-15',
         messageAnimation: 'message-memory-15',
@@ -233,9 +233,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 16,
-        title: 'Meri Khadush Biwi',
+        title: 'Meri Khadoos Biwi',
         image: 'assets/images/memories/dummy-photo-16.jpg',
-        message: 'Ye photo mere liye bahut important he iss dress me photo paane ke liye mene bahut intzar kiya he or tum bhi kya khoob ho tumen camera man ko hi bula liya or fir photo bheji.',
+        message: 'Ye photo mere liye bahut important he. Iss dress me photo paane ke liye maine bahut intezar kiya he, aur tum bhi kya khoob ho, tumne cameraman ko hi bula liya aur fir photo bheji.',
         titleAnimation: 'title-memory-16',
         photoAnimation: 'photo-memory-16',
         messageAnimation: 'message-memory-16',
@@ -246,9 +246,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 17,
-        title: 'First Kiss',
+        title: 'Hamari Pehli Kiss',
         image: 'assets/images/memories/dummy-photo-17.jpg',
-        message: 'Vese baby mujhe aaj tk samjh nahi aaya tum iss mulakat me itna kya soch rahi thi kya tum ghar se hi kiss lene ka plan bana kr aai thi or moke ke liye itna soch rahi thi.',
+        message: 'Vese baby, mujhe aaj tk samjh nahi aaya, tum iss mulakat me itna kya soch rahi thi? Kya tum ghar se hi kiss lene ka plan bana kr aai thi aur mauke ke liye itna soch rahi thi?',
         titleAnimation: 'title-memory-17',
         photoAnimation: 'photo-memory-17',
         messageAnimation: 'message-memory-17',
@@ -261,7 +261,7 @@ const PHOTO_MEMORIES = [
         id: 18,
         title: 'Tumhari Smile',
         image: 'assets/images/memories/dummy-photo-18.jpg',
-        message: 'Baby jab tum jor jor se hasti ho na to bahut pyari lagti ho pyari to tab bhi lagti ho jab dheere se hasti ho lekin Jor se hasti ho to jyda pyari lagti ho.',
+        message: 'Baby, jab tum zor zor se hasti ho na, to bahut pyari lagti ho. Pyari to tab bhi lagti ho, jab dheere se hasti ho, lekin zor se hasti ho to zyada pyari lagti ho.',
         titleAnimation: 'title-memory-18',
         photoAnimation: 'photo-memory-18',
         messageAnimation: 'message-memory-18',
@@ -272,9 +272,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 19,
-        title: 'Netural Buety',
+        title: 'Tumhari Natural Beauty',
         image: 'assets/images/memories/dummy-photo-19.jpg',
-        message: 'Dekho baby isiliye bolta hu ki Mackup mt kiya karo iss photo me kitni pyari lag rahi ho yahi to he tumhari netural Buety Lekin tumhe to putti ka sahara lena he.',
+        message: 'Dekho baby, isiliye bolta hu ki Makeup mt kiya karo. Iss photo me kitni pyari lag rahi ho, yahi to he tumhari natural beauty. Lekin tumhe to putti ka sahara lena he.',
         titleAnimation: 'title-memory-19',
         photoAnimation: 'photo-memory-19',
         messageAnimation: 'message-memory-19',
@@ -285,9 +285,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 20,
-        title: 'Tumhare posese',
+        title: 'Tumhare Poses',
         image: 'assets/images/memories/dummy-photo-20.jpg',
-        message: 'Baby yaar tumne mujhse kitna kuch chupaya tum bolti thi ki mujhe kuch bhi nahi aata he na pose dena na face expration dena or abhi dekho tum to master ho in sub me.',
+        message: 'Baby yaar, tumne mujhse kitna kuch chupaya. Tum bolti thi ki mujhe kuch bhi nahi aata he, na pose dena, na face expressions dena, aur abhi dekho, tum to master ho in sab me.',
         titleAnimation: 'title-memory-20',
         photoAnimation: 'photo-memory-20',
         messageAnimation: 'message-memory-20',
@@ -298,9 +298,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 21,
-        title: 'Special Dress',
+        title: 'Woh Khaas Dress',
         image: 'assets/images/memories/dummy-photo-21.jpg',
-        message: 'Baby tumhe nahi lagta ki tum iss dress me kuch jyda hi pyari lagti ho iss dress ke tum sare photos dekh lo tum sub me alag hi bawal macha rahi ho.',
+        message: 'Baby, tumhe nahi lagta ki tum iss dress me kuch zyada hi pyari lagti ho? Iss dress ke tum sare photos dekh lo, tum sab me alag hi bawal macha rahi ho.',
         titleAnimation: 'title-memory-21',
         photoAnimation: 'photo-memory-21',
         messageAnimation: 'message-memory-21',
@@ -313,7 +313,7 @@ const PHOTO_MEMORIES = [
         id: 22,
         title: 'Snapchat Queen',
         image: 'assets/images/memories/dummy-photo-22.jpg',
-        message: 'Rakhi ke din bhi tumne alag hi khusi di he mujhe iss din iss dress me tumhari snep kya hi din tha vo bahut pyari lag rahi thi.',
+        message: 'Rakhi ke din bhi tumne alag hi khushi di he mujhe. Iss din iss dress me tumhari snap kya hi thi, tum bahut pyari lag rahi thi.',
         titleAnimation: 'title-memory-22',
         photoAnimation: 'photo-memory-22',
         messageAnimation: 'message-memory-22',
@@ -324,9 +324,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 23,
-        title: 'My baby in Saree',
+        title: 'Saree Mein Meri Baby',
         image: 'assets/images/memories/dummy-photo-23.jpg',
-        message: 'Saree me to tumhari buity ka koi jawab hi nahi he baby bhale hi thodi patli lagti ho lekin bahut pyari lagti ho ek dum bemisal.',
+        message: 'Saree me to tumhari beauty ka koi jawab hi nahi he, baby. Bhale hi thodi patli lagti ho, lekin bahut pyari lagti ho, ek dum bemisaal.',
         titleAnimation: 'title-memory-23',
         photoAnimation: 'photo-memory-23',
         messageAnimation: 'message-memory-23',
@@ -337,9 +337,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 24,
-        title: 'My baby in Shirt',
+        title: 'Meri Shirt Mein Tum',
         image: 'assets/images/memories/dummy-photo-24.jpg',
-        message: 'Baby tumhe us din kesa laga tha jis din tumne mera shirt pahna tha kuch special feel hua tha ya mere shart se gandi smell aa rahi thi mujhe batana haa.',
+        message: 'Baby, tumhe us din kaisa laga tha, jis din tumne meri shirt pahni thi? Kuch special feel hua tha ya meri shirt se gandi smell aa rahi thi? Mujhe batana haa.',
         titleAnimation: 'title-memory-24',
         photoAnimation: 'photo-memory-24',
         messageAnimation: 'message-memory-24',
@@ -350,9 +350,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 25,
-        title: 'Ankho Ka Jaadu',
+        title: 'Aankhon Ka Jaadu',
         image: 'assets/images/memories/dummy-photo-25.jpg',
-        message: 'Baby tum itni pyari kio ho yaar tumhari aankhe to dekho iss photo me kitni jahar lag rahi he in aankho se hi jaadu karti ho na tum sub pr.',
+        message: 'Baby tumhari aankhon me pata nahi kya jaadu he, jitni baar dekhta hu utni baar bas dekhta hi reh jaata hu. Tum kuch bolo ya naa bolo, tumhari aankhein hi bahut kuch keh deti hain. Sach me baby, tumhari aankhein bahut pyari hain.',
         titleAnimation: 'title-memory-25',
         photoAnimation: 'photo-memory-25',
         messageAnimation: 'message-memory-25',
@@ -363,9 +363,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 26,
-        title: 'Khubsurat Kon',
+        title: 'Khoobsurat Kaun?',
         image: 'assets/images/memories/dummy-photo-26.jpg',
-        message: 'Kuch bhi kaho Baby hum sath me khubsurat to lagte he yaar bhale hi me thoda jyada handsome hu lekin thum bhi kuch kam nahi ho mujhe thodi bahut takkar to de hi deti ho.',
+        message: 'Kuch bhi kaho, Baby, hum sath me khubsurat to lagte he yaar. Bhale hi me thoda zyada handsome hu, lekin tum bhi kuch kam nahi ho. Mujhe thodi bahut takkar to de hi deti ho.',
         titleAnimation: 'title-memory-26',
         photoAnimation: 'photo-memory-26',
         messageAnimation: 'message-memory-26',
@@ -378,7 +378,7 @@ const PHOTO_MEMORIES = [
         id: 27,
         title: 'Meri Malkin',
         image: 'assets/images/memories/dummy-photo-27.jpg',
-        message: 'Baby agar tum meri malkin naa hoti to fir me tumhe batata ki me kitna sigma boy hu abhi to me sub sah leta hu.',
+        message: 'Baby, agar tum meri malkin naa hoti, to fir me tumhe batata ki me kitna sigma boy hu. Abhi to me sab sah leta hu.',
         titleAnimation: 'title-memory-27',
         photoAnimation: 'photo-memory-27',
         messageAnimation: 'message-memory-27',
@@ -389,9 +389,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 28,
-        title: 'Wish puri karogi',
+        title: 'Wish Puri Karogi?',
         image: 'assets/images/memories/dummy-photo-28.jpg',
-        message: 'Baby Mujhe na iss dress me tumhare sath time spend karna he mujhe na tum iss dress me bahut pyari lagti ho kuch kya bahut jyda hi pyari to batao milogi naa.',
+        message: 'Baby, mujhe na iss dress me tumhare sath time spend karna he. Mujhe na tum iss dress me bahut pyari lagti ho, kuch kya bahut zyada hi pyari. To batao, milogi naa?',
         titleAnimation: 'title-memory-28',
         photoAnimation: 'photo-memory-28',
         messageAnimation: 'message-memory-28',
@@ -402,9 +402,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 29,
-        title: 'Old Memory',
+        title: 'Woh Purani Insta Photo',
         image: 'assets/images/memories/dummy-photo-29.jpg',
-        message: 'Tumhe pata he baby ye photo mene tumhare insta pr dekha tha tab mujhe pata chala tha ki tum saree me itni jyda pyari lagti ho kuch bhi bolo saree tumhare uper shuit to karti he.',
+        message: 'Tumhe pata he baby, ye photo maine tumhare insta par dekha tha. Tab mujhe pata chala tha ki tum saree me itni zyada pyari lagti ho. Kuch bhi bolo, saree tumhare upar suit to karti he.',
         titleAnimation: 'title-memory-29',
         photoAnimation: 'photo-memory-29',
         messageAnimation: 'message-memory-29',
@@ -415,9 +415,9 @@ const PHOTO_MEMORIES = [
     },
     {
         id: 30,
-        title: 'All Time Favourite',
+        title: 'Meri Favourite Photo',
         image: 'assets/images/memories/dummy-photo-30.jpg',
-        message: 'Baby tum kitne bhi photos khicha lo kitne bhi acche khicha lo lekin iss photo ki baat hi kuch or he isme tum itni pyari lagti ho naa sach me baby tum bahut pyari hi I Love you Soo Much.',
+        message: 'Baby, tum kitne bhi photos khincha lo, kitne bhi acche khincha lo, lekin iss photo ki baat hi kuch aur he. Isme tum itni pyari lagti ho naa, sach me baby, tum bahut pyari ho. I Love you Soo Much.',
         titleAnimation: 'title-memory-30',
         photoAnimation: 'photo-memory-30',
         messageAnimation: 'message-memory-30',
@@ -438,24 +438,60 @@ const PHOTO_MEMORIES = [
    ------------------------------------------------------------ */
 const LETTER_AFTER_PHOTO = [3, 7, 11, 15, 19, 23, 27];
 
+const GRAPHEME_SEGMENTER =
+    typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+        ? new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+        : null;
+
+function splitGraphemes(text) {
+    if (GRAPHEME_SEGMENTER) {
+        return Array.from(
+            GRAPHEME_SEGMENTER.segment(text),
+            ({ segment }) => segment
+        );
+    }
+
+    // Preserve code points and common emoji/combining sequences in browsers
+    // without Intl.Segmenter, rather than splitting UTF-16 surrogate pairs.
+    const graphemes = [];
+    let joinNext = false;
+
+    for (const char of Array.from(text)) {
+        const joinsPrevious =
+            joinNext ||
+            char === '\u200D' ||
+            /[\u0300-\u036F\u1AB0-\u1AFF\u1DC0-\u1DFF\u20D0-\u20FF\uFE00-\uFE0F\u20E3\u{1F3FB}-\u{1F3FF}]/u.test(char);
+
+        if (graphemes.length && joinsPrevious) {
+            graphemes[graphemes.length - 1] += char;
+        } else {
+            graphemes.push(char);
+        }
+
+        joinNext = char === '\u200D';
+    }
+
+    return graphemes;
+}
+
 const LETTER_MEMORIES = [
     {
         id: 31,
         type: 'letter',
-        marker: 'A Little Letter',
-        title: 'Happy Birthday Khushbu',
+        marker: 'Tumhare Birthday Par',
+        title: 'Happy Birthday, Khushbu',
         paragraphs: [
-            'Dear Wife,',
-            'Happy Birthday, Tumhe pata he Aaj ka din mere liye kitna khaas he? Kyunki aaj us insaan ka janamdin he jise sochte hi Mere chehre par muskurahat aa jaati hai.',
-            'Tum meri Zindagi ka wo hissa ho jise main lafzon mein poori tarha bayan bhi nahi kar sakta hu. Tumhari ek chhoti  si baat mere din bana deti hai, aur tumhari ek mulakaat mere dil ko sukoon de deti he. Shayad tumhe andaja bhi nahi hoga ki tum meri zindagi mein kitni ahmiyat rakhti ho baby..',
-            'Aaj tumharea birthday pr mein bas itna kehna chahta hoon ki tum meri har dua mein shamil ho. Main dil se chahta hoon ki tumhari zindagi mein kabhi kisi cheez ki kami na ho. Tumhare har sapne poore hon, har manzil tumhe mile or tum hamesha khush raho baby..',
-            'Tumhare sath baat karna, tumhari fikr karna aur tumhe khush dekhna mujhe sach me bahut pasand he baby, Kabhi kabhi lagta he ki tum meri aadat ban gai gai ho. Din kitna bhi busy ho, ek baar tumhara khayal jarur aa hi jaata he baby....',
-            'Aaj ke din main bhagwan se bus yahi vinti karta hu ki tumhari zindagi hamesha khushiyon se bhari rahe. Tumharea chehre ki mushkurahat kabhi kam na ho aur tum jis cheez ko dil se chaho wo tumhe jarur mile baby.. ',
-            'Aur haan thanku you..... Meri zindagi mein aane ke liye, meri baaton ko sunne ke liye, aur bina kuch kahe bhi mujhe samajh lene ke liye. Tum sach mein mere liye bahut special ho baby..',
-            'Happy Birthday Meri duniya, Meri jaan, Mere dil ka sukoon. Aaaj ka din tumhare naam, Aur meri har wish bhi tumhare naam. Khush raho, Muskurate rahi, aur hamesha mere dil ke sabse kareeb raho.',
+            'Pyari Biwi,',
+            'Happy Birthday Baby. Tumhe pata he aaj ka din mere liye kitna special he? Kyunki aaj us insaan ka birthday he jiske baare me sochte hi mere chehre par smile aa jaati he. 🎂',
+            'Tum meri zindagi ka wo hissa ho jise main words me poori tarah samjha bhi nahi sakta hu. Tumhari ek chhoti si baat mera din bana deti he, aur tumse ek baar milna bhi mujhe andar se bahut achha feel karata he. Shayad tumhe khud bhi nahi pata hoga ki tum meri zindagi me mere liye kitni important ho baby. ❤️',
+            'Aaj tumhare birthday par main bas itna kehna chahta hu ki meri har wish me tum hoti ho. Main dil se chahta hu ki tumhari zindagi me kabhi kisi cheez ki kami naa ho. Tumhare saare sapne poore ho, tum jo bhi paana chahti ho wo tumhe mile aur tum hamesha khush raho baby. 💗',
+            'Tumhare saath baat karna, tumhari care karna aur tumhe khush dekhna mujhe sach me bahut pasand he baby. Kabhi-kabhi lagta he ki tum meri aadat ban gayi ho. Din kitna bhi busy ho, ek baar tumhare baare me sochna to hota hi he baby.... 🫶',
+            'Aaj ke din main Bhagwan se bas yahi chahta hu ki tumhari zindagi hamesha khushiyon se bhari rahe. Tumhare chehre ki smile kabhi kam naa ho aur tum jis cheez ko dil se chaho wo tumhe zaroor mile baby.. ✨',
+            'Aur haan, thank you..... Meri zindagi me aane ke liye, meri baaton ko sunne ke liye aur bina kuch kahe bhi mujhe samajh lene ke liye. Tum sach me mere liye bahut special ho baby.. ❤️',
+            'Happy Birthday meri duniya, meri jaan, mere dil ki khushi. Aaj ka din tumhare naam, aur meri har wish bhi tumhare naam. Khush raho, muskurati raho aur hamesha mere dil ke sabse kareeb raho. ✨',
         ],
-        signFrom: 'With all my love,',
-        signName: 'Yours \u2665',
+        signFrom: 'Bahut Saare Pyaar Ke Saath,',
+        signName: 'Tumhara Pati \u2665',
         titleAnimation: 'title-letter',
         photoAnimation: 'photo-letter',
         messageAnimation: 'message-letter',
@@ -467,25 +503,26 @@ const LETTER_MEMORIES = [
     {
         id: 32,
         type: 'letter',
-        marker: 'A Letter for You',
-        title: 'Meri Ek Baat maanogi',
-        paragraphs: ['Ek baat bolu',
-             'My pyari Biwi🦎🦎 yeh rokna tokna mujhay bhi pasand nahi hai par kya karun baby Aapka pati hu na, duniya ki gandi najron se bachana chahta hu kyonki is jamaney ko mai acchi tarah janta hu..',
-            'Me aapko countrol nahi bas safe and secure rakhna chahta hu kyonki aap meri sabsey kimati daulat ho, Mera sabsey anmol tohfa ho aur meri izzat ho aap mujhey galat mat samjhna Happy Birthday Meri gussel Wife...!!',
+        marker: 'Meri Chhoti Si Request',
+        title: 'Meri Ek Baat Maanogi?',
+        paragraphs: ['Ek baat bolu?',
+             'Meri pyari Biwi🦎🦎 yeh rokna tokna mujhay bhi pasand nahi hai par kya karun baby Aapka pati hu na, duniya ki gandi najron se bachana chahta hu kyonki is jamaney ko mai acchi tarah janta hu.. 💗',
+            'Me aapko countrol me nahi bas safe and secure rakhna chahta hu kyonki aap meri sabsey kimati daulat ho, Mera sabsey anmol tohfa ho aur meri izzat ho aap mujhey galat mat samjhna Happy Birthday Meri gussel Biwi...!!',
             'Baby tum meri ek baat maanogi',
-            'Baby tum na apna dhyan rakha karo na mujhe na bahut dar lagta he Jab tumhari tabiyat kharab hoti he naa tab, Baby tum naa bilkul bhi apna dhyan nahi rakhti ho.',
+            'Baby tum na apna dhyan rakha karo na mujhe na bahut dar lagta he Jab tumhari tabiyat kharab hoti he naa tab, Baby tum naa bilkul bhi apna dhyan nahi rakhti ho. 🥺',
             'Time se khana to khati hi nahi ho', 
-            'Tum apne iss birthday Pr meri ek baat maan lo na baby tum khud se ek promiss karo mujhse mt karo promiss Promiss karo ki tum apna dhyan rakhogi time se khana khaogi or postic khana khaogi',
-            'Esa vesa junck food nahi khaogi or Sub se important jyda phone nahi chalaogi', 
-            'Mujhe pata he abhi jab se tumhara phone aaya he tum bahut jyda hi phone chalane algi ho Haa to baby sub se pahle to tum ye phone chalana band karo Mtlb chalao pr limit me..',
-            'Tumhe pata he mera na sarir kaanpne lagta he jab me suntan hu ki tumhari tabiyat kharab he ya tumhe kuch ho gaya he Me tumhare samne jatata nahi hu or naa hi baar baar bolta hu me bolunga to tumhe or tenison hogi',
-            'Isiliye me hamesha jab tumhe problem hoti he to hasane ke liye ulti sidhi harkate karta hu taki tum us dard ko bhul jaao or Tumhara sara dhyan masti pr aa jaaye or tum mujhe cillao daato',
+            'Tum apne iss birthday Pr meri ek baat maan lo na baby tum khud se ek promiss karo mujhse mt karo promiss, Promiss karo ki tum apna dhyan rakhogi waqt se khana khaogi or postic khana khaogi ❤️',
+            'Esa vesa junck food nahi khaogi or Sub se zaruri jyda phone nahi chalaogi', 
+            'Mujhe pata he abhi jab se tumhara phone aaya he tum bahut jyda hi phone chalane lagi ho Haa to baby sub se pahle to tum ye phone chalana band karo Mtlb chalao pr limit me..',
+            'Tumhe pata he mera na sarir kaanpne lagta he jab me suntan hu ki tumhari tabiyat kharab he, Tumhe kahi dard ho raha he kamar dard, sar dard yaa tumhe kuch ho gaya he Me tumhare samne jatata nahi hu or naa hi baar baar bolta hu me bolunga to tumhe or tenison hogi 🥺',
+            'Isiliye me hamesha jab tumhe problem hoti he to hasane ulti sidhi harkate karta hu taki tum us dard ko bhul jaao or Tumhara shaara dhyan masti pr aa jaaye or tum mujhe cillao daato',
             'Mujhe na bahut accha lagta he jab tum bolti ho na chup ho jaao Nahi to itna maarungi ye kr dungi vo kr dungi esa bolti ho to bahut accha lagta he',
             'Tum hamesha khush raho baby',
-            'Happy Birthday Khud ka dhyan na rakhne wali meri Pyari Bivi.',
+            'Happy Birthday Khud ka dhyan na rakhne wali meri Pyari Bivi. 🫶',
         ],
-        signFrom: 'With all my love,',
-        signName: 'Yours \u2665',
+
+        signFrom: 'Tumhari Fikr Karne Wala,',
+        signName: 'Tumhara Pati \u2665',
         titleAnimation: 'title-letter',
         photoAnimation: 'photo-letter',
         messageAnimation: 'message-letter',
@@ -497,23 +534,27 @@ const LETTER_MEMORIES = [
     {
         id: 33,
         type: 'letter',
-        marker: 'A Letter From the Heart',
-        title: 'The Quiet Things I Notice',
-        paragraphs: [
-            'You think I don\'t notice, but I notice everything. The way your fingers find mine when you are tired. The way you talk to yourself when you think no one is listening.',
-            'I notice how you give without ever counting the cost, how you make room for everyone except yourself - so I always make sure there is room for you.',
-            'I will never stop noticing you. I hope you never stop letting me.',
-            'I notice the way you say my name when you are happy, how it lands a little differently on those days - softer and brighter at the same time.',
-            'I notice the small rituals you keep: the cup that must be exactly where you left it, the playlist you return to when the world gets loud.',
-            'I notice the days you carry the world quietly - the ones where you smile for everyone else and save the tired part of you for me to hold.',
-            'I notice how your face softens when you sleep, how the worry lines disappear and you finally look like the girl I met - the one I am still in love with.',
-            'I notice the way you forgive people who never even asked to be forgiven, and the way you are hardest on yourself for the smallest things.',
-            'And I notice myself changing - becoming gentler, more patient, more alive - because loving you has quietly taught me how.',
-            'Somewhere between all these small noticings, I fell in love with the whole of you: the loud mornings and the quiet nights, the plans and the worries, the you the world sees and the you that only I get to know.',
-            'So keep being exactly who you are. I am watching. I am keeping every single piece of it safe.',
+        marker: 'Dil Ki Ek Baat',
+        title: 'Pyaar Aur Ladai Ki Application',
+        paragraphs: ['To,',
+            'My Malkin,',
+            'Subject: Maaf kar dena mujhe,',
+            'Dear Wife,',
+            'Mujhe pata hai ki galti meri hi hoti hai. Main bohot zyada sochta hu, bohot zyada haq jatane wala aur hifazat karne wala ho jaata hu. Poora din sirf tumhare baare mein hi sochta rehta hu, aur shayad isi wajah se tumse zarurat se zyada umeedein laga baithta hu. Mujhe pata hai kabhi-kabhi meri ye aadatein tumhe bhi pareshan karti hongi. 🥺',
+            'Jab tum online nahi aa paati ya hum baat nahi kar paate he, tab main bas tumhara intezar karta rehta hu. Tadapta hu, aise rota hu, aur rote-rote wahi galtiyaan kar deta hu jo tumne mujhe kitni baar mana ki hain. Baad mein sirf ek hi baat sochta hu ki maine phir sab kuch khud hi kharab kar diya. 🥺',
+            'Sach kahu... main bhi khud se pareshan hu. Main bhi chahta hu ki main itna zyada na sochu aur tumhe sirf sukoon du. Bas meri har galti ke peeche sirf ek hi wajah hoti hai — main tumse bohot zyada pyaar karta hu. 💗',
+            'Isliye agar kabhi mujhse galti ho jaaye, to bas mera haath mat chhodna. Main har din apne aap ko tumhare liye behtar banane ki koshish kar raha hu. 🤝',
+            'Main tumhare liye baarish toh nahi rok sakta, lekin tumhare saath bheeg zaroor sakta huu. 🫂',
+            'Agar tumhaari aankhon se neend rooth jaye, toh main tumhare saath poori raat jaag zaroor sakta huu..',
+            'Agar kisi pareshani ka hal na mile, toh tumhare saath khamoshi se baith kar ro bhi sakta huu..',
+            'Jab tumhare paas koi na ho, toh main bina kuch kahe tumhare har dard ko sun sakta huu.. 🫶',
+            'Aur main tumse tab bhi mohabbat karta rahunga,',
+            'Jab tum khud se tang aa jaogi...',
+            'Me tumhara saath kabhi nahi chhodunga, hamesha tumhari parchai ban kr tumhare saath rahunga baby. ❤️',
+            'Hamesha Tumhara',
         ],
-        signFrom: 'With all my love,',
-        signName: 'Yours \u2665',
+        signFrom: 'Har Ladai Ke Baad Bhi,',
+        signName: 'Tumhara Pati \u2665',
         titleAnimation: 'title-letter',
         photoAnimation: 'photo-letter',
         messageAnimation: 'message-letter',
@@ -525,23 +566,20 @@ const LETTER_MEMORIES = [
     {
         id: 34,
         type: 'letter',
-        marker: 'A Little Letter',
-        title: 'For the Harder Days',
-        paragraphs: [
-            'Some days are heavy, and I want you to know I have felt their weight beside you. I have held your hand through them and I would do it a thousand times again.',
-            'You have carried more than anyone should ever have to, and you have done it with a gentleness I still cannot find the words for.',
-            'Whatever comes next, you will never carry it alone. I am here - not for the easy hours, but for all of them.',
-            'When the morning already feels heavy, I want you to remember one thing: you do not have to be brave today. You only have to be here.',
-            'You are allowed to rest. You are allowed to put the weight down. Resting is not giving up - it is how you gather yourself for the road again.',
-            'I have seen you be brave in ways that had no audience, no applause, no one to notice except me - and I noticed, and I will never forget it.',
-            'Some nights you will not have the words, and that is okay. You do not have to perform your strength for me. Silence is safe with me.',
-            'We will take the hard days one hour at a time, and I will hold your hand through every single hour, even the ones we cannot explain.',
-            'And on the days you forget how loved you are, I will remember for both of us, out loud, as many times as it takes.',
-            'This is my promise: not that the road will be easy, but that you will never walk it alone.',
-            'You are not a burden on your hardest days. You are the person I chose, and I choose you again every time the world feels like too much.',
+        marker: 'Mere Dil Se Tumhare Liye',
+        title: 'Tum Meri Zindagi Ka Sabse Khoobsurat Hissa Ho',
+        paragraphs: [ 'Dear Wife,',
+            'Kabhi-kabhi main sochta hoon ki agar tum meri zindagi mein nahi aati, to shayad mujhe kabhi samajh hi nahi aata ki kisi ka hona itna sukoon bhi de sakta hai. Tum sirf meri mohabbat nahi ho, balki meri har muskurahat ki wajah ho. 💗',
+            'Tumhare saath bitaya hua har pal mere liye khaas hai. Chahe hum ghanton baatein karein ya phir ek-doosre ke saath chup-chaap rahein, tumhari maujoodgi hi mere dil ko sukoon de deti hai. Tum mujhe bina kuch kahe samajh leti ho aur yakeen mano, ye ehsaas duniya ka sabse khoobsurat ehsaas hai. ❤️',
+            'Jab bhi main thak jata hoon ya zindagi mushkil lagti hai, tumhara ek chhota sa paigam, tumhari awaaz ya tumhari ek pyari si baat meri saari himmat wapas le aati hai. Tum meri taaqat ho, mera sukoon ho aur meri har dua ka sabse pyara jawab ho. ✨',
+            'Main chahta hoon ki hum hamesha isi tarah ek-doosre ka haath pakadkar har mushkil ka saamna karein aur har khushi ko saath mein jiyein. Waqt badal sakta hai, halaat badal sakte hain, duniya badal sakti hai, lekin tumhare liye mera pyaar, sammaan aur fikr kabhi nahi badlega. 🫂',
+            'Main har din bhagwan ko shukriya bolta hoon ki unhone tumhe meri zindagi mein bheja. Tum meri aadat ho, meri dua ho, meri khushi ho aur meri zindagi ki sabse khoobsurat kahani ho. 😊',
+            'Main vaada karta hoon ki chahe kuch bhi ho, main hamesha tumhara saath dene ki koshish karunga. Tumhari khushi mein khush rahunga, tumhare dukh mein tumhara sahara banunga aur jab bhi tumhe meri zarurat hogi, main tumhare paas rahunga. 🫶',
+            'Mujhe nahi pata hamari kahani kitni lambi hogi, lekin main itna zaroor jaanta hoon ki jab tak meri saansein hain, mere dil mein tumhare liye wahi pyaar rahega. Tum mere liye sirf ek insaan nahi ho... tum woh ehsaas ho jise main apni poori zindagi apne paas rakhna chahta hoon.',        
+            'Main tumse pyaar karta hu, Meri Jaan... Aaj bhi, Kal bhi aur har us din jab tak mera dil dhadakta rahega. ✨',
         ],
-        signFrom: 'With all my love,',
-        signName: 'Yours \u2665',
+        signFrom: 'Har Din Tumse Pyaar Karne Wala,',
+        signName: 'Tumhara Pati \u2665',
         titleAnimation: 'title-letter',
         photoAnimation: 'photo-letter',
         messageAnimation: 'message-letter',
@@ -553,22 +591,26 @@ const LETTER_MEMORIES = [
     {
         id: 35,
         type: 'letter',
-        marker: 'A Letter Across Time',
-        title: 'Us, in Every Version',
-        paragraphs: [
-            'I have imagined us in a hundred futures - older, softer, slower - and in every single one, you are beside me, and I am still happy.',
-            'It was never a place I loved. It was never the rooms or the road. It is the shape your hand makes when it finds mine.',
-            'Wherever the years take us, I will keep choosing you. I will keep finding you. That is my favorite promise to keep.',
-            'I have thought about what we will be in ten years - slower mornings, deeper silences, laughter that needs no reason - and every version of that life has your face in it.',
-            'We will have laughed in rooms we have not entered yet, in cities we have not seen, on days that do not exist anywhere except in what we are building together.',
-            'There will be fights about small things - the music, the dishes, whose turn it is - and I look forward to every single one of them, because arguing with you is still just being near you.',
-            'Because a life with you, even in its ordinary minutes - the kettle, the news, the shared blanket - is the life I would choose again and again.',
-            'I used to fear the future, all its unknown shapes and moving doors. Now I only fear the versions of it that do not have you in them.',
-            'So let the years come. Let them change our faces and slow our steps. Let them grey our hair and soften our voices.',
-            'In every version of us, I am still yours, and I am still happy. That is the only future I need.',
+        marker: 'Hum Dono Ke Liye',
+        title: 'Hamara Har Roop',
+        paragraphs: ['Pyari Biwi,',
+            'Mujhe jeena hai to tumhare saath jeena hai, mujhe hasna hai to tumhare saath hasna hai. Mujhe rona hai to tumhare kandhe par rona hai, mujhe chalna hai to tumhara haath pakad kar chalna hai. 🫂',
+            'Mujhe har subah tumhari muskurahat dekhni hai, har raat tumhari awaaz sunni hai.',
+            'Mujhe apni har khushi tumhare saath baantni hai aur har dard tumhare saath sehna hai. 💞',
+            'Mujhe gussa bhi tum par hi karna hai, shikayat bhi tumse hi karni hai, aur har baar manaana bhi tumse hi hai. 🫶',
+            'Mujhe apni har dua mein sirf tumhe maangna hai.',
+            'Mujhe pyaar chahiye to sirf tumhara, waqt chahiye to sirf tumhara, saath chahiye to sirf tumhara.',
+            'Aur agar zindagi mein kuch maangna ho, to bas tumhe hi maangna hai...',
+            'Kyunki mere liye meri poori duniya',
+            'sirf tum ho. ❤️',
+            'Bas tum... aur tumhare siwa kuch bhi nahi.',
+            'Tumhe mujhse jitna ladna he, lad lo, me tumhe mana lunga, tumhari maar kha lunga.',
+            'Tumhari sari baate sun lunga, acchi buri sari baate sun lunga. Tumhe bhi suna dunga acchi buri sari baate.',
+            'Hum ek dusre ke sath kuch bhi kare, hum sab sambhal lenge aur hum ek dusre se nahi ladenge to fir kisse ladenge? Humara pyar, humari ladai sab ek dusre ke liye hi he baby.',
+            'Me tumse bohottt pyaar karta hu Khushbu...... . ❤️'
         ],
-        signFrom: 'With all my love,',
-        signName: 'Yours \u2665',
+        signFrom: 'Har Roop Mein Tumhare Saath,',
+        signName: 'Tumhara Pati \u2665',
         titleAnimation: 'title-letter',
         photoAnimation: 'photo-letter',
         messageAnimation: 'message-letter',
@@ -580,22 +622,21 @@ const LETTER_MEMORIES = [
     {
         id: 36,
         type: 'letter',
-        marker: 'A Letter for You',
-        title: 'The Way Home',
-        paragraphs: [
-            'I used to believe home was a building, a street, a familiar bed. You taught me that home is a person.',
-            'Every time I come back to you, something in me exhales. The city can keep its lights and the world can keep its noise - I only need the quiet that lives where you are.',
-            'You are my home now. I hope you know it. I hope you always feel it.',
-            'Home is the sound of your voice calling my name from the next room. Home is the half of the blanket you always leave for me.',
-            'I have walked into places that should have felt like home and felt nothing at all - beautiful rooms, warm lights, and not a single heartbeat in them.',
-            'And I have walked into rooms where you stood, plain and ordinary and simply being you, and felt the entire world settle into place.',
-            'No matter how far the day takes me, there is a part of me that is already turning toward you before the door has even closed behind me.',
-            'You are not a place I visit. You are the place I live - the address of every good thing in my life.',
-            'When the world gets loud and the walls feel thin, I do not look for another city. I look for your hand.',
-            'Wherever we are, wherever we go, whatever the address on the door says - if you are there, I am home.',
+        marker: 'Bas Tumhara Saath',
+        title: 'Bas Tumhara Saath Chahiye',
+        paragraphs: ['Dear Wife,',
+            'Meri jaan, mujhe ab koi parwah nahi ki main tumhare layak hu ya nahi, bas main itna jaanta hu maine humesha tumhe khudse jyada pyaar kiya hai aur aage bhi hamesha tumse hi karta rahunga. Ye dil dhadkega to sirf meri Khushbu ke liye, nahi to kabhi nahi dhadkega. 💗',
+            'Baby, tumhe lagta hoga ki main aapko chhod dunga, lekin tum galat ho baby. Main kasam se kehta hu, maine kabhi sapne mein bhi tumhe chhodne ke baare mein kabhi nahi socha. Tumhe hamesha maine khudse jyada pyaar kiya hai aur aage bhi karta rahunga. 🫂',
+            'Mujhe ab koi parwah nahi ki main tumhare liye bilkul sahi hu ya nahi, lekin main hamesha koshish karunga ki me tumhare layak ban saku, tumhe samajh saku.... 🥺',
+            'Baby, maine hamesha tumse dil se pyaar kiya hai. Mujhe aapse na koi mehange tohfe chahiye, na kuch aur. Bas mujhe hamesha aapka saath chahiye aur marte dam tak aapka saath chahiye. ♾️ Mujhe har janam mein tum hi chahiye ho, mere jeevansaathi ke roop me. Mujhe na to tumhare jaisi koi, na tumhari tarah, bas mujhe sirf tum hi chahiye ho.',
+            'Baby, agar tumhe meri kisi bhi baat ka bura lage, tum kripya mujhe bol dena bina kisi sharam ke dar ke. Main fir kabhi vo baat nahi bolunga meri jaan.',
+            'Mera baccha, kabhi mujhse alag mat hona aur naa hi mujhe khudse alag hone dena. Agar puri duniya wale bhi tumhe galat sabit karenge, toh main fir bhi tumhare sath tumhari taraf hamesha khada rahunga. Mujhe sirf tumhara saath chahiye zindagi bhar. Na mujhe kuch mehanga chahiye, na mujhe kuch surprise, bas mujhe zindagi bhar aapka saath chahiye. 🫶',
+            'Mera baccha, me tumse bohottttt pyaar karta huuuuu. ❤️',
+            'Mera tumhare bina kahin man hi nahi lagta hai.',
+            'Me tumse pyaar karta hu, meri jaannn. ❤️',
         ],
-        signFrom: 'With all my love,',
-        signName: 'Yours \u2665',
+        signFrom: 'Zindagi Bhar Tumhare Saath,',
+        signName: 'Tumhara Pati \u2665',
         titleAnimation: 'title-letter',
         photoAnimation: 'photo-letter',
         messageAnimation: 'message-letter',
@@ -607,22 +648,26 @@ const LETTER_MEMORIES = [
     {
         id: 37,
         type: 'letter',
-        marker: 'A Little Letter',
-        title: 'Before the Next Chapter',
-        paragraphs: [
-            'We have walked so far together that I sometimes forget how we began. But I remember how I feel now - certain, grateful, and braver than I have ever been.',
-            'There are more memories to make, more songs, more quiet mornings, more of everything - and I want all of it with you.',
-            'Thank you for being my person. This is only the middle of our story, and I cannot wait for everything that is still to come.',
-            'We have shared meals that became stories, and silences that became understanding, and ordinary evenings that I have already filed away as the best days of my life.',
-            'I have watched you love the people around you without keeping score, and I have watched that same love turn toward me and rearrange everything I thought I knew about being loved.',
-            'Somewhere along the way, you became the easiest and the most important yes of my life - the one I would answer the same way every single time.',
-            'The next chapter does not frighten me, because I have seen how we write our story - with patience, with laughter, and with grace when we stumble.',
-            'There will be pages we cannot plan, days that do not go the way we hoped. And still, I want to write them all beside you, line by line, hand in hand.',
-            'So here is my hand. Here is my heart. Here is everything I am, and everything I am still becoming - all of it, yours.',
-            'Let us begin what comes next - slowly, together, the way we do everything.',
+        marker: 'Mere Sabse Pyare Gift Ke Liye',
+        title: 'Tum Hi Mera Gift Ho',
+        paragraphs: ['Pyari Biwi,',
+            'Aaj ka din mere liye sirf tumhara janamdin nahi hai… yeh wahi din hai jis din tumne iss dharti par mere liye avatar liya tha. 🎂',
+            'Bohot bohot shukriya meri jaan. Pata hai, meri zindagi ki sabse khoobsurat cheez tum ho. Main khud ko bahut khushkismat maanta hu ki tum meri jeevansaathi ho. 💗',
+            'Baby, tumhare alawa mujhe aur koi jhel bhi nahi paayega. Ab tum ho jo mujhe aankh dikha kr hi dara deti ho, aur koi aisa kar paayega kya? Aur tum sach me bahut acchi biwi banogi. 😊',
+            'Yaad rakhna baby, tum sirf meri ho aur kisi ki bhi nahi, yahan tak apne ghar walo ki bhi nahi, khud ki bhi nahi, sirf meri. Tumhare upar sirf mera haq he aur kisi ka bhi nahi, tumhara khud ka bhi nahi.',
+            'Tum yaad rakhna baby, tum meri nahi hui to mujhe khud nahi pata me kya karunga, lekin jo bhi karunga vo hum sab ke liye bahut bura hi hoga. Isi liye apne ghar walo ko samjha dena ki shadi ke baad vo hamare beech me naa aaye aur shadi ke pahle bhi.',
+            'Vese baby, tum kabhi gussa ho jaogi na, to me tumhe mana lunga, naraz ho jaogi to hasa dunga, lekin kabhi mujhse door mat jana. Tumhare bina meri zindagi, baby, me to soch bhi nahi sakta. 🫶',
+            'Har din bas itna hi chahta hu ki tum hamesha mere saath raho. Main har haalat mein tumhara sahara banunga aur hamesha tumhari hifazat karunga.',
+            'Vese dekha jaaye to aaj tumhara janamdin hai, lekin sach kahu to sabse khoobsurat tohfa mujhe mila hai tumhare roop me. 🎁',
+            'Agar tum aaj ke din iss dharti par avatar naa leti, to aaj mera kya hota? Me kisi chapri ke sath ghum raha hota. 😄 Isliye aaj main sirf tumhe “Janamdin Mubarak” nahi kehna chahta, main tumhe shukriya kehna chahta hoon.',
+            'Shukriya baby, jo tumne mere liye iss dharti par avatar liye, meri zindagi me meri jeevansaathi ban kr aai, meri biwi ban kar aai. Mujhe itna kuch sikhaya-bataya. "Bohot bohot shukriya biwi......" ❤️',
+            'Me tumse bohot pyaar karta hu, Meri Chipkali.',
+            'Janamdin Mubarak, Meri Jaan. ❤️',
+
+
         ],
-        signFrom: 'With all my love,',
-        signName: 'Yours \u2665',
+        signFrom: 'Sirf Tumhare Liye,',
+        signName: 'Tumhara Pati \u2665',
         titleAnimation: 'title-letter',
         photoAnimation: 'photo-letter',
         messageAnimation: 'message-letter',
@@ -669,64 +714,27 @@ export const memories = (() => {
    entries, do not participate in progress, and never replace the
    exact-memory index used for restoration.
    ------------------------------------------------------------ */
-export const MEMORY_ACTS = Object.freeze([
-    Object.freeze({
-        start: 0,
-        end: 3,
-        title: 'Where It Began',
-        line: 'Some stories begin quietly, then become everything.',
-    }),
-    Object.freeze({
-        start: 4,
-        end: 13,
-        title: 'The Little Things',
-        line: 'Love found its shape in the moments no one else could see.',
-        light: true,
-    }),
-    Object.freeze({
-        start: 14,
-        end: 18,
-        title: 'What We Became',
-        line: 'Somewhere along the way, comfort became home.',
-        light: true,
-    }),
-    Object.freeze({
-        start: 19,
-        end: 30,
-        title: 'The Life We Share',
-        line: 'The life we choose is made of ordinary moments, held with care.',
-        light: true,
-    }),
-    Object.freeze({
-        start: 31,
-        end: 36,
-        title: 'What Comes Next',
-        line: 'And still, the most beautiful part of us is ahead.',
-    }),
-]);
+export const MEMORY_ACTS = Object.freeze([]);
 
 
 /* Timings - must match animation.css */
 const EXIT_MS = 520;
 const INTRO_EXIT_MS = 380;
 const FINAL_DELAY_MS = 700;
-const NEXT_IN_MS = 450;
 const ACT_TRANSITION_MS = 900;
 const ACT_TRANSITION_LIGHT_MS = 680;
 const ACT_TRANSITION_EXIT_MS = 170;
 
 /*
  * Letter reveal timings. The stagger is derived per letter:
- * roughly 9s total for the whole message (clamped 620-1050ms per
- * paragraph), so short letters feel unhurried and very long ones
- * never drag on.
+ * Paragraphs arrive quickly enough that a reader can start naturally.
  */
-const PARA_STAGGER_TOTAL_MS = 9000;
-const PARA_STAGGER_MIN_MS = 620;
-const PARA_STAGGER_MAX_MS = 1050;
-const PARA_ANIM_MS = 1000;
-const PARA_FINAL_HOLD_MS = 1800;
-const SCROLL_BACK_MS = 900;
+const PARA_STAGGER_TOTAL_MS = 2800;
+const PARA_STAGGER_MIN_MS = 260;
+const PARA_STAGGER_MAX_MS = 420;
+const PARA_FINAL_HOLD_MS = 280;
+const LETTER_AUTO_SCROLL_PX_PER_SECOND = 300;
+const LETTER_AUTO_RETURN_MS = 560;
 
 
 /*
@@ -813,10 +821,21 @@ export class MemoryLane {
         this.state = 'intro';
         this.stage = 'title';
         this.current = 0;
-        this.queued = 0;
         this.reduced = prefersReducedMotion();
         this.timers = [];
         this.lifecycleToken = 0;
+        this._readCheckFrame = null;
+        this._letterScrollFrame = null;
+        this._letterScrollRun = 0;
+        this._letterScrollContainer = null;
+        this._letterReadPhase = 'idle';
+        this._manualReadStartTop = 0;
+        this._manualReadMoved = false;
+
+        // Keep only the current image and its two likely neighbours warm.
+        // Entries hold decoded Image instances briefly, rather than creating
+        // unbounded probes as the visitor advances through the lane.
+        this._imageCache = new Map();
 
         // Optional stage hook - lets main.js follow the lane's
         // internal stage ('intro' | 'exiting' | 'playing' |
@@ -857,8 +876,13 @@ export class MemoryLane {
         this._readMemories = null; // lazy-loaded Set of read memory ids
         this._onMessageScroll = () => this._handleMessageScroll();
         this._onReadIntent = (event) => {
-            if (!this._awaitingRead) return;
+            if (!this._awaitingRead || this._letterReadPhase !== 'manual-read') return;
             if (event.type === 'keydown' && !READ_SCROLL_KEYS.has(event.key)) return;
+            this._readUserInteracted = true;
+        };
+        this._onLetterAutoScrollIntent = (event) => {
+            if (event.type === 'keydown' && !READ_SCROLL_KEYS.has(event.key)) return;
+            this.cancelLetterAutoScroll({ enterManualRead: true });
             this._readUserInteracted = true;
         };
 
@@ -951,7 +975,6 @@ export class MemoryLane {
        ============================================================ */
 
     reset({ persist = true } = {}) {
-        console.log('[MemoryLane] reset() called, current state:', this.state);
         this.clearTimers();
 
         // Remove any pending read-gate scroll listener.
@@ -967,7 +990,6 @@ export class MemoryLane {
         this.state = 'intro';
         this.stage = 'title';
         this.current = 0;
-        this.queued = 0;
         this.hideActTransition();
 
         if (this.titleBlock) {
@@ -1104,7 +1126,6 @@ export class MemoryLane {
 
         if (persist) this.saveCurrentPosition(null, 'intro');
         this._fireState('intro');
-        console.log('[MemoryLane] reset() complete, new state:', this.state);
     }
 
 
@@ -1170,10 +1191,7 @@ export class MemoryLane {
 
         if (this.state === 'settled') {
             this.advance(1);
-            return;
         }
-
-        this.queued += 1;
     }
 
 
@@ -1209,8 +1227,9 @@ export class MemoryLane {
 
 
     advance(dir) {
-        if (!this.chapter) return;
+        if (!this.chapter || this.state !== 'settled') return;
 
+        this.cancelLetterAutoScroll();
         const m = memories[this.current];
         const previousIndex = this.current;
 
@@ -1300,7 +1319,6 @@ export class MemoryLane {
         this.current = target;
         this.state = 'act-transition';
         this.stage = 'act-transition';
-        this.queued = 0;
         this._actTransitionTarget = target;
         this._actTransitionPrevious = previousIndex;
         this.saveCurrentPosition(target, 'active');
@@ -1435,6 +1453,11 @@ export class MemoryLane {
         if (this.photo) {
             this.photo.style.opacity = '0';
         }
+
+        // Start decoding the incoming photo during the title entrance. The
+        // later photo phase can then reveal a prepared image instead of
+        // asking the decoder to begin at the visible transition boundary.
+        if (m.type === 'photo') this.prepareImage(m.image);
 
         this.chapter.classList.remove(
             'compose-a',
@@ -1766,11 +1789,15 @@ export class MemoryLane {
      * container is reset before the user-only listener is attached.
      */
     _armUnreadReadGate(m) {
-        if (
-            !m ||
-            this.isMemoryRead(m.id) ||
-            !this.messageOverflows(m)
-        ) {
+        if (!m || this.isMemoryRead(m.id)) {
+            return false;
+        }
+
+        if (!this.messageOverflows(m)) {
+            // A fully visible letter has already reached its real readable
+            // bottom. Persist that individual letter immediately so a later
+            // viewport change cannot incorrectly replay its first visit.
+            if (m.type === 'letter') this.markMemoryRead(m.id);
             return false;
         }
 
@@ -1786,6 +1813,7 @@ export class MemoryLane {
         if (this.prevBtn) this.prevBtn.hidden = true;
 
         this.armReadWatch(m.id);
+        if (m.type === 'letter') this.startLetterAutoScroll(m);
         return true;
     }
 
@@ -1806,11 +1834,11 @@ export class MemoryLane {
 
         this._awaitingRead = true;
         this._readTargetId = id;
-        this._readUserInteracted = false;
 
         // One bound handler on the actual readable container - never
         // duplicated and never attached while the opening scroll runs.
         const container = this.getReadScrollContainer(memories[this.current]);
+        this._enterManualReadPhase(container);
         container.addEventListener('scroll', this._onMessageScroll, { passive: true });
         container.addEventListener('wheel', this._onReadIntent, { passive: true });
         container.addEventListener('touchstart', this._onReadIntent, { passive: true });
@@ -1819,6 +1847,12 @@ export class MemoryLane {
     }
 
     disarmReadWatch() {
+        this.cancelLetterAutoScroll();
+        if (this._readCheckFrame !== null) {
+            cancelAnimationFrame(this._readCheckFrame);
+            this._readCheckFrame = null;
+        }
+
         // Remove from both possible containers because the entry type may
         // have changed before teardown runs.
         for (const container of [this.messageBlock, this.chapter]) {
@@ -1831,22 +1865,188 @@ export class MemoryLane {
         this._awaitingRead = false;
         this._readTargetId = null;
         this._readUserInteracted = false;
+        this._letterReadPhase = 'idle';
+        this._manualReadStartTop = 0;
+        this._manualReadMoved = false;
     }
 
     /** Scroll listener: fires while the visitor reads the message */
     _handleMessageScroll() {
         if (!this._awaitingRead || this.state !== 'settled') return;
-        if (!this._readUserInteracted) return;
-        if (!this._isMessageAtEnd()) return;
+        if (this._letterReadPhase !== 'manual-read' || this._readCheckFrame !== null) return;
+
+        const container = this.getReadScrollContainer(memories[this.current]);
+        if (container && Math.abs(container.scrollTop - this._manualReadStartTop) > 1) {
+            this._manualReadMoved = true;
+        }
+        if (!this._readUserInteracted || !this._manualReadMoved) return;
+
+        // Scroll events may fire many times per frame. Measure the scroll
+        // container at most once in the next paint, then detach completely
+        // once the gate is satisfied.
+        this._readCheckFrame = requestAnimationFrame(() => {
+            this._readCheckFrame = null;
+            if (!this._awaitingRead || this.state !== 'settled') return;
+            if (this._letterReadPhase !== 'manual-read') return;
+            if (!this._isMessageAtEnd()) return;
+
+            this._completeReadGate();
+        });
+    }
+
+    /** Complete one per-memory read gate exactly once. */
+    _completeReadGate() {
+        if (!this._awaitingRead || this.state !== 'settled') return false;
 
         const id = this._readTargetId;
         this.disarmReadWatch();
 
-        if (Number.isInteger(id)) {
-            this.markMemoryRead(id);
+        if (Number.isInteger(id)) this.markMemoryRead(id);
+        this._revealSettledControls();
+        return true;
+    }
+
+    /**
+     * First visit only: one cancellable RAF moves the real letter scroller to
+     * its measured bottom. Any touch/wheel/scroll key cancels the movement;
+     * the existing manual read gate then remains authoritative.
+     */
+    startLetterAutoScroll(m) {
+        const container = this.getReadScrollContainer(m);
+        if (!container || m?.type !== 'letter' || !this._awaitingRead) return;
+
+        this.cancelLetterAutoScroll();
+        const run = ++this._letterScrollRun;
+        const index = this.current;
+        const id = m.id;
+        let lastTime = null;
+        let confirmedBottom = null;
+        this._letterReadPhase = 'demo-down';
+        this._readUserInteracted = false;
+        this._manualReadMoved = false;
+        this._letterScrollContainer = container;
+        this._addLetterAutoScrollIntent(container);
+
+        const step = (time) => {
+            if (
+                run !== this._letterScrollRun ||
+                this.state !== 'settled' ||
+                this.current !== index ||
+                this._readTargetId !== id ||
+                container.isConnected === false
+            ) {
+                this.cancelLetterAutoScroll();
+                return;
+            }
+
+            const bottom = Math.max(0, container.scrollHeight - container.clientHeight);
+            const atBottom = container.scrollTop >= bottom - SCROLL_END_TOLERANCE_PX;
+            if (atBottom) {
+                container.scrollTop = bottom;
+                if (confirmedBottom === bottom) {
+                    this.startLetterAutoReturn(container, index);
+                    return;
+                }
+                confirmedBottom = bottom;
+            } else {
+                confirmedBottom = null;
+                if (lastTime !== null) {
+                    const elapsed = Math.min(64, Math.max(0, time - lastTime));
+                    container.scrollTop = Math.min(
+                        bottom,
+                        container.scrollTop + LETTER_AUTO_SCROLL_PX_PER_SECOND * elapsed / 1000
+                    );
+                }
+            }
+
+            lastTime = time;
+            this._letterScrollFrame = requestAnimationFrame(step);
+        };
+
+        if (this.reduced) {
+            container.scrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+            this.startLetterAutoReturn(container, index);
+            return;
         }
 
-        this._revealSettledControls();
+        this._letterScrollFrame = requestAnimationFrame(step);
+    }
+
+    /** Return a completed first-read letter to its top resting position. */
+    startLetterAutoReturn(container, index) {
+        this.cancelLetterAutoScroll();
+        if (!container || container.isConnected === false) return;
+
+        const startTop = container.scrollTop;
+        if (startTop <= 0 || this.reduced) {
+            container.scrollTop = 0;
+            this._enterManualReadPhase(container);
+            return;
+        }
+
+        const run = ++this._letterScrollRun;
+        let startedAt = null;
+        this._letterReadPhase = 'demo-up';
+        this._letterScrollContainer = container;
+        this._addLetterAutoScrollIntent(container);
+
+        const step = (time) => {
+            if (
+                run !== this._letterScrollRun ||
+                this.current !== index ||
+                (this.state !== 'settled' && this.state !== 'final') ||
+                container.isConnected === false
+            ) {
+                this.cancelLetterAutoScroll();
+                return;
+            }
+
+            if (startedAt === null) startedAt = time;
+            const progress = Math.min(1, (time - startedAt) / LETTER_AUTO_RETURN_MS);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            container.scrollTop = startTop * (1 - eased);
+
+            if (progress >= 1) {
+                container.scrollTop = 0;
+                this.cancelLetterAutoScroll();
+                this._enterManualReadPhase(container);
+                return;
+            }
+            this._letterScrollFrame = requestAnimationFrame(step);
+        };
+
+        this._letterScrollFrame = requestAnimationFrame(step);
+    }
+
+    _enterManualReadPhase(container) {
+        this._letterReadPhase = 'manual-read';
+        this._readUserInteracted = false;
+        this._manualReadStartTop = container?.scrollTop || 0;
+        this._manualReadMoved = false;
+    }
+
+    _addLetterAutoScrollIntent(container) {
+        container.addEventListener('wheel', this._onLetterAutoScrollIntent, { passive: true });
+        container.addEventListener('touchstart', this._onLetterAutoScrollIntent, { passive: true });
+        container.addEventListener('pointerdown', this._onLetterAutoScrollIntent, { passive: true });
+        window.addEventListener('keydown', this._onLetterAutoScrollIntent, true);
+    }
+
+    cancelLetterAutoScroll({ enterManualRead = false } = {}) {
+        this._letterScrollRun += 1;
+        if (this._letterScrollFrame !== null) {
+            cancelAnimationFrame(this._letterScrollFrame);
+            this._letterScrollFrame = null;
+        }
+        const container = this._letterScrollContainer;
+        container?.removeEventListener('wheel', this._onLetterAutoScrollIntent);
+        container?.removeEventListener('touchstart', this._onLetterAutoScrollIntent);
+        container?.removeEventListener('pointerdown', this._onLetterAutoScrollIntent);
+        window.removeEventListener('keydown', this._onLetterAutoScrollIntent, true);
+        this._letterScrollContainer = null;
+        if (enterManualRead && this._awaitingRead) {
+            this._enterManualReadPhase(container);
+        }
     }
 
     /**
@@ -1943,12 +2143,10 @@ export class MemoryLane {
        ============================================================ */
 
     /*
-     * The letter unfolds itself: every paragraph enters with the
-     * same cinematic fade/rise/blur, the container scrolls down to
-     * keep each new paragraph readable, and once the final
-     * paragraph (and the signature) has had a moment on screen the
-     * container glides back to the first line. The full message
-     * stays in place afterwards - the user reads it normally.
+     * The letter unfolds paragraph by paragraph while preserving the
+     * reader's own scroll position. Earlier versions measured each paragraph
+     * and started a new smooth scroll; those queued animations fought touch
+     * scrolling and made long letters appear to hang.
      *
      * Every step is scheduled through later(), so reset()/
      * clearTimers() cancels any pending reveal the moment the
@@ -1991,8 +2189,6 @@ export class MemoryLane {
                 if (this.state !== 'playing') return;
 
                 el.classList.add('is-in');
-
-                this.keepRevealedInView(el);
             });
         });
 
@@ -2001,71 +2197,8 @@ export class MemoryLane {
             this.scale(PARA_FINAL_HOLD_MS);
 
         this.later(revealEnd, () => {
-            if (this.state !== 'playing') return;
-
-            this.scrollLetterBackToTop();
+            if (this.state === 'playing') this.settleChapter();
         });
-
-        this.later(
-            revealEnd + this.scale(SCROLL_BACK_MS),
-            () => {
-                if (this.state !== 'playing') return;
-
-                this.settleChapter();
-            }
-        );
-    }
-
-
-    /*
-     * Scroll the internal message container so the paragraph that
-     * just entered stays comfortably readable - the title, photo
-     * and header never move.
-     */
-    keepRevealedInView(el) {
-        const block = this.messageBlock;
-
-        if (!block) return;
-
-        const blockRect = block.getBoundingClientRect();
-        const elRect = el.getBoundingClientRect();
-
-        const elTop =
-            elRect.top - blockRect.top + block.scrollTop;
-
-        const target = Math.max(
-            0,
-            elTop - (block.clientHeight - elRect.height) * 0.45
-        );
-
-        try {
-            block.scrollTo({
-                top: target,
-                behavior: this.reduced ? 'auto' : 'smooth'
-            });
-        } catch {
-            block.scrollTop = target;
-        }
-    }
-
-
-    /*
-     * Smoothly glide the message back to its first line once the
-     * whole letter has been revealed.
-     */
-    scrollLetterBackToTop() {
-        const block = this.messageBlock;
-
-        if (!block) return;
-
-        try {
-            block.scrollTo({
-                top: 0,
-                behavior: this.reduced ? 'auto' : 'smooth'
-            });
-        } catch {
-            block.scrollTop = 0;
-        }
     }
 
 
@@ -2088,15 +2221,6 @@ export class MemoryLane {
             'memory-next-in'
         );
 
-        this.later(this.scale(NEXT_IN_MS), () => {
-            if (
-                this.queued > 0 &&
-                this.state === 'settled'
-            ) {
-                this.queued -= 1;
-                this.advance(1);
-            }
-        });
     }
 
 
@@ -2323,7 +2447,6 @@ export class MemoryLane {
         this.current = index;
         this.state = final ? 'final' : 'settled';
         this.stage = 'settled';
-        this.queued = 0;
 
         if (this.intro) this.intro.hidden = true;
         this.chapter.hidden = false;
@@ -2468,6 +2591,8 @@ export class MemoryLane {
 
         const photoElement = this.photo;
         const newSrc = m.image;
+        const prepared = this.prepareImage(newSrc);
+        const cachedProbe = this._imageCache.get(newSrc)?.image;
 
         /*
          * Create a unique token for this image request.
@@ -2485,17 +2610,14 @@ export class MemoryLane {
          */
         photoElement.alt = m.title;
 
-        /*
-         * Remove the old source before assigning the new one.
-         *
-         * This ensures the previous image cannot remain visible.
-         */
-        photoElement.removeAttribute('src');
+        if (cachedProbe?.naturalWidth) {
+            this.applyPhotoDimensions(photoElement, cachedProbe);
+        }
 
         /*
          * New image successfully loaded.
          */
-        photoElement.onload = () => {
+        photoElement.onload = async () => {
             /*
              * If another memory started loading after this image,
              * ignore this old load event.
@@ -2508,6 +2630,15 @@ export class MemoryLane {
              * Only show the image after the browser confirms
              * that the new image has loaded.
              */
+            // Decoding is deliberately awaited off the interaction path. A
+            // loaded-but-not-decoded source was the source of the apparent
+            // freeze on first paint of a large photo.
+            try {
+                await photoElement.decode?.();
+            } catch {
+                // decode() may reject for an already-renderable image.
+            }
+
             requestAnimationFrame(() => {
                 if (loadToken !== this._photoLoadToken) {
                     return;
@@ -2543,7 +2674,21 @@ export class MemoryLane {
         /*
          * Start loading the new image.
          */
+        // A prepared neighbour exposes dimensions before the replacement is
+        // painted, which keeps the frame geometry stable while its source is
+        // swapped. Do not wait here: the chapter can continue immediately.
+        prepared.then((probe) => {
+            if (loadToken !== this._photoLoadToken || !probe) return;
+            this.applyPhotoDimensions(photoElement, probe);
+        });
+
         photoElement.src = newSrc;
+
+        // Cached images can be complete before assigning onload in some
+        // engines. Re-run the same handler in that case, guarded by token.
+        if (photoElement.complete && photoElement.naturalWidth) {
+            photoElement.onload?.();
+        }
     }
 
 
@@ -2557,11 +2702,11 @@ export class MemoryLane {
             m.message
         );
 
-        this.buildWords(
-            this.message,
-            m.message,
-            m.id + 100
-        );
+        this.buildWords(this.message, m.message, m.id + 100, {
+            // Memory 21's established entrance is intentionally glyph-based;
+            // every other short photo message only needs word-level nodes.
+            graphemes: m.id === 21
+        });
     }
 
 
@@ -2617,7 +2762,10 @@ export class MemoryLane {
         for (const para of m.paragraphs) {
             const p = document.createElement('p');
             p.className = 'memory-letter-para';
-            this.buildWords(p, para, m.id + 500);
+            // Letter paragraphs animate as one composited paragraph. Keeping
+            // their text as text avoids hundreds of animated grapheme spans
+            // without changing text, emoji, or reading order.
+            p.textContent = para;
             frag.appendChild(p);
         }
 
@@ -2642,7 +2790,7 @@ export class MemoryLane {
        Build text animation spans
        ============================================================ */
 
-    buildWords(container, text, salt) {
+    buildWords(container, text, salt, { graphemes = true } = {}) {
         const words = text.split(/\s+/);
 
         words.forEach((word, wi) => {
@@ -2661,11 +2809,19 @@ export class MemoryLane {
                 String(wi)
             );
 
-            for (let li = 0; li < word.length; li++) {
+            if (!graphemes) {
+                w.textContent = word;
+                container.appendChild(w);
+                return;
+            }
+
+            const segmented = splitGraphemes(word);
+
+            segmented.forEach((grapheme, li) => {
                 const l = document.createElement('span');
 
                 l.className = 'tl';
-                l.textContent = word[li];
+                l.textContent = grapheme;
 
                 l.style.setProperty(
                     '--i',
@@ -2694,7 +2850,7 @@ export class MemoryLane {
                 );
 
                 w.appendChild(l);
-            }
+            });
 
             container.appendChild(w);
         });
@@ -2702,27 +2858,68 @@ export class MemoryLane {
 
 
     /* ============================================================
-       Preload neighbouring photos
+       Small, decode-aware photo preparation cache
        ============================================================ */
+
+    prepareImage(src) {
+        const existing = this._imageCache.get(src);
+        if (existing) return existing.promise;
+
+        const image = new Image();
+        image.decoding = 'async';
+        const entry = {
+            image,
+            promise: new Promise((resolve) => {
+                image.onload = async () => {
+                    try {
+                        await image.decode?.();
+                    } catch {
+                        // A successful load is still usable when decode() is
+                        // unsupported or reports an already-decoded image.
+                    }
+                    resolve(image);
+                };
+                image.onerror = () => resolve(null);
+            })
+        };
+
+        this._imageCache.set(src, entry);
+        image.src = src;
+        return entry.promise;
+    }
+
+    applyPhotoDimensions(element, source) {
+        if (!source?.naturalWidth || !source?.naturalHeight) return;
+        element.width = source.naturalWidth;
+        element.height = source.naturalHeight;
+    }
+
+    findPhotoNeighbor(direction) {
+        for (let offset = 1; offset < this.total; offset += 1) {
+            const index = (this.current + direction * offset + this.total) % this.total;
+            const memory = memories[index];
+            if (memory?.type === 'photo') return memory;
+        }
+        return null;
+    }
 
     preloadNeighbors() {
         if (this.total === 0) return;
 
-        const next =
-            memories[
-                (this.current + 1) % this.total
-            ];
+        const current = memories[this.current];
+        const targets = [
+            current?.type === 'photo' ? current : null,
+            this.findPhotoNeighbor(1),
+            this.findPhotoNeighbor(-1)
+        ].filter(Boolean);
 
-        const prev =
-            memories[
-                (this.current - 1 + this.total) % this.total
-            ];
+        const retained = new Set(targets.map((memory) => memory.image));
+        for (const src of this._imageCache.keys()) {
+            if (!retained.has(src)) this._imageCache.delete(src);
+        }
 
-        for (const mem of [next, prev]) {
-            if (mem.type === 'letter') continue;
-
-            const probe = new Image();
-            probe.src = mem.image;
+        for (const memory of targets) {
+            this.prepareImage(memory.image);
         }
     }
 
@@ -2838,6 +3035,7 @@ export class MemoryLane {
     destroy() {
         this.clearTimers();
         this.hideActTransition();
+        this._imageCache.clear();
 
         /*
          * Remove any pending read-gate scroll listener.

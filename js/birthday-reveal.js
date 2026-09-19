@@ -4,16 +4,16 @@ import { BirthdayRain } from './birthday-rain.js';
 import { TITLE_MOTION, TITLE_SEGMENT_MOTION } from './birthday-celebration-motion.js';
 
 /* ------------------------------------------------------------
-   Birth moment: 21 Sep 2007, 01:30:00 IST (Asia/Kolkata).
+   Birth moment: 23 Sep 2007, 01:26:00 IST (Asia/Kolkata).
    IST is UTC+5:30 with no DST, so the instant is fixed forever:
-   UTC 2007-09-20T20:00:00.000Z. Interpreting the wall-clock in a
+   UTC 2007-09-22T19:56:00.000Z. Interpreting the wall-clock in a
    fixed offset keeps the result identical on every device,
    regardless of the user's locale/timezone.
    ------------------------------------------------------------ */
 export const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
 export function birthTimestampIST() {
-    return Date.UTC(2007, 8, 21, 1, 30, 0) - IST_OFFSET_MS;
+    return Date.UTC(2007, 8, 23, 1, 26, 0) - IST_OFFSET_MS;
 }
 
 /* Wall-clock components of t expressed in IST calendar terms.
@@ -137,11 +137,20 @@ export class BirthdayReveal {
         this.titleAssemblyRunId = null;
         this.heroGeometry = null;
         this.balloonCycle = 0;
+        // Fully framed perimeter slots leave a deliberate content exclusion
+        // zone around the title, text heart, its centre copy, and the advance
+        // control. The top row ends before the title; the lower row begins
+        // below the advance control.
         this.balloonSlots = [
-            { side: 'left', top: 10, depth: 'back' }, { side: 'right', top: 10, depth: 'back' },
-            { side: 'left', top: 30, depth: 'middle' }, { side: 'right', top: 30, depth: 'middle' },
-            { side: 'left', top: 61, depth: 'front' }, { side: 'right', top: 61, depth: 'front' },
-            { side: 'left', top: 80, depth: 'back' }, { side: 'right', top: 80, depth: 'back' },
+            { side: 'left', offset: '10px', top: '2px', size: 'upper', depth: 'middle', string: '0px' },
+            { side: 'right', offset: '10px', top: '2px', size: 'upper', depth: 'middle', string: '0px' },
+            { side: 'left', offset: '2px', top: '31%', size: 'side', depth: 'middle', string: '28px' },
+            { side: 'right', offset: '2px', top: '31%', size: 'side', depth: 'middle', string: '28px' },
+            { side: 'left', offset: '2px', top: '70%', size: 'lower', depth: 'back', string: '26px' },
+            { side: 'right', offset: '2px', top: '70%', size: 'lower', depth: 'back', string: '26px' },
+            { side: 'left', offset: '10px', top: '84%', size: 'bottom', depth: 'back', string: '18px' },
+            { side: 'left', offset: 'calc(50% - (var(--size) / 2))', top: '77%', size: 'large', depth: 'back', string: '20px' },
+            { side: 'right', offset: '10px', top: '84%', size: 'bottom', depth: 'back', string: '18px' },
         ];
         this._resolveWishGate = null;
         this._onWish = () => this._makeWish(this._run);
@@ -1205,9 +1214,9 @@ export class BirthdayReveal {
         this._stopBalloons();
         this.balloonsEl.innerHTML = '';
         this.balloonCycle = 0;
-        const total = innerHeight < 640 ? 6 : 8;
+        const total = innerHeight < 640 ? 6 : 9;
         for (let index = 0; index < total; index += 1) this.balloonsEl.append(this._createBalloon(index));
-        if (!this.reduced) this.balloonTimer = setInterval(() => this._cycleBalloon(), 1500);
+        if (!this.reduced) this.balloonTimer = setInterval(() => this._cycleBalloon(), 2000);
     }
 
     _createBalloon(slot) {
@@ -1217,19 +1226,22 @@ export class BirthdayReveal {
         const color = colors[slot % colors.length];
         const depth = zone.depth;
         const sizes = {
-            back: 'clamp(60px, 16vw, 70px)',
-            middle: 'clamp(78px, 21vw, 92px)',
-            front: 'clamp(95px, 27vw, 115px)',
+            upper: 'clamp(64px, 18vw, 72px)',
+            side: 'clamp(52px, 14vw, 60px)',
+            lower: 'clamp(68px, 20vw, 78px)',
+            bottom: 'clamp(62px, 18vw, 70px)',
+            large: 'clamp(94px, 27vw, 110px)',
         };
         const balloon = document.createElement('span');
         const variant = ['rose', 'diamond', 'pearl', 'mauve'][slot % 4];
         balloon.className = `birthday-reveal-balloon is-heart-balloon variant-${variant} depth-${depth} ${this.reduced ? 'is-floating is-static' : 'is-in'}`;
         balloon.dataset.balloon = String(serial);
         balloon.dataset.slot = String(slot);
-        balloon.style.setProperty(zone.side, 'clamp(-38px, -7vw, -18px)');
-        balloon.style.setProperty('top', `${zone.top}%`);
+        balloon.style.setProperty(zone.side, zone.offset);
+        balloon.style.setProperty('top', zone.top);
         balloon.style.setProperty('--i', slot);
-        balloon.style.setProperty('--size', sizes[depth]);
+        balloon.style.setProperty('--size', sizes[zone.size]);
+        if (zone.string) balloon.style.setProperty('--string-size', zone.string);
         balloon.style.setProperty('--c1', color[0]);
         balloon.style.setProperty('--c2', color[1]);
         balloon.style.setProperty('--dur', `${10 + serial % 3 * 2}s`);
@@ -1248,13 +1260,13 @@ export class BirthdayReveal {
         const balloon = eligible[this.balloonCycle % eligible.length];
         balloon.classList.replace('is-floating', 'is-popping');
         const effectFamilies = [
-            ['heart', 'heart', 'heart', 'heart', 'spark', 'spark', 'heart', 'spark', 'heart', 'streak', 'pearl', 'ribbon'],
-            ['star', 'star', 'star', 'star', 'star', 'pearl', 'pearl', 'star', 'pearl', 'heart', 'streak', 'ribbon'],
-            ['ribbon', 'ribbon', 'ribbon', 'spark', 'spark', 'spark', 'ribbon', 'spark', 'ribbon', 'heart', 'pearl', 'streak'],
-            ['pearl', 'pearl', 'pearl', 'pearl', 'streak', 'streak', 'pearl', 'streak', 'heart', 'spark', 'ribbon', 'heart'],
+            ['flower', 'heart', 'heart', 'spark', 'flower', 'spark', 'heart', 'pearl', 'ribbon', 'streak', 'flower', 'heart', 'spark'],
+            ['flower', 'star', 'star', 'pearl', 'flower', 'star', 'pearl', 'heart', 'star', 'ribbon', 'flower', 'streak', 'pearl'],
+            ['flower', 'ribbon', 'spark', 'ribbon', 'flower', 'spark', 'ribbon', 'heart', 'pearl', 'spark', 'flower', 'ribbon', 'streak'],
+            ['flower', 'pearl', 'pearl', 'streak', 'flower', 'pearl', 'heart', 'spark', 'ribbon', 'pearl', 'flower', 'streak', 'heart'],
         ];
         const family = effectFamilies[this.balloonCycle % effectFamilies.length];
-        const pieces = family.slice(0, 8 + (this.balloonCycle % 5));
+        const pieces = family.slice(0, 10 + (this.balloonCycle % 4));
         this._spawnEffectPieces(balloon, pieces);
         const timer = setTimeout(() => {
             this.balloonReplacementTimers.delete(timer);

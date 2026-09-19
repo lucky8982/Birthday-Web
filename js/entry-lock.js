@@ -106,11 +106,7 @@ export class EntryLockIntro {
         void this.overlay.offsetWidth;
         this.overlay.classList.add('is-visible');
 
-        // The intro owns the screen now
-        const tap = $('#tap-to-begin');
-        if (tap) tap.hidden = true;
-
-        // The old loading content must not show through
+        // The intro owns the shared loading host now.
         $('#loading-screen')?.classList.add('is-lettering');
 
         this.spawnStars();

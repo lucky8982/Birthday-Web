@@ -62,7 +62,7 @@ const AUTO_ADVANCE_MS = 10000;
 const LETTER_QUESTIONS = [
     {
         lead: 'Baby, sach sach batana… 😌❤️',
-        text: 'Main tumhe zyada tang karta hu 😏\nYa tum zyada nakhre karti ho 👀',
+        text: 'Main tumhe zyada tang or nakhre karta hu 😏\nYa tum zyada nakhre or tang karti ho mujhe 👀',
         correct: 'main',
     },
     {
@@ -165,6 +165,7 @@ export class OpeningCinematic {
         // the loading screen can hand over to the hero scene.
         this.onHandover = null;
         this.onDateGateComplete = null;
+        this.hasCompletedDateGate = null;
         this.onMessageChange = null;
 
         // Stage hook for main.js (global Back button state machine):
@@ -238,14 +239,7 @@ export class OpeningCinematic {
         void this.overlay.offsetWidth;
         this.overlay.classList.add('is-visible');
 
-        // The intro owns the screen now - hide the fallback button
-        const tap = $('#tap-to-begin');
-        if (tap) tap.hidden = true;
-
-        // The old loading content (title, progress, logo) must not
-        // show through behind the sky - it carries the same
-        // "Happy Birthday My Love" title as the reveal, so it would
-        // duplicate the message on screen.
+        // The intro owns the shared loading host now.
         $('#loading-screen')?.classList.add('is-lettering');
 
         this.spawnStars();
@@ -493,14 +487,14 @@ export class OpeningCinematic {
         this.letterOpened = true;
         this.letterOpeningEvent = event;
         this.busy = true;
-        // The Back control belongs to the letter lock only.
-        // Once KHOLO is accepted, the original letter-opening scene
-        // owns the screen without global navigation controls.
-        this._fireStage('none');
         const run = this._letterRun;
 
         this.letterCard?.classList.add('is-opening');
         this.letterScene?.classList.add('is-open');
+        // The destination is now mounted and visible. Persist its settled
+        // equivalent immediately so a refresh during the opening animation
+        // cannot fall back to the already-completed question gate.
+        this._fireStage('opening-letter-message');
 
         // Wait for the actual paper animation before entering the
         // message stage. The markup uses .letter-paper, so this must
@@ -516,6 +510,7 @@ export class OpeningCinematic {
                 this.busy = false;
                 this.overlay?.focus({ preventScroll: true });
                 this.onDateGateComplete?.();
+                this._fireStage('opening-letter-message');
             });
         });
     }
@@ -639,6 +634,19 @@ export class OpeningCinematic {
                     this.later(this.reduced ? 0 : 160, () => {
                         if (run !== this._letterRun || !this.questionTransitioning) return;
 
+                        // A completed visitor still answers Question 1, with
+                        // its existing acknowledgement animation, but then
+                        // re-enters the authoritative letter-opening method.
+                        if (this.questionIndex === 0 && this.isDateGateReplay()) {
+                            this.letterUnlocked = true;
+                            this.questionEl?.classList.add('is-settled');
+                            this.answersEl?.classList.add('is-exiting');
+                            this.questionTransitioning = false;
+                            this.letterReady = true;
+                            this.openLetter();
+                            return;
+                        }
+
                         if (this.questionIndex === LETTER_QUESTIONS.length - 1) {
                             this.letterUnlocked = true;
                             this.questionEl?.classList.add('is-settled');
@@ -671,6 +679,15 @@ export class OpeningCinematic {
                 });
             });
         });
+    }
+
+    isDateGateReplay() {
+        if (typeof this.hasCompletedDateGate !== 'function') return false;
+        try {
+            return this.hasCompletedDateGate() === true;
+        } catch {
+            return false;
+        }
     }
 
     showAnswerAck() {
@@ -992,6 +1009,51 @@ export class OpeningCinematic {
 
         // Re-persist the Love Letter state (Back pressed -> gate).
         this._fireStage('love-letter');
+    }
+
+    /** Restore the fully opened short-letter page without replaying the gate. */
+    restoreOpenedLetter() {
+        if (!this.overlay || !this.letterScene) return false;
+
+        const host = this.overlay.closest('#loading-screen');
+        if (host) {
+            host.hidden = false;
+            host.classList.remove('is-leaving');
+            host.classList.add('is-lettering');
+        }
+
+        this.clearTimers();
+        this.resetLetterUi();
+
+        this.finished = false;
+        this.started = true;
+        this.state = 'letter';
+        this.busy = false;
+        this.letterOpened = true;
+        this.letterUnlocked = true;
+        this.letterReady = true;
+        this.selectedAnswer = null;
+
+        this.messageEl?.replaceChildren();
+        this.messageEl?.setAttribute('aria-hidden', 'true');
+        this.overlay.hidden = false;
+        this.overlay.classList.remove('is-leaving');
+        this.overlay.classList.add('is-visible');
+
+        this.letterScene.setAttribute('aria-hidden', 'false');
+        this.letterScene.classList.add('is-visible', 'is-open', 'is-message');
+        this.letterCard?.classList.add('is-opening');
+        this.letterInvite?.classList.add('is-in');
+        this.letterMessage?.classList.add('is-in');
+        this.questionEl?.classList.remove('is-in', 'is-transitioning', 'is-entering', 'is-settled');
+        this.questionEl?.setAttribute('aria-hidden', 'true');
+        this.overlay.focus({ preventScroll: true });
+
+        // A restored opening route has now reached the same valid settled
+        // state as the original animation completion.
+        this.onDateGateComplete?.();
+        this._fireStage('opening-letter-message');
+        return true;
     }
 
     /* ---- Handover ---- */

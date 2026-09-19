@@ -226,9 +226,19 @@ export class FinalLoveLetter {
         this.root.classList.add('is-leaving');
         this.timer = window.setTimeout(() => {
             if (run !== this.run) return;
-            this.root.classList.remove('is-visible', 'is-leaving');
-            this.root.hidden = true;
-            this.onGarden?.();
+            let handedOff = false;
+            if (typeof this.onGarden === 'function') {
+                try { handedOff = this.onGarden() !== false; }
+                catch (error) { console.warn('Garden handoff failed.', error); }
+            } else {
+                console.warn('Garden handoff is unavailable.');
+            }
+            // The successful destination commit stops this controller. If it
+            // could not render, keep the readable letter available to retry.
+            if (!handedOff && run === this.run) {
+                this.root.classList.remove('is-leaving');
+                this.observe();
+            }
         }, this.reduced ? 0 : 1300);
     }
 

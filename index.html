@@ -51,41 +51,22 @@
             </div>
         </div>
         
-        <!-- Loading Content -->
-        <div class="loading-content">
-            <!-- Logo/Brand Mark -->
-            <div class="loading-logo" aria-hidden="true">
-                <svg class="logo-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
+        <!-- Delayed only when boot genuinely takes a moment. The empty,
+             named photo slot deliberately avoids guessing at a Memory Lane
+             image; set its background only after a wife portrait is chosen. -->
+        <section id="loading-waiting" class="loading-waiting" aria-live="polite" hidden>
+            <div id="loading-waiting-photo" class="loading-waiting-photo" data-waiting-photo-slot="wife-portrait" aria-hidden="true">
+                <span class="loading-waiting-heart">&hearts;</span>
             </div>
-            
-            <!-- Main Title -->
-            <h1 class="loading-title">
-                <span class="title-line">Happy Birthday</span>
-                <span class="title-line title-name">My Love</span>
-                <span class="title-heart" aria-hidden="true">💙</span>
-            </h1>
-            
-            <!-- Subtitle -->
-            <p class="loading-subtitle">A journey through memories awaits...</p>
-            
-            <!-- Loading Progress -->
-            <div class="loading-progress" aria-hidden="true">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill"></div>
-                </div>
-                <span class="progress-text" id="progress-text">0%</span>
-            </div>
-            
-            <!-- Tap to Begin (hidden until loaded) -->
-            <button class="tap-to-begin" id="tap-to-begin" aria-label="Begin the birthday journey" hidden>
-                <span class="tap-text">Tap to Begin</span>
-                <svg class="tap-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M5 12h14M12 5l7 7-7 7"></path>
-                </svg>
-            </button>
-        </div>
+            <p class="loading-waiting-copy">Bas ek pal&hellip;</p>
+            <span class="loading-waiting-detail">Preparing something just for you.</span>
+        </section>
+
+        <section id="loading-failure" class="loading-failure" role="alert" aria-live="assertive" hidden>
+            <div class="loading-failure-mark" aria-hidden="true">&hearts;</div>
+            <p>Something did not open properly.</p>
+            <button id="loading-retry" type="button">Try Again</button>
+        </section>
 
 <!-- ============================================
              CINEMATIC OPENING - the first moments
@@ -351,7 +332,8 @@
 Baby tumhe shayad pata bhi nahi,
 
 Ki tum meri zindagi me kitne khaas ho....
-Kabhi kabhi main sochta hoon ki meri zindagi tumse pehle kaisi thi,
+Kabhi kabhi main sochta hoon ki meri zindagi pehle kaisi thi,
+Jab se tum meri life me aai ho puri life hi change ho gai he,
 Tum mere liye sirf ek insaan nahi,
 Ek sukoon ho, Ek aadat ho,
 Ek khubsurat si dua ho jo har roj puri hoti hai.
@@ -449,7 +431,7 @@ I love you. ❤️</p>
                 <p class="birthday-reveal-burst-message" aria-label="Happy Birthday Meri pyari biwi" hidden><span class="birthday-burst-line"><i class="birthday-burst-word" style="--word-index:0">Happy</i><i class="birthday-burst-word" style="--word-index:1">Birthday</i></span><strong class="birthday-burst-line"><i class="birthday-burst-word" style="--word-index:2">Meri</i><i class="birthday-burst-word" style="--word-index:3">pyari</i><i class="birthday-burst-word" style="--word-index:4">biwi</i></strong></p>
                 <div class="birthday-reveal-heart" aria-hidden="true" hidden></div>
                 <!-- Live age: filled by js/birthday-reveal.js from the
-                     real clock (born 21 Sep 2007, 01:30:00 IST - UTC 2007-09-20T20:00:00.000Z) -->
+                     real clock (born 23 Sep 2007, 01:26:00 IST - UTC 2007-09-22T19:56:00.000Z) -->
                 <div class="birthday-reveal-age" hidden>
                     <p class="birthday-reveal-age-row birthday-reveal-age-years">
                         <span class="birthday-reveal-age-value" data-age="years">0</span>
@@ -634,7 +616,7 @@ I love you. ❤️</p>
                             <span class="final-love-letter-envelope-seal">&#10084;</span>
                         </div>
                         <p class="final-love-letter-eyebrow">For the most important person in my life</p>
-                        <h2 id="final-love-letter-title">My Love&hellip;</h2>
+                        <h2 id="final-love-letter-title">Meri Jaan&hellip; &#10084;&#65039;</h2>
                     </header>
 
                     <section class="final-love-letter-chapter" data-letter-paragraph>
@@ -644,18 +626,34 @@ I love you. ❤️</p>
                         <p>Kabhi kabhi main sochta hoon ki agar tum meri life mein nahi aati, toh shayad meri life chal toh rahi hoti&hellip; lekin woh life meri wali life nahi hoti.</p>
                         <p>Usme woh excitement nahi hoti jo tumhara message dekh kar hoti hai. Woh smile nahi hoti jo tumhari ek chhoti si baat se automatically aa jaati hai. Woh sukoon nahi hota jo tumse baat karne ke baad milta hai.</p>
                         <p>Aur shayad mujhe kabhi pata bhi nahi chalta ki kisi ek insaan ka mere liye itna important ho jaana possible hai.</p>
-                    </section>
-
-                    <section class="final-love-letter-chapter" data-letter-paragraph>
-                        <p class="final-love-letter-emphasis">Tum meri life ka sirf ek part nahi ho.</p>
-                        <p class="final-love-letter-emphasis">Tum meri life ki woh jagah ho jahan main baar-baar lautna chahta hoon.</p>
+                        <p class="final-love-letter-hero-line">Tum meri life ka sirf ek part nahi ho.</p>
+                        <p class="final-love-letter-hero-line">Tum meri life ki woh jagah ho jahan main baar-baar lautna chahta hoon.</p>
                         <p>Tumse baat karna mera favourite part hai. Tumhe hasana mujhe khud khush kar deta hai.</p>
                         <p>Tum naraz hoti ho toh sach mein sab kuch thoda ajeeb sa lagne lagta hai. Tum khush hoti ho toh bina reason mera mood bhi achha ho jaata hai.</p>
                         <p>Aur jab tum mujhe apna samajh kar apni chhoti se chhoti baat batati ho na&hellip; pata nahi kyun, lekin us waqt mujhe duniya ka sabse lucky insaan hone jaisa feel hota hai.</p>
                     </section>
 
                     <section class="final-love-letter-chapter" data-letter-paragraph>
-                        <p>Mujhe tumhari perfect version nahi chahiye. Mujhe tum chahiye.</p>
+                        <p>Tumhe pata hai sabse ajeeb baat kya hai?</p>
+                        <p>Ab tum meri aadat se bhi bahut aage nikal chuki ho.</p>
+                        <p class="final-love-letter-hero-line">Aisa lagta hai jaise tum meri rag-rag mein bas gayi ho.</p>
+                        <p>Main bahar kahin hota hoon, kisi couple ko haste hue dekh leta hoon, kisi ko saath ghoomte hue dekh leta hoon, kisi ko chhoti si cheez enjoy karte hue dekh leta hoon&hellip; aur pata nahi kyun, mere dimaag mein sabse pehle tum aa jaati ho.</p>
+                        <p>Main sochta hoon&hellip;</p>
+                        <p class="final-love-letter-quote">&ldquo;Hum kab aise saath ghoomenge?&rdquo;</p>
+                        <p class="final-love-letter-quote">&ldquo;Hum kab ye sab saath enjoy karenge?&rdquo;</p>
+                        <p class="final-love-letter-quote">&ldquo;Kaash abhi tum bhi mere paas hoti.&rdquo;</p>
+                        <p>Main khush hota hoon toh tumhari yaad aati hai, kyunki mann karta hai woh khushi tumhare saath baantun.</p>
+                        <p>Main udaas hota hoon toh tumhari yaad aati hai, kyunki mann karta hai tumhare paas baith jaun.</p>
+                        <p>Main gusse mein hota hoon toh bhi tumhari yaad aati hai. Main thak jaata hoon toh bhi tumhari yaad aati hai.</p>
+                        <p>Aur jab kabhi mujhe lagta hai ki main haar raha hoon, tab bhi mujhe tumhari hi zarurat mehsoos hoti hai.</p>
+                        <p>Kyuki tum un logon mein se nahi ho jo sirf meri khushi ke time mere saath hoti ho.</p>
+                        <p>Tumne mujhe meri thakaan mein bhi samjha hai. Meri haar mein bhi sambhala hai.</p>
+                        <p>Mujhe jab khud par bharosa kam hua, tab tumne mujhe motivate kiya hai.</p>
+                        <p>Aur shayad isi liye ab meri har feeling ka ek hissa tumse juda hua hai.</p>
+                    </section>
+
+                    <section class="final-love-letter-chapter" data-letter-paragraph>
+                        <p class="final-love-letter-hero-line">Mujhe tumhari perfect version nahi chahiye.<br>Mujhe tum chahiye.</p>
                         <p>Tumhari hasi. Tumhara gussa. Tumhari zid. Tumhare silly moments. Tumhari overthinking. Tumhari random baatein. Tumhara bina kisi reason ke mood change ho jaana. Tumhara care karna.</p>
                         <p>Tumhara woh tareeka jisme kabhi kabhi tum kuch bolti nahi ho, lekin phir bhi bahut kuch keh deti ho.</p>
                         <p>Mujhe ye sab chahiye. Kyuki ye sab milkar tum banti ho. Aur mujhe tumse hi pyaar hai. &#10084;&#65039;</p>
@@ -671,68 +669,150 @@ I love you. ❤️</p>
 
                     <section class="final-love-letter-chapter" data-letter-paragraph>
                         <p>Kabhi kabhi ek normal conversation. Ek random photo. Ek chhota sa joke. Ek call. Ek &ldquo;kya kar rahe ho?&rdquo; Ek &ldquo;khana kha liya?&rdquo;</p>
-                        <p>Ye sab bahar se bahut normal lagta hai. Lekin mere liye nahi.</p>
-                        <p>Mere liye ye woh chhoti chhoti cheezein hain jinse meri life beautiful bani hai.</p>
-                        <p>Tumne meri life mein sirf memories nahi add ki. Tumne meri life ko feel karne ka tareeka change kar diya.</p>
+                        <p>Bahar wale ke liye shayad ye sab bahut normal ho. Mere liye nahi.</p>
+                        <p>Mere liye ye wahi chhoti-chhoti cheezein hain jinse meri zindagi khoobsurat bani hai.</p>
+                        <p>Tumne meri life mein sirf memories nahi add ki. Tumne meri life ko mehsoos karne ka tareeka badal diya.</p>
                         <p>Tumne mujhe kisi ka wait karna sikhaya. Kisi ki awaaz miss karna sikhaya. Kisi ki smile ko apni khushi samajhna sikhaya.</p>
                         <p class="final-love-letter-callback" data-letter-callback="love-mix" hidden></p>
                     </section>
 
-                    <section class="final-love-letter-chapter" data-letter-paragraph>
+                    <section class="final-love-letter-chapter final-love-letter-chapter--home" data-letter-paragraph>
                         <p>Aur sabse zyada&hellip; tumne mujhe ye samjhaya ki &ldquo;home&rdquo; hamesha koi jagah nahi hoti.</p>
-                        <p class="final-love-letter-emphasis">Kabhi kabhi home ek insaan hota hai.</p>
-                        <p class="final-love-letter-emphasis">Aur mere liye woh insaan tum ho. &#10084;&#65039;</p>
+                        <p class="final-love-letter-hero-line">Kabhi kabhi home ek insaan hota hai.</p>
+                        <p class="final-love-letter-hero-line">Aur mere liye woh insaan tum ho. &#10084;&#65039;</p>
+                    </section>
+
+                    <section class="final-love-letter-chapter final-love-letter-chapter--quiet" data-letter-paragraph>
+                        <p>Aur ek baat jo shayad mujhe tumse aur clearly kehni chahiye&hellip;</p>
+                        <p>Meri baby, mujhe pata hai ki kabhi kabhi main tumse kuch zyada hi ummeedein laga leta hoon.</p>
+                        <p>Kabhi main apne dimaag mein kuch soch leta hoon&hellip; aur jab cheezein mere sochne ke hisaab se nahi hoti, toh main hurt ho jaata hoon.</p>
+                        <p>Aur hurt hone ke baad kabhi kabhi main overreact kar deta hoon. Bahut kuch aisa bol deta hoon jo mujhe nahi bolna chahiye.</p>
+                        <p>Kabhi tumhe bina wajah bura feel kara deta hoon. Kabhi apni expectations ko tumhari galti bana deta hoon.</p>
+                        <p>Aur uske liye&hellip;</p>
+                        <p class="final-love-letter-hero-line">Mujhe sach mein sorry hai, meri baby.</p>
+                        <p>Tumhara pyaar kisi test ka answer nahi hai. Tumhe har baar meri expectations ke according behave karna zaroori nahi hai.</p>
+                        <p>Tum jo bhi dil se, apni marzi se mere liye karti ho&hellip; wahi mere liye sabse special hona chahiye. Aur main ye seekhna chahta hoon.</p>
+                        <p>Main tumse ye nahi chahta ki tum meri har expectation poori karo. Main bas tumhe tumhari marzi se, tumhari khushi se, tum jaise ho waise hi pyaar karna chahta hoon.</p>
+                        <p>Ab tum apni ichha se jo bhi karogi, main usi ko dil se enjoy karna chahta hoon.</p>
+                        <p>Kyuki mujhe tumhari forced perfect version nahi chahiye. Mujhe meri asli wali baby chahiye.</p>
+                        <p class="final-love-letter-personal-signature">Meri pyari chipkali. &#129438;&#10084;&#65039;</p>
                     </section>
 
                     <section class="final-love-letter-chapter" data-letter-paragraph>
                         <p>Main nahi jaanta future exactly kaisa hoga. Kaunse din easy honge. Kaunse difficult. Kitni baar hum ladenge. Kitni baar ek dusre ko samajhne mein time lagega.</p>
                         <p>Lekin ek cheez hai jo main jaanta hoon.</p>
-                        <p class="final-love-letter-emphasis">Main har version of future mein tumhe choose karna chahta hoon.</p>
-                        <p>Good days mein bhi. Bad days mein bhi. Exciting days mein bhi. Boring days mein bhi. Jab life bahut beautiful lage tab bhi. Aur jab sab kuch complicated lage tab bhi.</p>
-                        <p>Main tumhare saath sirf best moments nahi chahta. Main tumhare saath real life chahta hoon.</p>
-                        <p>Woh life jisme subah ke normal days hon. Late night baatein hon. Random plans hon. Cancelled plans hon. Photos hon. Fights hon. Sorry ho. Hugs hon. Dreams hon. Aur har baar kisi bhi problem ke baad hum dono fir se ek dusre ke paas aa jaayein.</p>
+                        <p class="final-love-letter-hero-line">Main har aane wale kal mein tumhe hi choose karna chahta hoon.</p>
+                        <p>Achhe dinon mein bhi. Bure dinon mein bhi. Khushi mein bhi. Tension mein bhi. Exciting days mein bhi. Boring normal days mein bhi. Jab sab kuch beautiful lage tab bhi. Aur jab sab kuch complicated lage tab bhi.</p>
+                        <p class="final-love-letter-hero-line">Main tumhare saath sirf best moments nahi chahta.<br>Main tumhare saath real life chahta hoon.</p>
+                    </section>
+
+                    <section class="final-love-letter-chapter final-love-letter-chapter--future" data-letter-paragraph>
+                        <p>Woh life jisme normal subah ho. Late-night baatein ho. Random plans ho. Cancelled plans ho. Photos ho. Fights ho. Sorry ho. Hugs ho. Dreams ho.</p>
+                        <p>Thoda gussa ho. Thodi nok-jhok ho. Kabhi tum meri khinchai karo. Kabhi main tumhari.</p>
+                        <p>Aur kisi bhi problem ke baad aakhir mein hum dono fir ek dusre ke paas hi aa jaayein.</p>
+                        <p>Aur raat ko din chahe jaisa bhi gaya ho&hellip;</p>
+                        <p class="final-love-letter-hero-line">akhir mein tum aur main ek hi ghar mein ho.</p>
+                    </section>
+
+                    <section class="final-love-letter-chapter final-love-letter-chapter--future" data-letter-paragraph>
+                        <p>Main tumhare saath sirf ek relationship nahi chahta. Main tumhare saath apni zindagi banana chahta hoon.</p>
+                        <p>Main chahta hoon ki ek din hamari dono families ek saath khadi ho. Hamari shaadi ho.</p>
+                        <p>Hum dono ek dusre ko officially wohi naam de saken jo dil se shayad hum kab se de chuke hain.</p>
+                        <p>Aur phir ek din&hellip; hamare paas apna ghar ho.</p>
+                        <p>Aisa ghar jo sirf deewaron aur rooms se na bana ho. Aisa ghar jahan hamari family ho. Hamare apne log ho. Hamari hasi ho. Hamari nok-jhok ho. Hamari everyday life ho. Tumhara gussa ho. Mera pagalpan ho.</p>
+                        <p>Sach bolun? Mujhe bahut badi-badi cheezein nahi chahiye agar tum mere saath ho.</p>
+                        <p class="final-love-letter-hero-line">Normal couple wali life bhi mere liye bahut special hogi&hellip;<br>agar usmein meri wife tum ho.</p>
                     </section>
 
                     <section class="final-love-letter-chapter" data-letter-paragraph>
                         <p>Main tumhe promise nahi kar sakta ki main hamesha perfect rahunga. Main mistakes karunga. Kabhi stupid behave karunga. Kabhi tumhe samajhne mein late karunga. Kabhi shayad bina matlab tumhe irritate bhi karunga.</p>
                         <p>Lekin ek promise main dil se kar sakta hoon.</p>
-                        <p>Main hamesha try karta rahunga. Tumhe samajhne ke liye. Tumhe khush rakhne ke liye. Tumhari respect karne ke liye. Tumhare dreams ko support karne ke liye.</p>
-                        <p>Aur jab tumhe lage ki duniya thodi zyada heavy ho gayi hai&hellip; tab tumhare saath khade rehne ke liye.</p>
+                        <p>Main hamesha try karta rahunga. Tumhe samajhne ke liye. Tumhari respect karne ke liye. Tumhare emotions ko lightly na lene ke liye. Tumhare dreams ko support karne ke liye.</p>
+                        <p>Aur jab tumhe lage ki sab kuch thoda zyada bhaari ho gaya hai&hellip; tab main tumhare paas rehna chahta hoon.</p>
+                        <p>Tumhari baat sunne ke liye. Tumhe sambhalne ke liye. Aur zarurat pade toh bina kuch bole sirf tumhara haath pakad kar tumhare saath khade rehne ke liye.</p>
+                        <p class="final-love-letter-hero-line">Tumhara dukh mera dukh hai.</p>
+                        <p>Tum dukhi hoti ho toh main bhi andar se theek nahi reh pata. Tum khush hoti ho toh sach mein mujhe bhi khushi hoti hai.</p>
+                        <p>Baby, tum meri jaan ho&hellip; main tumhe dukhi dekh hi nahi sakta. &#10084;&#65039;</p>
                     </section>
 
                     <section class="final-love-letter-chapter" data-letter-paragraph>
-                        <p>Main chahta hoon tum apne life mein bahut kuch achieve karo. Bahut travel karo. Bahut hanso. Apne saare dreams complete karo. Woh sab bano jo tum banna chahti ho.</p>
-                        <p>Aur kabhi bhi apne aap ko chhota mat samajhna. Kyuki jis ladki ko main dekhta hoon na&hellip; woh bahut special hai. Bahut strong hai. Bahut beautiful hai. Aur woh apne aap se jitna expect karti hai, usse kahin zyada deserve karti hai.</p>
-                        <p>Aur haan&hellip; beautiful se mera matlab sirf tumhari smile ya tumhari photos nahi hai.</p>
-                        <p>Tum beautiful ho tumhare heart ki wajah se. Tumhare care karne ki wajah se. Tumhare emotions ki wajah se. Tumhare us soft side ki wajah se jo tum har kisi ko nahi dikhati. Aur tumhare us pagal side ki wajah se bhi jo mujhe bahut pasand hai. &#10084;&#65039;</p>
+                        <p>Tum meri khushi mein mere saath rahi ho. Mere gham mein mere saath rahi ho. Achhe waqt mein bhi. Bure waqt mein bhi. Jab cheezein easy thi tab bhi. Aur jab sab kuch mushkil laga tab bhi.</p>
+                        <p>Tumne kabhi sirf meri achhi wali version ko nahi chuna. Tum meri mushkil wali version ke saath bhi khadi rahi.</p>
+                        <p>Aur shayad main tumhe jitni baar thank you bolun, woh kam hi hoga.</p>
+                        <p>Thank you, meri jaan. Sirf meri wife hone ke liye nahi. Mera saath nibhane ke liye. Mujhe samajhne ke liye. Mujhe motivate karne ke liye.</p>
+                        <p>Mujhe girte hue dekh kar chhod na dene ke liye. Meri khushi ko apni khushi samajhne ke liye. Mere dukh mein mere saath rehne ke liye.</p>
+                        <p>Thank you mere pagalpan ko itne pyaar se jhelne ke liye&hellip; aur fir bhi mujhe apna hi samajhne ke liye. &#10084;&#65039;</p>
+                        <p>Aur mujhe ye feel karane ke liye ki chahe bahar kitna bhi kuch chal raha ho&hellip; mere paas tum ho.</p>
                     </section>
 
                     <section class="final-love-letter-chapter" data-letter-paragraph>
-                        <p>Aaj tumhara birthday hai. Aur usually birthdays par log wish karte hain ki tumhari saari wishes complete ho. Main bhi wahi wish karta hoon.</p>
-                        <p>Lekin thoda selfish hoke ek aur wish karta hoon.</p>
-                        <p>Ki chahe life kitni bhi change ho jaaye&hellip; chahe years pass ho jaayein&hellip; chahe hum dono kitne bhi bade ho jaayein&hellip; mere paas tumhe isi tarah birthday wish karne ka haq hamesha rahe.</p>
-                        <p>Main har saal tumhe dekh kar ye keh sakun: &ldquo;Happy Birthday, meri jaan.&rdquo;</p>
+                        <p>Main chahta hoon tum apni life mein bahut kuch achieve karo. Bahut travel karo. Bahut hanso. Apne saare dreams complete karo. Woh sab bano jo tum banna chahti ho.</p>
+                        <p>Aur kabhi bhi apne aap ko chhota mat samajhna. Kyuki jis ladki ko main dekhta hoon na&hellip; woh bahut special hai. Bahut strong hai. Bahut khoobsurat hai. Aur woh apne aap se jitna expect karti hai na&hellip; usse kahin zyada deserve karti hai.</p>
+                        <p>Aur haan&hellip; khoobsurat se mera matlab sirf tumhara chehra, tumhari smile ya tumhari photos nahi hai.</p>
+                        <p>Tum khoobsurat ho tumhare komal se dil ki wajah se&hellip; jo bahut jaldi pighal jaata hai.</p>
+                        <p>Tum khoobsurat ho kyunki tum chhoti-chhoti baaton ko bhi dil se feel karti ho. Tum khoobsurat ho kyunki tum care karti ho. Kyuki tumhare emotions sachche hain.</p>
+                        <p>Kyuki tum bahar se chahe kitni bhi khadoos ban jao&hellip; andar se meri baby ka dil bahut hi pyara aur naram hai. &#10084;&#65039;</p>
+                    </section>
+
+                    <section class="final-love-letter-chapter" data-letter-paragraph>
+                        <p>Aaj tumhara birthday hai. Aur usually birthday par log wish karte hain ki tumhari saari wishes complete ho. Main bhi wahi wish karta hoon.</p>
+                        <p>Lekin thoda selfish hokar ek wish aur karta hoon.</p>
+                        <p>Chahe life kitni bhi change ho jaaye&hellip; chahe kitne bhi saal beet jaayein&hellip; chahe hum dono kitne bhi bade ho jaayein&hellip; mere paas tumhe isi tarah birthday wish karne ka haq hamesha rahe.</p>
+                        <p>Main har saal tumhe dekh kar keh sakun&mdash; &ldquo;Happy Birthday, meri jaan.&rdquo;</p>
                         <p>Aur har saal mere paas tumse pyaar karne ke aur zyada reasons ho.</p>
+                        <p>Main har birthday par tumhe thoda aur achhe se samajhta rahun. Thoda aur achhe se pyaar karta rahun.</p>
+                        <p>Aur har birthday par hum peeche mudkar dekhein aur bolein&mdash; &ldquo;Yaar&hellip; hum kitna aage aa gaye.&rdquo;</p>
                     </section>
 
                     <section class="final-love-letter-chapter" data-letter-paragraph>
-                        <p>Tum meri favourite person ho. Meri favourite notification. Meri favourite awaaz. Meri favourite smile. Meri favourite memory. Mera favourite future.</p>
-                        <p>Aur agar mujhe dobara beginning se choose karna pade&hellip; toh main phir tumhe hi choose karunga.</p>
-                        <p class="final-love-letter-emphasis">Har baar. Without doubt. Without thinking twice. Sirf tum. &#10084;&#65039;</p>
+                        <p>Tum meri favourite person ho. Meri favourite notification. Meri favourite awaaz. Meri favourite smile. Meri favourite memory. Aur mera favourite future.</p>
+                        <p>Aur agar mujhe dobara shuru se bhi choose karna pade&hellip; toh main phir tumhe hi choose karunga.</p>
+                        <p>Har baar. Bina kisi shak ke. Bina kuch soche-samjhe&hellip;</p>
+                        <p>Aankhein band karun toh sabse pehle tumhara hi chehra nazar aayega.</p>
+                        <p class="final-love-letter-hero-line">Aur meri choice phir bhi tum hi hogi. &#10084;&#65039;</p>
                     </section>
 
-                    <section class="final-love-letter-chapter" data-letter-paragraph>
-                        <p>Thank you meri life mein aane ke liye. Thank you mere pagalpan ko tolerate karne ke liye. Thank you mujhe care dene ke liye. Thank you meri memories ka sabse beautiful part banne ke liye. Aur thank you sirf tum hone ke liye.</p>
+                    <section class="final-love-letter-chapter final-love-letter-chapter--kaash" data-letter-paragraph>
+                        <p>Thank you meri life mein aane ke liye. Thank you meri memories ka sabse beautiful part banne ke liye. Thank you meri har mushkil mein mere saath khade rehne ke liye. Aur thank you&hellip; sirf tum hone ke liye.</p>
                         <p>Happy Birthday, meri cute wife. &#10084;&#65039;</p>
-                        <p>I love you more than main kabhi properly words mein explain kar paunga. Aur shayad isi liye maine ye poora experience banaya. Kyuki ek simple &ldquo;Happy Birthday&rdquo; kabhi enough tha hi nahi.</p>
+                        <p>I love you&hellip; shayad jitna main kabhi words mein properly bata hi nahi paunga.</p>
+                        <p>Aur shayad isi liye maine ye poora experience banaya. Kyuki tumhare liye ek simple &ldquo;Happy Birthday&rdquo; kabhi enough tha hi nahi.</p>
                         <p>Tum mere liye simple nahi ho. Tum special ho. Bahut zyada.</p>
-                        <p class="final-love-letter-callback" data-letter-callback="future">Jo kuch peeche tha woh hamari kahani hai... aur jo aage hai, use bhi main tumhare saath hi jeena chahta hoon.</p>
+                        <p>Aur agar kabhi tumhe lage ki tum mere liye kitni important ho&hellip; toh ye poori website dobara dekh lena.</p>
+                        <p>Har photo. Har memory. Har game. Har line. Har chhota sa detail.</p>
+                        <p>Kyuki in sabke peeche ek hi reason tha&mdash; tum.</p>
+                        <p>Jo kuch peeche tha woh hamari kahani hai&hellip; aur jo aage hai&hellip; use bhi main tumhare saath hi jeena chahta hoon.</p>
+                        <p>Ye story yahin khatam nahi hoti. Abhi toh humne bas kuch memories banayi hain. Baaki poori life padi hai.</p>
+                        <p>Aur main chahta hoon ki usmein jitni bhi khushiyan aayein&hellip; main tumhare saath baantun. Jitna bhi dukh aaye&hellip; usmein tumhare paas rahun.</p>
+                        <p>Jahan bhi jaun&hellip; wahan tumhari yaad ke bajay ek din tum khud mere paas ho.</p>
+                        <p class="final-love-letter-quote final-love-letter-quote--kaash">&ldquo;Kaash tum bhi yahan hoti&hellip;&rdquo;</p>
+                        <p class="final-love-letter-hero-line">toh ek din mujhe ye line bolne ki zarurat hi na pade.</p>
+                        <p>Kyuki tum sach mein mere saath ho. Meri wife. Meri partner. Meri best friend. Mera ghar. Meri aadat. Mera sukoon.</p>
+                        <p class="final-love-letter-personal-signature">Aur&hellip; Meri pyari chipkali. &#129438;&#10084;&#65039;</p>
+                    </section>
+
+                    <section class="final-love-letter-chapter final-love-letter-chapter--quiet" data-letter-paragraph>
+                        <p>Bas ek baat hamesha yaad rakhna&mdash;</p>
+                        <p>chahe main kitna bhi gussa karun, kitni bhi ulta-seedhi baatein bol dun, kabhi bina matlab zyada react kar jaun, ya hum dono kitna bhi lad lein&hellip;</p>
+                        <p>ek baat kabhi mat sochna ki mere dil mein tumhari jagah kam ho gayi hai.</p>
+                        <p>Gussa thodi der ka ho sakta hai. Ladai thodi der ki ho sakti hai. Narazgi bhi thodi der ki ho sakti hai.</p>
+                        <p class="final-love-letter-hero-line">Lekin tumhari jagah?</p>
+                        <p>Woh mere dil mein wahi rahegi.</p>
+                        <p>Kyuki ek ladai, ek galat baat ya ek bura din mere tumhare liye pyaar ko chhota nahi kar sakta. &#10084;&#65039;</p>
                     </section>
 
                     <section class="final-love-letter-chapter final-love-letter-closing" id="final-love-letter-closing" data-letter-paragraph>
-                        <p>Aur ye story yahin khatam nahi hoti. Abhi toh humne bas kuch memories banayi hain. Baaki poori life padi hai.</p>
-                        <p>aur main chahta hoon ki usmein har possible jagah&hellip; tum mere saath ho. &#10084;&#65039;</p>
-                        <p class="final-love-letter-signature" id="final-love-letter-signature">Always yours.</p>
+                        <p>Main seekhunga. Main improve karunga. Main galtiyan bhi karunga.</p>
+                        <p>Lekin ek cheez nahi badlegi&mdash; main tumhara saath chhodna nahi chahta.</p>
+                        <p>Main tumhare saath dheere-dheere aur achha insaan banna chahta hoon. Tumhare saath seekhna chahta hoon. Tumhare saath apni galtiyan sudharna chahta hoon.</p>
+                        <p>Aur zindagi ke har naye mod par tumhara haath pakad kar aage badhna chahta hoon.</p>
+                        <p>Tumhare saath ghar banana chahta hoon. Tumhare saath family ke beech rehna chahta hoon. Tumhare saath normal boring din bhi jeena chahta hoon. Tumhare saath buddha hona chahta hoon.</p>
+                        <p>Aur meri bas ek chhoti si khwahish aur hai&hellip; ki aaj se bahut saare birthdays beet jaayein, hum dono ki zindagi kitni bhi badal jaaye, hum kitne bhi bade ho jaayein&hellip; phir bhi jab main tumhe dekhun na, toh mere dil mein wahi feeling aaye jo aaj aati hai.</p>
+                        <p>Wahi pyaar. Wahi apnapan.</p>
+                        <p class="final-love-letter-hero-line">Wahi &ldquo;ye meri wali hai&rdquo; wali feeling. &#10084;&#65039;</p>
+                        <p>Bas tab farq sirf itna ho&hellip; ki tab tum sirf meri yaadon mein nahi, mere saamne, mere ghar mein, meri zindagi mein mere saath ho.</p>
+                        <p class="final-love-letter-closing-wish">Happy Birthday, meri pyari chipkali. &#10084;&#65039;</p>
+                        <p class="final-love-letter-signature" id="final-love-letter-signature">Hamesha tumhara. &#10084;&#65039;</p>
                         <button type="button" class="final-love-letter-garden-btn" id="final-love-letter-garden" hidden>
                             <span>Hamare Garden Mein Chalo &#127800;</span>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
@@ -948,43 +1028,8 @@ I love you. ❤️</p>
                 </section>
             </div>
 
-            <!-- LEVEL 5: UNLOCK MY HEART -->
-            <div id="sg-level-5" class="sg-level sg-l5" hidden>
-                <div class="sg-l5-steps" aria-label="Final game progress"><span class="is-done"></span><span></span><span></span><span></span></div>
-                <div id="sg-l5-heart-thread" class="sg-l5-heart-thread" aria-hidden="true"><i></i><i></i><i></i><i></i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
-                <section class="sg-l5-panel is-active" data-l5-panel="intro">
-                    <p class="sg-l5-eyebrow">FINAL GAME</p>
-                    <h3 class="sg-l5-title">Unlock My Heart <span aria-hidden="true">♥</span></h3>
-                    <p class="sg-l5-intro-line">Ab tak tumne sab kuch unlock kar liya...</p><p class="sg-l5-intro-line">Bas ek cheez abhi bhi locked hai.</p>
-                    <div class="sg-l5-lock-heart" aria-hidden="true"><i></i><i></i><i></i><i></i><b>⌁</b><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
-                    <p class="sg-l5-intro-line sg-l5-intro-heart">Mera dil. ♥</p><p class="sg-l5-intro-line">Dekhte hain tum ise unlock kar paati ho ya nahi...</p>
-                    <button type="button" class="sg-btn sg-l5-btn" id="sg-l5-start" aria-label="Start Unlock My Heart"><span>START ♥</span></button>
-                </section>
-                <section class="sg-l5-panel" data-l5-panel="find" hidden>
-                    <p class="sg-l5-eyebrow">STAGE 1</p><h3 class="sg-l5-title">Find My Heart</h3><p class="sg-l5-copy">Har jagah dekho... mera dil kahin yahin hai. ✨</p>
-                    <div id="sg-l5-find-field" class="sg-l5-find-field" aria-label="Find the hidden heart">
-                        <button type="button" class="sg-l5-find-object" data-heart="false" style="--x:13%;--y:22%">✦</button><button type="button" class="sg-l5-find-object" data-heart="false" style="--x:42%;--y:15%">☾</button><button type="button" class="sg-l5-find-object" data-heart="false" style="--x:76%;--y:24%">✧</button><button type="button" class="sg-l5-find-object" data-heart="false" style="--x:23%;--y:52%">✿</button><button type="button" class="sg-l5-find-object" data-heart="true" style="--x:58%;--y:47%" aria-label="A hidden heart">♥</button><button type="button" class="sg-l5-find-object" data-heart="false" style="--x:88%;--y:57%">✦</button><button type="button" class="sg-l5-find-object" data-heart="false" style="--x:12%;--y:80%">♡</button><button type="button" class="sg-l5-find-object" data-heart="false" style="--x:40%;--y:80%">✧</button><button type="button" class="sg-l5-find-object" data-heart="false" style="--x:72%;--y:77%">❋</button>
-                    </div>
-                    <p class="sg-l5-status" aria-live="polite"></p><button type="button" class="sg-btn sg-l5-btn" data-l5-next hidden><span>CONTINUE</span></button>
-                </section>
-                <section class="sg-l5-panel" data-l5-panel="hold" hidden>
-                    <p class="sg-l5-eyebrow">STAGE 2</p><h3 class="sg-l5-title">Hold My Heart</h3><p class="sg-l5-copy">Ab ise thodi der sambhal ke rakho... ♥</p>
-                    <button type="button" id="sg-l5-hold-heart" class="sg-l5-hold-heart" aria-label="Press and hold my heart"><svg class="sg-l5-hold-ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52"></circle><circle class="sg-l5-hold-fill" cx="60" cy="60" r="52"></circle></svg><span>♥</span></button>
-                    <p id="sg-l5-hold-label" class="sg-l5-hold-label" aria-live="polite">Press and hold</p><p class="sg-l5-status" aria-live="polite"></p><button type="button" class="sg-btn sg-l5-btn" data-l5-next hidden><span>CONTINUE</span></button>
-                </section>
-                <section class="sg-l5-panel" data-l5-panel="story" hidden>
-                    <p class="sg-l5-eyebrow">STAGE 3</p><h3 class="sg-l5-title">Follow Our Story</h3><p class="sg-l5-copy">Bas is raaste ko follow karo... ✨</p>
-                    <div id="sg-l5-story-field" class="sg-l5-story-field"><svg id="sg-l5-story-svg" viewBox="0 0 400 250" role="img" aria-label="Trace the path from You to Me"><path id="sg-l5-story-track" d="M35 205 C80 185 92 72 155 105 S205 208 250 152 S294 39 365 48"></path><path id="sg-l5-story-progress" d="M35 205 C80 185 92 72 155 105 S205 208 250 152 S294 39 365 48"></path><circle class="sg-l5-story-start" cx="35" cy="205" r="16"></circle><circle class="sg-l5-story-end" cx="365" cy="48" r="18"></circle><text x="35" y="210">YOU</text><text x="365" y="53">ME ♥</text></svg><p id="sg-l5-story-status" class="sg-l5-story-status" aria-live="polite">Start from YOU</p></div>
-                    <p class="sg-l5-status" aria-live="polite"></p><button type="button" class="sg-btn sg-l5-btn" data-l5-next hidden><span>CONTINUE</span></button>
-                </section>
-                <section class="sg-l5-panel" data-l5-panel="choice" hidden>
-                    <p class="sg-l5-eyebrow">STAGE 4</p><h3 class="sg-l5-title">The Final Choice</h3><div class="sg-l5-choice-setup"><p>Ek last sawaal...</p><p>Thoda soch kar answer dena.</p><p>Agar mujhe sab kuch dobara choose karna hota...</p></div>
-                    <div id="sg-l5-choices" class="sg-l5-choices"><button type="button">Tum ♥</button><button type="button">Tum, obviously 😌♥</button><button type="button">100 baar bhi... Tum.</button></div><p class="sg-l5-status" aria-live="polite"></p><button type="button" class="sg-btn sg-l5-btn" data-l5-next hidden><span>REVEAL MY HEART</span></button>
-                </section>
-                <section class="sg-l5-panel" data-l5-panel="unlock" hidden>
-                    <div id="sg-l5-unlock-heart" class="sg-l5-lock-heart sg-l5-unlock-heart" aria-hidden="true"><i></i><i></i><i></i><i></i><b>⌁</b><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div><p class="sg-l5-reveal-line">Tum soch rahi thi ki tum bas ek game khel rahi ho...</p><p class="sg-l5-reveal-line">But actually...</p><h3 class="sg-l5-reveal-title">You were unlocking my heart. ♥</h3><button type="button" class="sg-btn sg-l5-btn" id="sg-l5-finish" hidden><span>CONTINUE ♥</span></button>
-                </section>
-            </div>
+            <!-- LEVEL 5: HUMARE BEECH KA GAP -->
+            <div id="sg-level-5" class="sg-level sg-l5 sg-gap" hidden></div>
 
             <!-- FINAL KISS REVEAL -->
             <section id="sg-kiss-reveal" class="sg-kiss-reveal" aria-labelledby="sg-kiss-reveal-title" hidden>
@@ -993,8 +1038,6 @@ I love you. ❤️</p>
                 <div class="sg-kiss-reveal-rows" aria-live="polite">
                     <p class="sg-kiss-reveal-row" data-kiss-game="game2"><span>Game II</span><strong>0 kisses</strong></p>
                     <p class="sg-kiss-reveal-row" data-kiss-game="game3"><span>Game III</span><strong>0 kisses</strong></p>
-                    <p class="sg-kiss-reveal-row" data-kiss-game="game4"><span>Game IV</span><strong>0 kisses</strong></p>
-                    <p class="sg-kiss-reveal-row" data-kiss-game="game5"><span>Game V</span><strong>0 kisses</strong></p>
                 </div>
                 <div class="sg-kiss-reveal-heart" aria-hidden="true">♥</div>
                 <p id="sg-kiss-reveal-zero" class="sg-kiss-reveal-zero" hidden>Ek bhi penalty nahi... impressive. ❤️</p>
@@ -1062,7 +1105,68 @@ I love you. ❤️</p>
         <span class="experience-back-label" aria-hidden="true">Back</span>
     </button>
     
-    <!-- JavaScript Modules -->
+    <script>
+        // This static guard runs before the module graph. It covers a missing
+        // module as well as a synchronous boot failure without faking progress.
+        (() => {
+            const screen = document.querySelector('#loading-screen');
+            const waiting = document.querySelector('#loading-waiting');
+            const failure = document.querySelector('#loading-failure');
+            const retry = document.querySelector('#loading-retry');
+            const appRoot = document.querySelector('#app');
+            let settled = false;
+            let waitTimer = null;
+            let failTimer = null;
+
+            const cleanup = () => {
+                window.clearTimeout(waitTimer);
+                window.clearTimeout(failTimer);
+                window.removeEventListener('error', onBootError, true);
+                window.removeEventListener('unhandledrejection', onBootRejection);
+            };
+            const ready = () => {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                waiting.hidden = true;
+                screen?.classList.remove('is-waiting', 'is-failed');
+                screen?.setAttribute('aria-busy', 'false');
+            };
+            const fail = () => {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                appRoot.hidden = true;
+                waiting.hidden = true;
+                failure.hidden = false;
+                if (screen) screen.hidden = false;
+                screen?.classList.remove('is-lettering', 'is-leaving', 'is-waiting');
+                screen?.classList.add('is-failed');
+                screen?.setAttribute('aria-busy', 'false');
+            };
+            const onBootError = (event) => {
+                // Do not convert a failed optional image/font into a boot
+                // failure. Module-script failures and uncaught errors do.
+                if (event.target && event.target !== window && event.target.tagName !== 'SCRIPT') return;
+                fail();
+            };
+            const onBootRejection = () => fail();
+
+            window.hbmBootGuard = { ready, fail };
+            retry?.addEventListener('click', () => window.location.reload());
+            waitTimer = window.setTimeout(() => {
+                if (settled) return;
+                waiting.hidden = false;
+                screen?.classList.add('is-waiting');
+            }, 350);
+            // This is a boot watchdog, not a progress timer: a module graph
+            // that never reaches main.js receives a recoverable error state.
+            failTimer = window.setTimeout(fail, 8000);
+            window.addEventListener('error', onBootError, true);
+            window.addEventListener('unhandledrejection', onBootRejection);
+        })();
+    </script>
+
     <!-- main.js is the ES module entry point; it imports the other modules -->
     <script type="module" src="js/main.js"></script>
 </body>

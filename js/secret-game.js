@@ -34,6 +34,7 @@ import {
     SECRET_REWARD,
     GAME_META,
 } from './secret-game-data.js';
+import { RelationshipGapGame } from './relationship-gap.js';
 
 /* ------------------------------------------------------------
    Helpers
@@ -84,6 +85,7 @@ const GAME3_TIMING = Object.freeze({
 
 const SECRET_GAME_PROGRESS_KEY = 'hbm.secretGameProgress';
 const SECRET_GAME_PROGRESS_VERSION = 1;
+const FINAL_KISS_PENALTY_KEY = 'hbm.finalKissPenalty.v1';
 const SECRET_GAME_PHASES = new Set(['gameplay', 'reward', 'kiss-reveal', 'complete']);
 const GAME5_STAGES = new Set(['intro', 'find', 'hold', 'story', 'choice', 'unlock']);
 const KISS_PENALTY_GAMES = Object.freeze(['game2', 'game3', 'game4', 'game5']);
@@ -96,11 +98,50 @@ function normalizeKissPenalty(value) {
     const normalized = emptyKissPenalty();
     if (!value || typeof value !== 'object' || Array.isArray(value)) return normalized;
     KISS_PENALTY_GAMES.forEach((game) => {
-        if (Number.isFinite(value[game]) && Number.isInteger(value[game]) && value[game] >= 0) {
+        if (Number.isSafeInteger(value[game]) && value[game] >= 0) {
             normalized[game] = value[game];
         }
     });
     return normalized;
+}
+
+function validFinalPenalty(value) {
+    return Number.isSafeInteger(value) && value >= 0;
+}
+
+function currentFinalKissPenalty(kissPenalty) {
+    const live = normalizeKissPenalty(kissPenalty);
+    const total = live.game2 + live.game3;
+    return validFinalPenalty(total)
+        ? { game2Penalty: live.game2, game3Penalty: live.game3, total }
+        : { game2Penalty: 0, game3Penalty: 0, total: 0 };
+}
+
+function loadFinalKissPenalty() {
+    try {
+        const snapshot = JSON.parse(window.localStorage.getItem(FINAL_KISS_PENALTY_KEY));
+        if (snapshot?.version !== 1 || snapshot.finalized !== true ||
+            !validFinalPenalty(snapshot.game2Penalty) || !validFinalPenalty(snapshot.game3Penalty) ||
+            !validFinalPenalty(snapshot.total) ||
+            snapshot.total !== snapshot.game2Penalty + snapshot.game3Penalty ||
+            typeof snapshot.finalizedAt !== 'string' || !Number.isFinite(Date.parse(snapshot.finalizedAt))) return null;
+        return snapshot;
+    } catch { return null; }
+}
+
+function finalizeKissPenalty(kissPenalty) {
+    const existing = loadFinalKissPenalty();
+    if (existing) return existing;
+    const live = currentFinalKissPenalty(kissPenalty);
+    const snapshot = {
+        version: 1, finalized: true,
+        ...live,
+        finalizedAt: new Date().toISOString(),
+    };
+    try {
+        window.localStorage.setItem(FINAL_KISS_PENALTY_KEY, JSON.stringify(snapshot));
+        return loadFinalKissPenalty() || snapshot;
+    } catch { return snapshot; }
 }
 
 function normalizeGame5Substate(stage, stageDone) {
@@ -393,11 +434,13 @@ export class SecretGame {
         this.l5StoryProgressValue = 0;
         this.l5FindMisses = 0;
         this.l5HoldReleaseCount = 0;
+        this.relationshipGap = null;
 
         // Completion survives in-game Back/forward navigation and refreshes.
         // It is intentionally reset only with the explicit replay action.
         this.completedLevels = { level1: false, level2: false, level3: false, level4: false, level5: false };
         this.persistedProgress = defaultSecretGameProgress();
+        this.finalKissPenalty = loadFinalKissPenalty();
         this.backLocked = false;
         this.l1Restored = false;
         this.l4Restored = false;
@@ -572,21 +615,8 @@ export class SecretGame {
         on(this.l4NextBtn, 'click', () => this._advanceChemistry());
         on(this.l4JackpotAction, 'click', () => this._handleJackpotAction());
         on(this.l4ContinueBtn, 'click', () => this._continueFromLevel4());
-        // L5 is deliberately user-paced. Each listener is scoped to its
-        // current stage; no global touch or scrolling behavior is changed.
-        on(this.l5StartBtn, 'click', () => this._startL5FromIntro());
-        on(this.l5FindField, 'click', (e) => this._handleL5Find(e));
-        on(this.l5HoldHeart, 'pointerdown', (e) => this._startL5Hold(e));
-        on(this.l5HoldHeart, 'pointerup', (e) => this._stopL5Hold(e));
-        on(this.l5HoldHeart, 'pointercancel', (e) => this._stopL5Hold(e));
-        on(this.l5HoldHeart, 'lostpointercapture', () => this._stopL5Hold());
-        on(this.l5StoryField, 'pointerdown', (e) => this._startL5Story(e));
-        on(this.l5StoryField, 'pointermove', (e) => this._traceL5Story(e));
-        on(this.l5StoryField, 'pointerup', (e) => this._stopL5Story(e));
-        on(this.l5StoryField, 'pointercancel', (e) => this._stopL5Story(e));
-        on(this.l5Choices, 'click', (e) => this._chooseL5Choice(e));
-        on(this.root, 'click', (e) => { if (e.target.closest('[data-l5-next]')) this._advanceL5Stage(); });
-        on(this.l5FinishBtn, 'click', () => this._finishLevel5());
+        // Game 5 owns a fully isolated listener lifecycle in
+        // relationship-gap.js; this engine only receives its completion.
         on(this.kissRevealContinueBtn, 'click', () => this._continueFromKissReveal());
 
         // L2 objects are delegated via _renderLevel2 per object
@@ -651,6 +681,7 @@ export class SecretGame {
     // Clean teardown (called on destroy / restart)
     destroy() {
         this._cleanupL1Drag();
+        this._cleanupLevel5();
         this._clearAllTimers();
         for (const [el, evt, fn] of this.boundHandlers) {
             try { el.removeEventListener(evt, fn); } catch {}
@@ -719,6 +750,23 @@ export class SecretGame {
         this.transitioning = false;
         this.l3SequenceToken += 1;
         this.root?.classList.remove('is-leaving');
+
+        if (state === 'level5' && this.relationshipGap) {
+            // Review is an internal Game 5 destination. Global Back first
+            // returns to the finished reflection summary, never Game 4.
+            if (this.relationshipGap.handleBack?.()) {
+                this.backLocked = false;
+                return true;
+            }
+            // The reflection chamber owns its short word-release exit. The
+            // saved answers are deliberately never touched by this route.
+            this.relationshipGap.exitWithWordBurst(() => {
+                if (!this.started || this.destroyed) return;
+                this._restoreCompletedLevel4();
+                this.backLocked = false;
+            });
+            return true;
+        }
 
         if (state === 'level2') this._restoreCompletedLevel1();
         else if (state === 'level3') this._restoreCompletedLevel2();
@@ -790,6 +838,9 @@ export class SecretGame {
     }
 
     _markLevelCompleted(gameNumber) {
+        // Game 5's completion callback is the first authoritative point at
+        // which the entire five-game journey has been completed.
+        if (gameNumber === 5) this.finalKissPenalty = loadFinalKissPenalty() || this.finalKissPenalty || finalizeKissPenalty(this.persistedProgress.kissPenalty);
         const highestCompletedGame = Math.max(this.persistedProgress.highestCompletedGame, gameNumber);
         const gameProgress = { ...this.persistedProgress.gameProgress };
         this.persistedProgress = {
@@ -1119,7 +1170,7 @@ export class SecretGame {
         if (this.l3CinematicLine) {
             this.l3CinematicLine.classList.remove('is-in');
             this.l3CinematicLine.classList.add('is-climax');
-            this.l3CinematicLine.textContent = 'TUM HUMEIN JAANTI HO. ❤️';
+            this.l3CinematicLine.textContent = 'TUM ACCHE SE JAANTI HO. ❤️';
         }
         this._showTestBtn(this.l3ContinueBtn);
     }
@@ -1481,6 +1532,16 @@ export class SecretGame {
 
     _getLevel2Memory() { return GAME2_MEMORY_DATA[this.l2MainSlot]?.[this.l2Stage] || null; }
 
+    _getLevel2KissTotal() { return normalizeKissPenalty(this.persistedProgress.kissPenalty).game2; }
+
+    _addLevel2KissPenalty(amount) {
+        const kissPenalty = normalizeKissPenalty(this.persistedProgress.kissPenalty);
+        kissPenalty.game2 += amount;
+        this.persistedProgress = { ...this.persistedProgress, kissPenalty };
+        saveSecretGameProgress(this.persistedProgress.highestCompletedGame, this.persistedProgress.currentGame, this.persistedProgress.currentPhase, this.persistedProgress.game5Stage, this.persistedProgress.game5StageDone, this.persistedProgress.gameProgress, kissPenalty);
+        return amount;
+    }
+
     _renderLevel2Round(preserveAttempt = false) {
         const memory = this._getLevel2Memory();
         if (!memory || !this.l2StageEl || !this.l2Card) return;
@@ -1524,8 +1585,10 @@ export class SecretGame {
         const chances = document.createElement('p');
         chances.className = 'sg-game2-chances'; chances.setAttribute('aria-live', 'polite'); chances.textContent = '2 Chances ❤';
         chances.textContent = this.l2Attempts === 1 ? '1 Chance Left ❤️' : '2 Chances ❤️';
+        const kisses = document.createElement('p');
+        kisses.className = 'sg-game2-kisses'; kisses.setAttribute('aria-live', 'polite'); kisses.textContent = `Kisses: ${this._getLevel2KissTotal()} 😘`;
         const status = document.createElement('div');
-        status.className = 'sg-game2-status'; status.append(chances);
+        status.className = 'sg-game2-status'; status.append(chances, kisses);
         const options = document.createElement('div');
         options.className = 'sg-game2-options'; options.setAttribute('role', 'group'); options.setAttribute('aria-label', `Answers for ${memory.title}`);
         memory.options.forEach((label, index) => {
@@ -1552,20 +1615,33 @@ export class SecretGame {
         this.l2Locked = true; this.l2SelectedIndex = index;
         if (index === memory.correctIndex) { this._resolveLevel2Correct(button, memory); return; }
         this.l2TotalWrongAnswers += 1; this.l2Attempts += 1;
-        this._addKissPenalty('game2');
+        const kissIncrement = this.l2Stage === 'recovery' && this.l2Attempts === 2 ? 25 : 5;
+        this._addLevel2KissPenalty(kissIncrement);
+        this._updateLevel2KissCounter();
         if (this.l2Attempts === 1) this.l2WrongChoices.push(index);
         button.disabled = true; button.classList.add('is-wrong');
         const chances = this.l2StageEl?.querySelector('.sg-game2-chances');
         if (chances) chances.textContent = this.l2Attempts === 1 ? '1 Chance Left ❤' : '0 Chances';
         this.l2Card?.classList.remove('is-penalty'); void this.l2Card?.offsetWidth; this.l2Card?.classList.add('is-penalty');
         if (this.l2Attempts === 1) {
+            // Recovery is the second and final chance for the same visible
+            // memory. The original option's disabled state never carries
+            // into recovery's new five-option set.
+            this.l2WrongChoices = [];
             this._recordGameProgress('game2', {
-                slot: this.l2MainSlot, stage: this.l2Stage, attempts: this.l2Attempts,
-                totalWrongAnswers: this.l2TotalWrongAnswers, wrongChoices: [...this.l2WrongChoices],
+                slot: this.l2MainSlot, stage: 'recovery', attempts: 1,
+                totalWrongAnswers: this.l2TotalWrongAnswers, wrongChoices: [],
             });
+            this._setLevel2Feedback('Hmm... ek baar aur socho. ❤ +5 kisses 😘', 'is-wrong');
+            const token = this.l2RoundToken;
+            const slot = this.l2MainSlot;
+            this.later(this.reduced ? 350 : 850, () => {
+                if (this.state !== 'level2' || token !== this.l2RoundToken || this.l2MainSlot !== slot || this.l2Stage !== 'original') return;
+                this._transitionLevel2Content('recovery', true);
+            });
+            return;
         }
-        if (this.l2Attempts === 1) { this._setLevel2Feedback('Hmm... ek baar aur socho. ❤ +5 kisses 😘', 'is-wrong'); this.l2Locked = false; return; }
-        this._setLevel2Feedback('Oops... dono chances chale gaye. ❤ +5 kisses 😘', 'is-penalty');
+        this._setLevel2Feedback('Oops... dono chances chale gaye. ❤ Penalty: 30 kisses 😘', 'is-penalty');
         const isFinalRecoveryFailure = this.l2Stage === 'recovery' && this.l2MainSlot === GAME2_MEMORY_DATA.length - 1;
         const restartCheckpoint = this.l2Stage === 'original'
             ? { slot: this.l2MainSlot, stage: 'recovery', attempts: 0, totalWrongAnswers: this.l2TotalWrongAnswers, wrongChoices: [] }
@@ -1607,13 +1683,22 @@ export class SecretGame {
 
     _setLevel2Feedback(text, modifier = '') { if (this.l2Feedback) { this.l2Feedback.textContent = text; this.l2Feedback.className = `sg-game2-feedback is-visible ${modifier}`.trim(); } }
 
-    _transitionLevel2Content(stage) {
+    _updateLevel2KissCounter() {
+        const kisses = this.l2StageEl?.querySelector('.sg-game2-kisses');
+        if (!kisses) return;
+        kisses.textContent = `Kisses: ${this._getLevel2KissTotal()} 😘`;
+        kisses.classList.remove('is-updating');
+        void kisses.offsetWidth;
+        kisses.classList.add('is-updating');
+    }
+
+    _transitionLevel2Content(stage, preserveAttempt = false) {
         if (!this.l2Card) return;
         this.l2Locked = true; this.l2Card.classList.add('is-transitioning');
         const token = this.l2RoundToken;
         this.later(this.reduced ? 0 : 320, () => {
             if (this.state !== 'level2' || token !== this.l2RoundToken) return;
-            this.l2Stage = stage; this._renderLevel2Round();
+            this.l2Stage = stage; this._renderLevel2Round(preserveAttempt);
         });
     }
 
@@ -1637,7 +1722,8 @@ export class SecretGame {
         const wrap = document.createElement('div'); wrap.className = 'sg-game2-complete';
         const title = document.createElement('h4'); title.textContent = 'Memory Detector Complete â¤';
         const copy = document.createElement('p'); copy.textContent = 'Tumne kaafi kuch yaad rakha hai... ab dekhte hain aage aur kitna jaanti ho. ❤';
-        wrap.append(title, copy);
+        const summary = document.createElement('p'); summary.className = 'sg-game2-complete-kisses'; summary.textContent = `Total Kiss Penalty: ${this._getLevel2KissTotal()} Kisses 😘`;
+        wrap.append(title, copy, summary);
         this.l2StageEl.append(wrap);
     }
 
@@ -1650,7 +1736,8 @@ export class SecretGame {
         const wrap = document.createElement('div'); wrap.className = 'sg-game2-complete';
         const title = document.createElement('h4'); title.textContent = 'Memory Detector Complete ❤';
         const copy = document.createElement('p'); copy.textContent = 'Tumne kaafi kuch yaad rakha hai... ab dekhte hain aage aur kitna jaanti ho. ❤';
-        wrap.append(title, copy); this.l2StageEl.append(wrap);
+        const summary = document.createElement('p'); summary.className = 'sg-game2-complete-kisses'; summary.textContent = `Total Kiss Penalty: ${this._getLevel2KissTotal()} Kisses 😘`;
+        wrap.append(title, copy, summary); this.l2StageEl.append(wrap);
         this.later(this.reduced ? 800 : 2600, () => {
             if (this.state === 'level2') this._queueLevelTransition('level2', () => this._enterLevel3(), 0);
         });
@@ -2266,46 +2353,15 @@ export class SecretGame {
        -------------------------------------------------------- */
     _renderLevel5() {
         this._cleanupLevel5();
-        this.l5StageDone = 0;
-        this.l5HoldProgress = 0;
-        this.l5StoryProgressValue = 0;
-        this.l5FindMisses = 0;
-        this.l5HoldReleaseCount = 0;
-        this.l5Panels?.forEach(panel => {
-            panel.querySelectorAll('[data-l5-next]').forEach(btn => { btn.hidden = true; btn.disabled = false; btn.classList.remove('is-in'); });
-            panel.querySelectorAll('.sg-l5-status').forEach(status => { status.textContent = ''; status.className = 'sg-l5-status'; });
+        this.relationshipGap = new RelationshipGapGame(this.levels.level5, {
+            onComplete: () => this._finishRelationshipGap(),
         });
-        this.l5FindField?.querySelectorAll('.sg-l5-find-object').forEach(btn => { btn.disabled = false; btn.classList.remove('is-missed', 'is-found'); });
-        this.l5StoryField?.classList.remove('is-complete');
-        this.l5Choices?.querySelectorAll('button').forEach(btn => { btn.disabled = false; btn.classList.remove('is-chosen'); });
-        this.l5Choices?.classList.remove('is-visible');
-        this.l5FinishBtn && (this.l5FinishBtn.hidden = true);
-        this.l5FinishBtn?.classList.remove('is-in');
-        this.l5FinishBtn && (this.l5FinishBtn.disabled = false);
-        this.root?.querySelector('#sg-l5-unlock-heart')?.classList.remove('is-unlocked');
-        this.root?.querySelector('#sg-l5-heart-thread')?.classList.remove('is-unlocking');
-        this.root?.classList.remove('sg-l5-final-calm');
-        this.l5StartBtn && (this.l5StartBtn.disabled = false);
-        this.l5StartBtn?.classList.remove('is-in', 'is-pressed');
-        this.l5Choices && (this.l5Choices.hidden = false);
-        this._randomizeL5Find();
-        this._setL5Stage('intro', true);
+        this.relationshipGap.mount();
     }
 
     _restoreGame5Gameplay() {
-        const { game5Stage, game5StageDone, currentGame, currentPhase } = this.persistedProgress;
         this._showLevel('level5', 5);
         this._renderLevel5();
-
-        if (currentGame !== 5 || currentPhase !== 'gameplay' || !game5Stage) return;
-
-        this.l5StageDone = game5StageDone;
-        this._setL5Stage(game5Stage, true);
-        // Restore stable UI only; queued reveal effects and pointer-driven
-        // partial progress must not run again after a refresh.
-        this._clearAllTimers();
-        this._applyRestoredL5Stage(game5Stage, game5StageDone);
-        this._recordGame5Stage(game5Stage, game5StageDone);
     }
 
     _applyRestoredL5Stage(stage, stageDone) {
@@ -2345,6 +2401,8 @@ export class SecretGame {
     }
 
     _cleanupLevel5() {
+        this.relationshipGap?.destroy();
+        this.relationshipGap = null;
         this.l5Token += 1;
         this.l5Holding = false;
         this.l5HoldPointer = null;
@@ -2708,6 +2766,13 @@ export class SecretGame {
         this._queueLevelTransition('level5', () => this._showKissReveal(), this.reduced ? 0 : 500);
     }
 
+    _finishRelationshipGap() {
+        if (this.transitioning || this.state !== 'level5') return;
+        this._markLevelCompleted(5);
+        this._recordCurrentGame(5, 'kiss-reveal');
+        this._queueLevelTransition('level5', () => this._showKissReveal(), this.reduced ? 0 : 500);
+    }
+
     _enterComplete() {
         const cur = this.levels.level5;
         if (cur) {
@@ -2725,8 +2790,6 @@ export class SecretGame {
     _restoreLevel5Reward() {
         this._showLevel('level5', 5);
         this._renderLevel5();
-        this.l5StageDone = 4;
-        this._setL5Stage('unlock', true);
         this._recordCurrentGame(5, 'reward');
     }
 
@@ -2754,8 +2817,14 @@ export class SecretGame {
         this._recordCurrentGame(5, 'kiss-reveal');
         this._setProgress(5);
         this._setGameProgressVisible(false);
-        const penalty = normalizeKissPenalty(this.persistedProgress.kissPenalty);
-        const total = KISS_PENALTY_GAMES.reduce((sum, game) => sum + penalty[game], 0);
+        // Existing pre-feature completions cannot reveal their historical
+        // first-run score reliably; show a safe G2+G3 fallback until a new
+        // authoritative full completion creates the write-once snapshot.
+        const snapshot = loadFinalKissPenalty() || this.finalKissPenalty;
+        if (snapshot) this.finalKissPenalty = snapshot;
+        const live = currentFinalKissPenalty(this.persistedProgress.kissPenalty);
+        const penalty = { game2: snapshot?.game2Penalty ?? live.game2Penalty, game3: snapshot?.game3Penalty ?? live.game3Penalty };
+        const total = snapshot?.total ?? live.total;
         this.kissRevealEl?.querySelectorAll('[data-kiss-game]').forEach((row) => {
             const value = penalty[row.dataset.kissGame] || 0;
             const label = row.querySelector('strong');
@@ -2973,18 +3042,27 @@ export class SecretGame {
     }
 
     _handoffAfterReward() {
-        // Clean transition out of game, then call main.js hook
+        if (this.root?.classList.contains('is-leaving')) return;
+        // Keep the settled reward mounted until main.js confirms that the
+        // Final Letter destination has rendered successfully.
         this._clearAllTimers();
         if (this.root) {
             this.root.classList.add('is-leaving');
             this.later(this.reduced ? 0 : 600, () => {
-                this.root.classList.remove('is-visible', 'is-leaving');
-                this.root.hidden = true;
-                this.state = 'done';
-                // notify host
+                let handedOff = false;
                 if (typeof this._onRewardContinue === 'function') {
-                    try { this._onRewardContinue(); } catch (e) { console.warn('reward handoff failed', e); }
-                } else console.warn('Secret Game reward continuation is unavailable.');
+                    try { handedOff = this._onRewardContinue() !== false; }
+                    catch (e) { console.warn('reward handoff failed', e); }
+                } else {
+                    console.warn('Secret Game reward continuation is unavailable.');
+                }
+                if (handedOff) {
+                    this.root.classList.remove('is-visible', 'is-leaving');
+                    this.root.hidden = true;
+                    this.state = 'done';
+                } else {
+                    this.root.classList.remove('is-leaving');
+                }
             });
         } else {
             if (typeof this._onRewardContinue === 'function') {
