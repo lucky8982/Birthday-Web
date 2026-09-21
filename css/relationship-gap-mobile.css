@@ -1,0 +1,148 @@
+/* Game 5 coarse-pointer depth: extends the existing chamber perspective. */
+@media (hover: none) and (pointer: coarse) {
+    .sg-gap .gap-chamber {
+        --gap-rx: 0deg;
+        --gap-ry: 0deg;
+        --gap-pan-x: 0px;
+        --gap-pan-y: 0px;
+        --gap-back-x: 0px;
+        --gap-back-y: 0px;
+        --gap-frame-x: 0px;
+        --gap-frame-y: 0px;
+        --gap-near-x: 0px;
+        --gap-near-y: 0px;
+        --gap-control-x: 0px;
+        --gap-control-y: 0px;
+        --rg-light-x: 50%;
+        --rg-light-y: 42%;
+        will-change: transform;
+        transform: translate3d(0, 0, 0) rotateX(var(--gap-rx)) rotateY(var(--gap-ry));
+        transform-origin: 50% 48%;
+    }
+
+    .sg-gap .gap-chamber.is-mobile-idle {
+        animation:
+            gap-chamber-breathe 12s ease-in-out infinite alternate,
+            gap-mobile-chamber-idle 11s ease-in-out infinite alternate;
+    }
+
+    .sg-gap .gap-chamber.is-touch-parallax {
+        animation: gap-chamber-breathe 12s ease-in-out infinite alternate;
+        transform: translate3d(0, 0, 0) rotateX(var(--gap-rx)) rotateY(var(--gap-ry));
+        transition: transform 110ms linear;
+    }
+
+    .sg-gap .gap-chamber.is-device-tilt {
+        animation: gap-chamber-breathe 12s ease-in-out infinite alternate;
+        transform: translate3d(0, 0, 0) rotateX(var(--gap-rx)) rotateY(var(--gap-ry));
+        transition: transform 90ms linear;
+    }
+
+    .sg-gap .gap-chamber.is-touch-settling {
+        animation: gap-chamber-breathe 12s ease-in-out infinite alternate;
+        transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg);
+        transition: transform 720ms cubic-bezier(.22, .8, .25, 1);
+    }
+
+    @keyframes gap-mobile-chamber-idle {
+        0% {
+            transform: translate3d(0, -1px, 0) rotateX(-.65deg) rotateY(-.95deg);
+        }
+        50% {
+            transform: translate3d(0, 1px, 0) rotateX(.35deg) rotateY(.45deg);
+        }
+        100% {
+            transform: translate3d(0, 2px, 0) rotateX(.7deg) rotateY(1deg);
+        }
+    }
+
+    .sg-gap .gap-ambient::after {
+        content: '';
+        position: absolute;
+        inset: -5%;
+        border-radius: inherit;
+        pointer-events: none;
+        background: radial-gradient(
+            circle at var(--rg-light-x) var(--rg-light-y),
+            rgba(206, 232, 248, .18),
+            rgba(238, 172, 204, .07) 22%,
+            transparent 46%
+        );
+        opacity: .48;
+        transition: opacity .45s ease;
+    }
+
+    .sg-gap .gap-chamber.is-touch-parallax .gap-ambient::after {
+        opacity: .78;
+    }
+
+    .sg-gap .gap-chamber.is-device-tilt .gap-ambient::after {
+        opacity: .64;
+    }
+
+    .sg-gap .gap-chamber-back {
+        transform: translate3d(var(--gap-back-x), var(--gap-back-y), -70px);
+    }
+
+    .sg-gap .gap-chamber-glow {
+        transform: translate3d(var(--gap-pan-x), var(--gap-pan-y), -45px);
+    }
+
+    .sg-gap .gap-frame {
+        transform: translate3d(var(--gap-frame-x), var(--gap-frame-y), -2px);
+    }
+
+    .sg-gap .gap-chamber-side-left {
+        transform: translate3d(var(--gap-frame-x), var(--gap-frame-y), -20px) rotateY(18deg);
+    }
+
+    .sg-gap .gap-chamber-side-right {
+        transform: translate3d(var(--gap-frame-x), var(--gap-frame-y), -20px) rotateY(-18deg);
+    }
+
+    .sg-gap .gap-chamber-floor {
+        transform: translate3d(var(--gap-pan-x), var(--gap-pan-y), -25px) rotateX(68deg);
+    }
+
+    .sg-gap .gap-intro {
+        transform: translate3d(var(--gap-pan-x), var(--gap-pan-y), 18px);
+    }
+
+    .sg-gap .gap-glass-card {
+        transform: translate3d(var(--gap-near-x), var(--gap-near-y), 25px);
+    }
+
+    .sg-gap .gap-input-wrap {
+        transform: translate3d(var(--gap-near-x), var(--gap-near-y), 28px);
+    }
+
+    .sg-gap .gap-final {
+        transform: translate3d(var(--gap-pan-x), var(--gap-pan-y), 18px);
+    }
+
+    .sg-gap .gap-start,
+    .sg-gap .gap-lock,
+    .sg-gap .gap-continue,
+    .sg-gap .gap-review,
+    .sg-gap .gap-return-current,
+    .sg-gap .gap-review-controls {
+        transform: translate3d(var(--gap-control-x), var(--gap-control-y), 4px);
+    }
+}
+
+@media (hover: none) and (pointer: coarse) and (prefers-reduced-motion: reduce) {
+    .sg-gap .gap-chamber,
+    .sg-gap .gap-chamber.is-mobile-idle,
+    .sg-gap .gap-chamber.is-touch-parallax,
+    .sg-gap .gap-chamber.is-device-tilt,
+    .sg-gap .gap-chamber.is-touch-settling {
+        animation: none;
+        transform: none !important;
+        transition: none;
+        will-change: auto;
+    }
+
+    .sg-gap .gap-ambient::after {
+        display: none;
+    }
+}

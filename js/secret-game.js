@@ -34,7 +34,7 @@ import {
     SECRET_REWARD,
     GAME_META,
 } from './secret-game-data.js';
-import { RelationshipGapGame } from './relationship-gap.js';
+import { RelationshipGapGame, hasActiveRelationshipGapResume } from './relationship-gap.js';
 
 /* ------------------------------------------------------------
    Helpers
@@ -86,6 +86,7 @@ const GAME3_TIMING = Object.freeze({
 const SECRET_GAME_PROGRESS_KEY = 'hbm.secretGameProgress';
 const SECRET_GAME_PROGRESS_VERSION = 1;
 const FINAL_KISS_PENALTY_KEY = 'hbm.finalKissPenalty.v1';
+const REWARD_READ_KEY = 'hbm.secretRewardRead.v1';
 const SECRET_GAME_PHASES = new Set(['gameplay', 'reward', 'kiss-reveal', 'complete']);
 const GAME5_STAGES = new Set(['intro', 'find', 'hold', 'story', 'choice', 'unlock']);
 const KISS_PENALTY_GAMES = Object.freeze(['game2', 'game3', 'game4', 'game5']);
@@ -142,6 +143,16 @@ function finalizeKissPenalty(kissPenalty) {
         window.localStorage.setItem(FINAL_KISS_PENALTY_KEY, JSON.stringify(snapshot));
         return loadFinalKissPenalty() || snapshot;
     } catch { return snapshot; }
+}
+
+function loadRewardRead() {
+    try { return window.localStorage.getItem(REWARD_READ_KEY) === '1'; }
+    catch { return false; }
+}
+
+function saveRewardRead() {
+    try { window.localStorage.setItem(REWARD_READ_KEY, '1'); }
+    catch { /* Storage is best-effort; this visit still remains usable. */ }
 }
 
 function normalizeGame5Substate(stage, stageDone) {
@@ -454,10 +465,13 @@ export class SecretGame {
         this.envelope = null;
         this.envelopePaper = null;
         this.rewardCard = null;
+        this.rewardBody = null;
         this.rewardContinueBtn = null;
         this.rewardRun = 0;
         this.rewardReady = false;
         this.rewardPhase = 'idle';
+        this.rewardRead = false;
+        this.rewardReadInteraction = false;
 
         this.reduced = prefersReducedMotion();
         this.state = 'idle'; // idle | intro | level1..level5 | complete | reward
@@ -579,10 +593,12 @@ export class SecretGame {
         // Reward
         this.envelope = this.root.querySelector('#sg-envelope');
         this.rewardCard = this.root.querySelector('#sg-reward-card');
+        this.rewardBody = this.root.querySelector('#sg-reward-body');
         this.rewardContinueBtn = this.root.querySelector('#sg-reward-continue');
 
         this.reduced = prefersReducedMotion();
         this._hydratePersistedProgress();
+        this.rewardRead = loadRewardRead();
         this.destroyed = false;
         this.transitioning = false;
         this._spawnBgStars();
@@ -633,6 +649,14 @@ export class SecretGame {
         // Envelope open
         on(this.envelope, 'click', () => this._openEnvelope());
         on(this.envelope, 'keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this._openEnvelope(); }});
+
+        // The reward body owns its own first-read gate. Intent is recorded
+        // before scroll so layout/restore work can never complete it.
+        on(this.rewardBody, 'pointerdown', (event) => this._noteRewardReadInteraction(event));
+        on(this.rewardBody, 'touchstart', (event) => this._noteRewardReadInteraction(event), { passive: true });
+        on(this.rewardBody, 'wheel', (event) => this._noteRewardReadInteraction(event), { passive: true });
+        on(this.rewardBody, 'keydown', (event) => this._noteRewardReadInteraction(event));
+        on(this.rewardBody, 'scroll', () => this._handleRewardBodyScroll(), { passive: true });
 
         // Reward continue -> handoff to future sections (main.js)
         on(this.rewardContinueBtn, 'click', () => {
@@ -717,7 +741,8 @@ export class SecretGame {
         this._hideAllLevels();
         this._hideKissReveal();
         this._hideCompleteUI();
-        this.rewardReady = opened;
+        this.rewardRead = loadRewardRead();
+        this.rewardReady = opened && this.rewardRead;
         this.rewardPhase = opened ? 'opened' : 'opening';
         this.state = 'reward';
         this._setGameProgressVisible(false);
@@ -726,8 +751,13 @@ export class SecretGame {
         this.root.classList.add('is-visible', 'sg-reward-active');
         if (this.rewardEl) { this.rewardEl.hidden = false; this.rewardEl.classList.add('is-active'); }
         if (this.envelope) this.envelope.classList.toggle('is-open', opened);
-        if (this.rewardCard) { this.rewardCard.hidden = !opened; this.rewardCard.classList.toggle('is-in', opened); }
-        if (this.rewardContinueBtn) { this.rewardContinueBtn.hidden = !opened; this.rewardContinueBtn.classList.toggle('is-in', opened); }
+        if (this.rewardCard) {
+            this.rewardCard.hidden = !opened;
+            this.rewardCard.classList.toggle('is-in', opened);
+            this.rewardCard.classList.toggle('is-read', this.rewardRead);
+        }
+        this._resetRewardReadGate();
+        if (this.rewardContinueBtn) { this.rewardContinueBtn.hidden = !this.rewardReady; this.rewardContinueBtn.classList.toggle('is-in', this.rewardReady); }
         const hint = this.rewardEl?.querySelector('#sg-reward-hint');
         if (hint) hint.hidden = opened;
         if (this.shell) this.shell.scrollTop = 0;
@@ -760,6 +790,7 @@ export class SecretGame {
             }
             // The reflection chamber owns its short word-release exit. The
             // saved answers are deliberately never touched by this route.
+            this.relationshipGap.deactivateResume?.();
             this.relationshipGap.exitWithWordBurst(() => {
                 if (!this.started || this.destroyed) return;
                 this._restoreCompletedLevel4();
@@ -805,7 +836,7 @@ export class SecretGame {
         // Fill reward content from config
         const eyebrow = this.rewardCard.querySelector('#sg-reward-eyebrow');
         const title = this.rewardCard.querySelector('#sg-reward-title');
-        const body = this.rewardCard.querySelector('#sg-reward-body');
+        const body = this.rewardCard.querySelector('.sg-reward-copy');
         const signFrom = this.rewardCard.querySelector('#sg-reward-from');
         const signName = this.rewardCard.querySelector('#sg-reward-name');
         if (eyebrow) eyebrow.textContent = SECRET_REWARD.eyebrow;
@@ -901,6 +932,13 @@ export class SecretGame {
         const highest = this.persistedProgress.highestCompletedGame;
         const currentGame = this.persistedProgress.currentGame;
         const currentPhase = this.persistedProgress.currentPhase;
+
+        // Game 5 owns a finer-grained persistent checkpoint than the legacy
+        // five-game frontier. Its explicit active marker is authoritative.
+        if (hasActiveRelationshipGapResume()) {
+            this._restoreGame5Gameplay();
+            return true;
+        }
 
         // An explicitly saved result screen is more specific than the
         // completed-game frontier and must win during refresh restoration.
@@ -1170,7 +1208,7 @@ export class SecretGame {
         if (this.l3CinematicLine) {
             this.l3CinematicLine.classList.remove('is-in');
             this.l3CinematicLine.classList.add('is-climax');
-            this.l3CinematicLine.textContent = 'TUM ACCHE SE JAANTI HO. ❤️';
+            this.l3CinematicLine.textContent = 'MERI PYARI BIWI. ❤️';
         }
         this._showTestBtn(this.l3ContinueBtn);
     }
@@ -1936,11 +1974,11 @@ export class SecretGame {
             { text: 'Achha…', duration: GAME3_TIMING.cinematic.short },
             { text: 'To shayad tum sach me mujhe kaafi achhe se jaanti ho…', duration: GAME3_TIMING.cinematic.normal },
             { text: 'Aur shayad…', duration: GAME3_TIMING.cinematic.short },
-            { text: 'hum dono sach me ek dusre ke liye hi bane hain. ❤️', duration: GAME3_TIMING.cinematic.emotional },
+            { text: 'Hum dono sach me ek dusre ke liye hi bane hain. ❤️', duration: GAME3_TIMING.cinematic.emotional },
         ], () => {
             if (this.state !== 'level3' || this.l3Phase !== 'final') return;
             this.l3CinematicLine?.classList.add('is-climax');
-            if (this.l3CinematicLine) this.l3CinematicLine.textContent = 'TUM HUMEIN JAANTI HO. ❤️';
+            if (this.l3CinematicLine) this.l3CinematicLine.textContent = 'MERI PYARI MALKIN.❤️';
             this.later(GAME3_TIMING.climaxBeforeContinue, () => {
                 if (this.state === 'level3' && this.l3Phase === 'final') this._showTestBtn(this.l3ContinueBtn);
             });
@@ -2024,6 +2062,7 @@ export class SecretGame {
         this.rewardRun += 1;
         this.rewardReady = false;
         this.rewardPhase = 'idle';
+        this._resetRewardReadGate();
         this.root?.classList.remove('sg-reward-active');
         if (this.rewardEl) {
             this.rewardEl.classList.remove('is-active');
@@ -2036,7 +2075,7 @@ export class SecretGame {
             this.envelope.setAttribute('aria-label', 'Open your reward');
         }
         if (this.rewardCard) {
-            this.rewardCard.classList.remove('is-in');
+            this.rewardCard.classList.remove('is-in', 'is-read');
             this.rewardCard.hidden = true;
         }
         if (this.rewardContinueBtn) {
@@ -2979,6 +3018,8 @@ export class SecretGame {
         this.rewardRun += 1;
         this.rewardReady = false;
         this.rewardPhase = 'opening';
+        this.rewardRead = loadRewardRead();
+        this._resetRewardReadGate();
         this.state = 'reward';
         this.root?.classList.add('sg-reward-active');
         if (this.rewardEl) {
@@ -2995,7 +3036,7 @@ export class SecretGame {
             this.envelope.setAttribute('aria-label', 'Open your reward');
         }
         if (this.rewardCard) {
-            this.rewardCard.classList.remove('is-in');
+            this.rewardCard.classList.remove('is-in', 'is-read');
             this.rewardCard.hidden = true;
         }
         if (this.rewardContinueBtn) {
@@ -3022,11 +3063,41 @@ export class SecretGame {
                 this.rewardCard.hidden = false;
                 void this.rewardCard.offsetWidth;
                 this.rewardCard.classList.add('is-in');
-                // scroll card into view gently
-                this.later(300, () => this.rewardCard.scrollIntoView({ behavior: this.reduced ? 'auto' : 'smooth', block: 'nearest' }));
+                this.rewardCard.classList.toggle('is-read', this.rewardRead);
+                this._resetRewardReadGate();
             }
-            this.later(this.reduced ? 0 : 800, () => this._revealRewardContinue(rewardRun));
+            // The opened letter is now the stable reward phase even before
+            // its first read finishes, so refresh restores the same frame.
+            this.rewardPhase = 'opened';
+            this._onRewardPhaseChange?.('opened');
+            if (this.rewardRead) this.later(this.reduced ? 0 : 360, () => this._revealRewardContinue(rewardRun));
         });
+    }
+
+    _resetRewardReadGate() {
+        this.rewardReadInteraction = false;
+        if (this.rewardBody) this.rewardBody.scrollTop = 0;
+    }
+
+    _noteRewardReadInteraction(event) {
+        if (!event?.isTrusted) return;
+        if (this.state !== 'reward' || !this.rewardCard?.classList.contains('is-in') || this.rewardRead) return;
+        this.rewardReadInteraction = true;
+    }
+
+    _handleRewardBodyScroll() {
+        if (!this.rewardReadInteraction || this.rewardRead || !this.rewardBody ||
+            this.state !== 'reward' || !this.rewardCard?.classList.contains('is-in')) return;
+        const reachedBottom = this.rewardBody.scrollTop + this.rewardBody.clientHeight >= this.rewardBody.scrollHeight - 28;
+        if (reachedBottom) this._markRewardRead();
+    }
+
+    _markRewardRead() {
+        if (this.rewardRead || this.state !== 'reward') return;
+        this.rewardRead = true;
+        saveRewardRead();
+        this.rewardCard?.classList.add('is-read');
+        this._revealRewardContinue(this.rewardRun);
     }
 
     _revealRewardContinue(rewardRun) {
@@ -3038,7 +3109,6 @@ export class SecretGame {
         this.rewardContinueBtn.hidden = false;
         void this.rewardContinueBtn.offsetWidth;
         this.rewardContinueBtn.classList.add('is-in');
-        this.rewardContinueBtn.focus({ preventScroll: true });
     }
 
     _handoffAfterReward() {

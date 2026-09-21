@@ -331,6 +331,7 @@ export class OpeningCinematic {
         // scale settle) and stays readable until the next tap.
         void line.offsetWidth;
         line.classList.add('is-in');
+        this._fireStage('opening-story');
 
         // Keyboard users advance with Enter/Space again
         this.overlay.focus({ preventScroll: true });
@@ -357,6 +358,29 @@ export class OpeningCinematic {
         this.busy = true;
         this.onMessageChange?.(index);
 
+        const { line, lastWord, wordCount } = this.buildPassageLine();
+
+        // Only the message is cleared - nothing else lives inside
+        // #opening-message.
+        el.querySelectorAll('.opening-message-text').forEach((n) => n.remove());
+        el.appendChild(line);
+        el.setAttribute('aria-hidden', 'false');
+        void line.offsetWidth;
+        line.classList.add('is-in');
+        this._fireStage('opening-story');
+
+        this.overlay.focus({ preventScroll: true });
+
+        // Busy until the very last word has finished entering, so
+        // taps during the reveal are ignored (the passage plays
+        // itself). Reduced motion: everything appears instantly.
+        this.settle(lastWord, this.reduced ? 0 : wordCount * WORD_STEP + WORD_ANIM, () => {
+            this.busy = false;
+            this.scheduleAutoAdvance();
+        });
+    }
+
+    buildPassageLine() {
         const line = document.createElement('p');
         line.className = 'opening-message-text opening-passage';
         line.style.setProperty('--word-step', (this.reduced ? 0 : WORD_STEP) + 'ms');
@@ -376,24 +400,7 @@ export class OpeningCinematic {
                 wordCount += 1;
             });
         });
-
-        // Only the message is cleared - nothing else lives inside
-        // #opening-message.
-        el.querySelectorAll('.opening-message-text').forEach((n) => n.remove());
-        el.appendChild(line);
-        el.setAttribute('aria-hidden', 'false');
-        void line.offsetWidth;
-        line.classList.add('is-in');
-
-        this.overlay.focus({ preventScroll: true });
-
-        // Busy until the very last word has finished entering, so
-        // taps during the reveal are ignored (the passage plays
-        // itself). Reduced motion: everything appears instantly.
-        this.settle(lastWord, this.reduced ? 0 : wordCount * WORD_STEP + WORD_ANIM, () => {
-            this.busy = false;
-            this.scheduleAutoAdvance();
-        });
+        return { line, lastWord, wordCount };
     }
 
     /** Exit the current message, then present the next state */
@@ -491,10 +498,6 @@ export class OpeningCinematic {
 
         this.letterCard?.classList.add('is-opening');
         this.letterScene?.classList.add('is-open');
-        // The destination is now mounted and visible. Persist its settled
-        // equivalent immediately so a refresh during the opening animation
-        // cannot fall back to the already-completed question gate.
-        this._fireStage('opening-letter-message');
 
         // Wait for the actual paper animation before entering the
         // message stage. The markup uses .letter-paper, so this must
@@ -933,6 +936,103 @@ export class OpeningCinematic {
         this.showLetter();
     }
 
+    /** Replay the opening animation for a visitor who has already completed the gate. */
+    replayLetterOpening() {
+        if (!this.overlay || !this.letterScene || this.state !== 'message') return false;
+
+        this.clearTimers();
+        this.messageIndex = -1;
+        this.messageEl?.replaceChildren();
+        this.messageEl?.setAttribute('aria-hidden', 'true');
+        this.onMessageChange?.(-1);
+
+        // Reset only the transient letter animation state. The completion
+        // marker remains external to this UI reset and continues to govern
+        // whether main.js exposes this replay shortcut.
+        this.resetLetterUi();
+        this.finished = false;
+        this.state = 'letter';
+        this.busy = false;
+        this.letterOpened = false;
+        this.letterUnlocked = true;
+        this.letterReady = true;
+        this.selectedAnswer = null;
+
+        this.letterScene.setAttribute('aria-hidden', 'false');
+        this.letterScene.classList.remove('is-open', 'is-message');
+        this.letterScene.classList.add('is-visible');
+        this.letterCard?.classList.remove('is-opening');
+        this.letterInvite?.classList.add('is-in');
+        this.letterMessage?.classList.remove('is-in');
+        this.questionEl?.classList.remove('is-in', 'is-transitioning', 'is-entering', 'is-settled');
+        this.questionEl?.setAttribute('aria-hidden', 'true');
+
+        // Give the sealed card one committed frame before the canonical
+        // opening method adds its animation classes. The run token prevents
+        // this deferred start from surviving a Back/reset/navigation change.
+        const run = this._letterRun;
+        requestAnimationFrame(() => {
+            if (
+                run !== this._letterRun ||
+                this.state !== 'letter' ||
+                this.letterOpened ||
+                !this.letterUnlocked
+            ) return;
+            this.openLetter();
+        });
+        return true;
+    }
+
+    /** Restore a story checkpoint as a fully readable message, never mid-animation. */
+    restoreStoryMessage(index) {
+        if (!this.overlay || !this.messageEl || !Number.isInteger(index) || index < 0 || index >= this.messages.length) return false;
+
+        this.clearTimers();
+        const host = this.overlay.closest('#loading-screen');
+        if (host) {
+            host.hidden = false;
+            host.classList.remove('is-leaving');
+            host.classList.add('is-lettering');
+        }
+
+        this.started = true;
+        this.finished = false;
+        this.beginFired = true;
+        this.state = 'message';
+        this.messageIndex = index;
+        this.busy = false;
+        this.letterScene?.classList.remove('is-visible', 'is-open', 'is-message');
+        this.letterScene?.setAttribute('aria-hidden', 'true');
+
+        this.overlay.hidden = false;
+        this.overlay.classList.remove('is-leaving');
+        this.overlay.classList.add('is-visible');
+        this.spawnStars();
+        this.spawnPetals();
+
+        const message = this.messages[index];
+        const line = message.passage ? this.buildPassageLine().line : document.createElement('p');
+        if (!message.passage) {
+            line.className = 'opening-message-text ' + message.cls;
+            line.textContent = message.text;
+        } else {
+            line.querySelectorAll('.opening-passage-word').forEach((word) => {
+                word.style.animation = 'none';
+                word.style.opacity = '1';
+                word.style.filter = 'none';
+                word.style.transform = 'none';
+            });
+        }
+        line.classList.add('is-in');
+        this.messageEl.replaceChildren(line);
+        this.messageEl.setAttribute('aria-hidden', 'false');
+        this.overlay.focus({ preventScroll: true });
+        this.onMessageChange?.(index);
+        this._fireStage('opening-story');
+        this.scheduleAutoAdvance();
+        return true;
+    }
+
     /* ---- Restore (global Back button) ---- */
 
     /* Notify main.js (global Back button state machine) which stage
@@ -1049,9 +1149,6 @@ export class OpeningCinematic {
         this.questionEl?.setAttribute('aria-hidden', 'true');
         this.overlay.focus({ preventScroll: true });
 
-        // A restored opening route has now reached the same valid settled
-        // state as the original animation completion.
-        this.onDateGateComplete?.();
         this._fireStage('opening-letter-message');
         return true;
     }

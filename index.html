@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="css/animation.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/secret-game.css">
+    <link rel="stylesheet" href="css/relationship-gap-mobile.css">
     <link rel="stylesheet" href="css/particle-countdown.css">
     
     <!-- Fonts - Using system fonts for performance, with Google Fonts as enhancement -->
@@ -51,22 +52,30 @@
             </div>
         </div>
         
-        <!-- Delayed only when boot genuinely takes a moment. The empty,
-             named photo slot deliberately avoids guessing at a Memory Lane
-             image; set its background only after a wife portrait is chosen. -->
-        <section id="loading-waiting" class="loading-waiting" aria-live="polite" hidden>
-            <div id="loading-waiting-photo" class="loading-waiting-photo" data-waiting-photo-slot="wife-portrait" aria-hidden="true">
-                <span class="loading-waiting-heart">&hearts;</span>
+        <!-- This portrait is static rather than module-assigned, so it is
+             available during normal boot and before any module can report a
+             failure. It is the only image used by the loader states. -->
+        <div class="loading-state-shell">
+            <div id="loading-waiting-photo" class="loading-waiting-photo" data-waiting-photo-slot="wife-portrait">
+                <img
+                    src="assets/images/wife/wife-loader.png"
+                    alt="A portrait of the birthday girl"
+                    onerror="this.hidden = true; this.parentElement.classList.add('is-image-unavailable');"
+                >
+                <span class="loading-waiting-heart" aria-hidden="true">&hearts;</span>
             </div>
-            <p class="loading-waiting-copy">Bas ek pal&hellip;</p>
-            <span class="loading-waiting-detail">Preparing something just for you.</span>
-        </section>
 
-        <section id="loading-failure" class="loading-failure" role="alert" aria-live="assertive" hidden>
-            <div class="loading-failure-mark" aria-hidden="true">&hearts;</div>
-            <p>Something did not open properly.</p>
-            <button id="loading-retry" type="button">Try Again</button>
-        </section>
+            <section id="loading-waiting" class="loading-waiting" aria-live="polite" hidden>
+                <p class="loading-waiting-copy">Bas ek pal&hellip;</p>
+                <span class="loading-waiting-detail">Preparing something just for you.</span>
+            </section>
+
+            <section id="loading-failure" class="loading-failure" role="alert" aria-live="assertive" hidden>
+                <div class="loading-failure-mark" aria-hidden="true">&hearts;</div>
+                <p>Something did not open properly.</p>
+                <button id="loading-retry" type="button">Try Again</button>
+            </section>
+        </div>
 
 <!-- ============================================
              CINEMATIC OPENING - the first moments
@@ -131,6 +140,11 @@
              ============================================ -->
         <section id="question-lock" class="scene scene-question-lock" aria-labelledby="question-title" hidden>
             <div class="scene-bg"></div>
+            <!-- Visible only in the automatic Resume Lock mode. This is a
+                 dedicated full-screen layer, not an entry-lock portrait. -->
+            <div class="resume-lock-backdrop" id="resume-lock-backdrop" hidden aria-hidden="true">
+                <img src="assets/images/lock/resume-lock-fullscreen.png" alt="">
+            </div>
             <div class="scene-content question-content">
                 <div class="question-stage" id="question-stage">
                     <!-- Lock Icon -->
@@ -153,7 +167,7 @@
                     <!-- Input Field -->
                     <div class="question-input-wrapper">
                         <input 
-                            type="text" 
+                            type="password"
                             class="question-input" 
                             id="question-input" 
                             placeholder="Apna jawab yahan likho..." 
@@ -165,6 +179,23 @@
                             maxlength="20"
                             inputmode="text"
                         >
+                        <button
+                            type="button"
+                            class="question-password-toggle"
+                            id="question-password-toggle"
+                            aria-label="Show password"
+                            aria-pressed="false"
+                        >
+                            <svg class="password-eye-icon password-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"></path>
+                                <circle cx="12" cy="12" r="2.75"></circle>
+                            </svg>
+                            <svg class="password-eye-icon password-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" hidden>
+                                <path d="m3 3 18 18"></path>
+                                <path d="M10.6 6.2A10.9 10.9 0 0 1 12 6c6.1 0 9.5 6 9.5 6a17.3 17.3 0 0 1-3.05 3.72M6.1 6.1A17.7 17.7 0 0 0 2.5 12S5.9 18 12 18c1.27 0 2.4-.26 3.4-.67"></path>
+                                <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"></path>
+                            </svg>
+                        </button>
                         <span class="input-underline" aria-hidden="true"></span>
                     </div>
                     
@@ -275,6 +306,9 @@
     id="music-toggle"
     aria-label="Toggle background music"
     aria-pressed="false"
+    aria-hidden="true"
+    disabled
+    hidden
 >
     <svg class="icon-music-on" viewBox="0 0 24 24" fill="none"
          stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -801,6 +835,24 @@ I love you. ❤️</p>
                         <p>Kyuki ek ladai, ek galat baat ya ek bura din mere tumhare liye pyaar ko chhota nahi kar sakta. &#10084;&#65039;</p>
                     </section>
 
+                    <section class="final-love-letter-chapter final-love-letter-time-love" data-letter-paragraph>
+                        <div class="final-love-letter-time-love-numbers">
+                            <p class="final-love-letter-time-love-number">1 Year</p>
+                            <p class="final-love-letter-time-love-number">12 Months</p>
+                            <p class="final-love-letter-time-love-number">365 Days</p>
+                            <p class="final-love-letter-time-love-number">8760 Hours</p>
+                            <p class="final-love-letter-time-love-number">525600 Minutes</p>
+                            <p class="final-love-letter-time-love-number">31536000 Seconds</p>
+                        </div>
+                        <div class="final-love-letter-time-love-every">
+                            <p>Every Day</p>
+                            <p>Every Night</p>
+                            <p>Every Time</p>
+                            <p>...</p>
+                        </div>
+                        <p class="final-love-letter-time-love-final">I Always Love You. &#10084;&#65039;</p>
+                    </section>
+
                     <section class="final-love-letter-chapter final-love-letter-closing" id="final-love-letter-closing" data-letter-paragraph>
                         <p>Main seekhunga. Main improve karunga. Main galtiyan bhi karunga.</p>
                         <p>Lekin ek cheez nahi badlegi&mdash; main tumhara saath chhodna nahi chahta.</p>
@@ -853,7 +905,7 @@ I love you. ❤️</p>
             <div class="infinite-garden-horizon" aria-hidden="true"></div>
             <div class="infinite-garden-copy" aria-live="polite">
                 <p class="infinite-garden-eyebrow">Hamari kahani, hamesha khilti hui</p>
-                <h2 id="infinite-garden-title" class="infinite-garden-heading">Hamari Kahani Ka Gulshan ❤️</h2>
+                <h2 id="infinite-garden-title" class="infinite-garden-heading">Hamari Pyar Ki Tarha Ye Bhi Unlimited He ❤️</h2>
                 <p class="infinite-garden-instruction">Jahan dil kare, wahan tap karo... aur hamari kahani me ek aur phool khilne do. ❤️</p>
             </div>
             <div class="infinite-garden-milestone" data-garden-control role="dialog" aria-modal="true" aria-labelledby="garden-milestone-title" aria-hidden="true" hidden>
@@ -870,7 +922,7 @@ I love you. ❤️</p>
             </div>
             <div class="infinite-garden-actions" data-garden-control>
                 <button type="button" class="infinite-garden-reset" id="infinite-garden-reset" data-garden-control>
-                    <span>Gulshan Phir Se Khilao 🌸</span>
+                    <span>Start Again 🌸</span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 18 0"></path><path d="M3 12h6M9 18l-6-6 6-6"></path></svg>
                 </button>
                 <button type="button" class="infinite-garden-restart" id="infinite-garden-restart" data-garden-control>
@@ -1074,12 +1126,18 @@ I love you. ❤️</p>
                 </div>
                 <p id="sg-reward-hint" class="sg-reward-hint">Tap the envelope to open it...</p>
                 <div id="sg-reward-card" class="sg-reward-card" hidden>
-                    <p id="sg-reward-eyebrow" class="sg-reward-eyebrow"></p>
-                    <h3 id="sg-reward-title" class="sg-reward-title"></h3>
-                    <div id="sg-reward-body"></div>
-                    <div class="sg-reward-sign">
-                        <p id="sg-reward-from"></p>
-                        <p id="sg-reward-name"></p>
+                    <div class="sg-reward-header">
+                        <p id="sg-reward-eyebrow" class="sg-reward-eyebrow"></p>
+                        <h3 id="sg-reward-title" class="sg-reward-title"></h3>
+                    </div>
+                    <div class="sg-reward-reading">
+                        <div id="sg-reward-body" class="sg-reward-body" tabindex="0" aria-label="Read your reward letter">
+                            <div class="sg-reward-copy"></div>
+                            <div class="sg-reward-sign">
+                                <p id="sg-reward-from"></p>
+                                <p id="sg-reward-name"></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <button type="button" class="sg-btn" id="sg-reward-continue" hidden><span class="sg-btn-label">Aage Badho — Special Message →</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>

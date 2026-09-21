@@ -99,13 +99,13 @@ export const GAME2_MEMORY_DATA = [
     {
         slot: 0,
         original: {
-            id: 'g2-m1-original', slot: 0, stage: 'original', image: 'assets/images/game-2/game2-memory1-main.jpg', imageFit: 'contain',
+            id: 'g2-m1-original', slot: 0, stage: 'original', image: '/assets/images/game-2/enhanced/game2-memory1-main-enhanced.jpg', imageFit: 'contain',
             title: '15/07/2026', question: '15/07/2026 ko meri wife ko gussa kyun aaya tha?',
             options: ['Kyunki maine uski baat dhyaan se nahi suni thi', 'Kyunki main usse chhed raha tha', 'Kyunki maine late reply kiya tha', 'Kyunki main biwi ko zabardasti khila raha tha.', 'Kyunki main uska mood samajh nahi paaya tha'], correctIndex: 3,
             revealText: 'Bas thoda sa khila raha tha... aur biwi ka gussa bhi kitna pyaara lag raha tha. ❤',
         },
         recovery: {
-            id: 'g2-m1-recovery', slot: 0, stage: 'recovery', image: 'assets/images/game-2/game2-memory1-recovery.jpg', imageFit: 'contain',
+            id: 'g2-m1-recovery', slot: 0, stage: 'recovery', image: '/assets/images/game-2/enhanced/game2-memory1-recovery-enhanced.png', imageFit: 'contain',
             title: 'Thoda Aur Socho...', question: '15/07/2026 ko mujhe maar kyun rahi thi?',
             options: ['Kyunki maine uska phone nahi uthaya tha', 'Kyunki main apni biwi ke paas baith nahi raha tha.', 'Kyunki main sirf hass raha tha', 'Kyunki maine usse ignore kiya tha', 'Kyunki main usko mana nahi raha tha'], correctIndex: 1,
             revealText: 'Bas paas baithna tha... aur biwi ne apna haq bilkul pyaar se jata diya. ❤',
@@ -114,13 +114,13 @@ export const GAME2_MEMORY_DATA = [
     {
         slot: 1,
         original: {
-            id: 'g2-m2-original', slot: 1, stage: 'original', image: 'assets/images/game-2/game2-memory2-main.jpg', imageFit: 'contain',
+            id: 'g2-m2-original', slot: 1, stage: 'original', image: '/assets/images/game-2/enhanced/game2-memory2-main-enhanced.png', imageFit: 'contain',
             title: '25/02/2025', question: '25/02/2025 ko tum kis mood mein thi aur aisa kyun kar rahi thi?',
             options: ['Kyunki tum sharma rahi thi', 'Kyunki tum mujhe tang kar rahi thi', 'Kyunki main kiss nahi kar raha tha.', 'Kyunki tum romantic mood mein thi', 'Kyunki tum bas mera reaction dekhna chahti thi'], correctIndex: 2,
             revealText: 'Bas ek kiss ki kami thi... aur phir mood ko reason mil gaya. ❤',
         },
         recovery: {
-            id: 'g2-m2-recovery', slot: 1, stage: 'recovery', image: 'assets/images/game-2/game2-memory2-recovery.jpg', imageFit: 'contain',
+            id: 'g2-m2-recovery', slot: 1, stage: 'recovery', image: '/assets/images/game-2/enhanced/game2-memory2-recovery-preserved.webp', imageFit: 'contain',
             title: 'Ab Sach Sach Batao...', question: '25/02/2025 ko kiss ke baad kaisa lag raha tha?',
             options: ['Dil bahut shaant ho gaya tha', 'Aur bhi zyada sharam aa rahi thi', 'Bas smile ruk hi nahi rahi thi', 'Aisa lag raha tha waqt wahi ruk jaaye', 'Biwi ke mann mein laddu phoot rahe the.'], correctIndex: 4,
             revealText: 'Kiss ke baad biwi ke mann mein laddu phoot rahe the... aur meri smile bhi ruk nahi rahi thi. ❤',
@@ -129,13 +129,13 @@ export const GAME2_MEMORY_DATA = [
     {
         slot: 2,
         original: {
-            id: 'g2-m3-original', slot: 2, stage: 'original', image: 'assets/images/game-2/game2-memory3-main.jpg',
+            id: 'g2-m3-original', slot: 2, stage: 'original', image: '/assets/images/game-2/enhanced/game2-memory3-main-enhanced.png',
             title: '03/09/2026', question: '03/09/2026 ko meri biwi itne nakhre kyun kar rahi thi?',
             options: ['Kiss na dena pade isiliye.', 'Kyunki mood thoda shararti tha', 'Kyunki mujhe aur tadpana tha', 'Kyunki bas nakhre dikhane ka mann tha', 'Kyunki seedha maan jaana boring hota'], correctIndex: 0,
             revealText: 'Nakhre bhi pyaare... par kiss se bachne ki chaal pakdi gayi. 😏',
         },
         recovery: {
-            id: 'g2-m3-recovery', slot: 2, stage: 'recovery', image: 'assets/images/game-2/game2-memory3-recovery.jpg',
+            id: 'g2-m3-recovery', slot: 2, stage: 'recovery', image: '/assets/images/game-2/enhanced/game2-memory3-recovery-enhanced.png',
             title: 'Last Chance 😏', question: '03/09/2026 ko meri biwi photo kyun nahi khinchwa rahi thi?',
             options: ['Kyunki pehle aur ready hona tha', 'Kyunki mood pose dene ka nahi tha', 'Kyunki bas mujhe pareshan karna tha', 'Us din zyada khubsurat dikh rahi thi isiliye.', 'Kyunki natural rehna zyada pasand tha'], correctIndex: 3,
             revealText: 'Photo se bachne ka reason bhi kitna pyaara tha... biwi waise hi bahut khubsurat lag rahi thi. ❤',
@@ -269,14 +269,29 @@ export const JACKPOT_CATEGORIES = [
    afterwards leads to Special Message / Final Birthday etc.
    ------------------------------------------------------------ */
 export const SECRET_REWARD = {
-    eyebrow: 'Tumhare Liye — Sirf Tumhare Liye',
-    title: 'My Dear Wife 💙',
+    eyebrow: 'TUMHARE LIYE — SIRF TUMHARE LIYE',
+    title: 'Meri Pyari Biwi 💙',
     // Paragraphs are rendered as separate <p> - keep them short.
     paragraphs: [
-        'Tumne yeh saare secrets dhoondh liye — har yaad, har sitara, har dhadkan.',
-        'Par sabse bada secret toh yeh hai...',
-        'Mera dil kab ka tumhara ho chuka hai. Is game se bohot pehle se. ❤️',
-        'Har level par tumne jo pyaar dikhaya, woh is baat ka saboot hai ki hum hamesha ek hi team the — aur hamesha rahenge.',
+        'Tumne yeh saare secrets dhoondh liye…',
+        'har yaad, har sawaal, har chhoti si baat.',
+        'Lekin ek secret aisa hai jo shayad kabhi secret tha hi nahi…',
+        'Mera dil bahut pehle hi tumhara ho chuka tha. ❤️',
+        'Iss game se bhi pehle, in yaadon se bhi pehle.',
+        'Pata nahi kab tum meri aadat se badhkar meri zarurat ban gayi…',
+        'kab tumhari khushi meri khushi ban gayi,',
+        'aur tumhari udaasi dekh kar mera dil bhi chup sa ho jaata hai.',
+        'Har level par tumne jo pyaar, patience aur apnapan dikhaya,',
+        'usne mujhe bas ek hi cheez aur strongly feel karayi—',
+        'main kitna lucky hoon ki meri zindagi mein tum ho.',
+        'Tum meri sirf ek beautiful memory nahi ho…',
+        'tum woh insaan ho jiske saath main aur bhi hazaar memories banana chahta hoon.',
+        'Aur chahe kitna bhi time beet jaaye,',
+        'chahe zindagi kitni bhi badal jaaye…',
+        'meri ek choice kabhi nahi badlegi — tum.',
+        'Aaj bhi.',
+        'Kal bhi.',
+        'Aur har aane wale kal mein bhi. 💙',
     ],
     signFrom: 'Hamesha tumhara,',
     signName: 'Tumhara Pati 💙',

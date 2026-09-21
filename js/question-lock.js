@@ -68,6 +68,7 @@ export class QuestionLockScreen {
         this.questionText = null;
         this.inputWrapper = null;
         this.input = null;
+        this.passwordToggle = null;
         this.underline = null;
         this.feedback = null;
         this.unlockBtn = null;
@@ -76,6 +77,10 @@ export class QuestionLockScreen {
         this.starsEl = null;
         this.particlesEl = null;
         this.gateEl = null;
+        this.resumeBackdrop = null;
+        this.mode = 'primary';
+        this.resumeReason = 'security';
+        this.primaryCopy = null;
 
         this.reduced = prefersReducedMotion();
         this.started = false;
@@ -85,6 +90,8 @@ export class QuestionLockScreen {
         this.timers = [];
         this._boundOnInput = this._onInput.bind(this);
         this._boundOnUnlockClick = this._onUnlockClick.bind(this);
+        this._boundOnPasswordToggle = this._onPasswordToggle.bind(this);
+        this._boundOnPasswordTogglePointerDown = (event) => event.preventDefault();
         this._boundOnKey = this._onKey.bind(this);
         this._boundOnTap = this._onTap.bind(this);
         // Mobile keyboard tracking (visual viewport) - keeps the
@@ -96,6 +103,10 @@ export class QuestionLockScreen {
 
         // Wired by entry-lock.js or main.js: called when unlock succeeds
         this.onHandover = null;
+        // Called synchronously after a correct answer, while the click/Enter
+        // event still has transient user activation. The visual handover is
+        // intentionally later and must not be used to unlock media.
+        this.onAuthenticatedGesture = null;
     }
 
     /* ---- Lifecycle ---- */
@@ -111,6 +122,7 @@ export class QuestionLockScreen {
         this.questionText = $('#question-text');
         this.inputWrapper = $('.question-input-wrapper');
         this.input = $('#question-input');
+        this.passwordToggle = $('#question-password-toggle');
         this.underline = $('.input-underline');
         this.feedback = $('#question-feedback');
         this.unlockBtn = $('#question-unlock-btn');
@@ -119,6 +131,15 @@ export class QuestionLockScreen {
         this.starsEl = $('#question-stars');
         this.particlesEl = $('#question-particles');
         this.gateEl = $('#question-gate');
+        this.resumeBackdrop = $('#resume-lock-backdrop');
+        this.primaryCopy = {
+            heading: this.heading?.innerHTML || '',
+            question: this.questionText?.innerHTML || '',
+            placeholder: this.input?.getAttribute('placeholder') || '',
+            ariaLabel: this.input?.getAttribute('aria-label') || '',
+            button: this.unlockBtnText?.textContent || '',
+            buttonLabel: this.unlockBtn?.getAttribute('aria-label') || '',
+        };
 
         // Ensure initial state: no feedback, button disabled
         this._clearFeedback();
@@ -126,6 +147,9 @@ export class QuestionLockScreen {
 
         // Input validation on input event
         this.input?.addEventListener('input', this._boundOnInput);
+        this.passwordToggle?.addEventListener('pointerdown', this._boundOnPasswordTogglePointerDown);
+        this.passwordToggle?.addEventListener('click', this._boundOnPasswordToggle);
+        this._setPasswordVisibility(false, { preserveFocus: false });
 
         // Button click handler
         this.unlockBtn?.addEventListener('click', this._boundOnUnlockClick);
@@ -186,8 +210,9 @@ export class QuestionLockScreen {
      * Reveal the question lock scene.
      * Called after Phase 1 (EntryLockIntro) finishes.
      */
-    start() {
+    start({ mode = 'primary', reason = 'security' } = {}) {
         if (this.started || !this.overlay) return;
+        this._configureMode(mode, reason);
         this.started = true;
         this.finished = false;
         this.busy = false;
@@ -225,6 +250,7 @@ export class QuestionLockScreen {
             this.input.removeAttribute('maxlength');
             this.input.setAttribute('autocomplete', 'off');
         }
+        this._setPasswordVisibility(false, { preserveFocus: false });
         this._clearFeedback();
         this._setButtonEnabled(false);
         // Ensure fields are correctly positioned and visible
@@ -245,6 +271,73 @@ export class QuestionLockScreen {
 
         // Start entrance animations
         this.playEntrance();
+    }
+
+    // Resume remains the same controller, input and isCorrectAnswer()
+    // validation path; only its presentation and concise copy differ.
+    _configureMode(mode, reason) {
+        this.mode = mode === 'resume' ? 'resume' : 'primary';
+        this.resumeReason = reason === 'inactivity' ? 'inactivity' : 'security';
+        this.overlay?.setAttribute('data-lock-mode', this.mode);
+        const isResume = this.mode === 'resume';
+        if (this.resumeBackdrop) {
+            this.resumeBackdrop.hidden = !isResume;
+            this.resumeBackdrop.setAttribute('aria-hidden', String(!isResume));
+        }
+        if (!isResume) {
+            if (this.heading) this.heading.innerHTML = this.primaryCopy?.heading || '';
+            if (this.questionText) this.questionText.innerHTML = this.primaryCopy?.question || '';
+            if (this.input) {
+                this.input.type = 'password';
+                this.input.placeholder = this.primaryCopy?.placeholder || '';
+                this.input.setAttribute('aria-label', this.primaryCopy?.ariaLabel || 'Apna jawab yahan likho...');
+            }
+            if (this.unlockBtnText) this.unlockBtnText.textContent = this.primaryCopy?.button || '';
+            this.unlockBtn?.setAttribute('aria-label', this.primaryCopy?.buttonLabel || 'Hamari Kahani Unlock Karo');
+            return;
+        }
+        if (this.heading) this.heading.innerHTML = 'Arey... thodi der ke liye lock ho gaya <span class="resume-lock-emoji" aria-hidden="true">💙</span>';
+        if (this.questionText) this.questionText.innerHTML = this.resumeReason === 'inactivity'
+            ? 'Abhi tum kaha chali gai thi baby, Deko Lock lag gaya naa <span class="resume-lock-emoji" aria-hidden="true">😌</span><br><span>Ab Password daal kar wapas kholo.</span>'
+            : 'Security bhi chahti hai ki tum hi wapas aao <span class="resume-lock-emoji" aria-hidden="true">💙</span><br><span>Password daal kar wapas kholo.</span>';
+        if (this.input) {
+            this.input.type = 'password';
+            this.input.placeholder = 'Password daalo';
+            this.input.setAttribute('aria-label', 'Password daalo');
+        }
+        if (this.unlockBtnText) this.unlockBtnText.textContent = 'Khol Do';
+        this.unlockBtn?.setAttribute('aria-label', 'Khol Do');
+    }
+
+    /** One visibility control serves both primary and resume lock modes. */
+    _onPasswordToggle(event) {
+        event?.preventDefault?.();
+        event?.stopPropagation?.();
+        this._setPasswordVisibility(this.input?.type === 'password');
+    }
+
+    _setPasswordVisibility(visible, { preserveFocus = true } = {}) {
+        const input = this.input;
+        if (!input) return;
+
+        const wasFocused = preserveFocus && document.activeElement === input;
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.type = visible ? 'text' : 'password';
+
+        if (this.passwordToggle) {
+            this.passwordToggle.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
+            this.passwordToggle.setAttribute('aria-pressed', String(visible));
+            this.passwordToggle.querySelector('.password-eye-open')?.toggleAttribute('hidden', visible);
+            this.passwordToggle.querySelector('.password-eye-closed')?.toggleAttribute('hidden', !visible);
+        }
+
+        if (wasFocused) {
+            try { input.focus({ preventScroll: true }); } catch { input.focus(); }
+            if (Number.isInteger(start) && Number.isInteger(end)) {
+                try { input.setSelectionRange(start, end); } catch {}
+            }
+        }
     }
 
     /* ---- Entrance Animation ---- */
@@ -449,7 +542,9 @@ export class QuestionLockScreen {
         if (this.finished || this.busy) return;
         // Keep button enabled so user can retry immediately (or keep enabled for correction)
         this._setButtonEnabled(true);
-        this._showFeedback('Hmm... 😄<br>Ek baar fir soch kar dekho. 💙', 'error');
+        this._showFeedback(this.mode === 'resume'
+            ? 'Password sahi nahi hai. Ek baar fir try karo.'
+            : 'Hmm... 😄<br>Ek baar fir soch kar dekho. 💙', 'error');
         this._shakeInput();
         this._focusInput();
         // Do not trigger gate, stay on lock screen
@@ -460,6 +555,13 @@ export class QuestionLockScreen {
         this.busy = true;
         this.finished = true;
         this._handedOver = false;
+
+        // Keep this before blur, animation, timers, or handover work. It is
+        // the only point where main.js can legally start existing music from
+        // the successful trusted unlock action.
+        try { this.onAuthenticatedGesture?.(); } catch (error) {
+            console.warn('Question authentication gesture hook failed', error);
+        }
 
         // Prevent multiple submissions
         this._setButtonEnabled(false);
@@ -477,7 +579,7 @@ export class QuestionLockScreen {
         this.overlay?.style.removeProperty('--kb-inset');
 
         // Visual feedback for correct unlock
-        this._showFeedback('Bilkul sahi... 💙', 'success');
+        this._showFeedback(this.mode === 'resume' ? 'Wapas chalo... 💙' : 'Bilkul sahi... 💙', 'success');
 
         // Lock icon unlock animation
         this.lockIcon?.classList.add('unlocking');
@@ -495,6 +597,10 @@ export class QuestionLockScreen {
     }
 
     _openGate() {
+        if (this.mode === 'resume') {
+            this.later(this.reduced ? 0 : 260, () => this._fadeOutAndHandover());
+            return;
+        }
         // Gate is the main cinematic action - not just a fade
         if (this.gateEl) {
             this.gateEl.hidden = false;
@@ -533,12 +639,14 @@ export class QuestionLockScreen {
             this.stage.style.filter = 'blur(10px)';
         }
 
-        this.later(this.reduced ? 0 : 800, () => {
+        const fadeDuration = this.mode === 'resume' ? 360 : 800;
+        const finalFade = this.mode === 'resume' ? 260 : DURATIONS.finalFade;
+        this.later(this.reduced ? 0 : fadeDuration, () => {
             if (this._handedOver) return;
             this.overlay.classList.remove('is-visible');
             this.overlay.classList.add('is-leaving');
 
-            this.later(this.reduced ? 0 : DURATIONS.finalFade, () => {
+            this.later(this.reduced ? 0 : finalFade, () => {
                 if (this._handedOver) return;
                 this._handedOver = true;
                 // Deterministic handover: remove question overlay from layout,
@@ -546,7 +654,12 @@ export class QuestionLockScreen {
                 // and do not disturb the next scene's DOM.
                 this.overlay.hidden = true;
                 this.overlay.classList.remove('is-leaving', 'is-gate-opening', 'is-gate-open');
+                this.overlay.removeAttribute('data-lock-mode');
                 this.overlay.style.pointerEvents = '';
+                if (this.resumeBackdrop) {
+                    this.resumeBackdrop.hidden = true;
+                    this.resumeBackdrop.setAttribute('aria-hidden', 'true');
+                }
                 if (this.gateEl) {
                     this.gateEl.hidden = true;
                     this.gateEl.classList.remove('is-opening', 'is-open');
@@ -698,6 +811,7 @@ export class QuestionLockScreen {
         if (this.input) {
             this.input.value = '';
         }
+        this._setPasswordVisibility(false, { preserveFocus: false });
         this.answerValid = false;
         this.busy = false;
         this._setButtonEnabled(false);
@@ -717,6 +831,11 @@ export class QuestionLockScreen {
             this.gateEl.setAttribute('aria-hidden', 'true');
         }
         this.overlay?.classList.remove('is-gate-opening', 'is-gate-open');
+        this.overlay?.removeAttribute('data-lock-mode');
+        if (this.resumeBackdrop) {
+            this.resumeBackdrop.hidden = true;
+            this.resumeBackdrop.setAttribute('aria-hidden', 'true');
+        }
         this.overlay?.classList.remove('is-keyboard');
         this.overlay?.style.removeProperty('--kb-inset');
 
@@ -753,6 +872,8 @@ export class QuestionLockScreen {
             window.visualViewport.removeEventListener('scroll', this._boundOnViewportChange);
         }
         this.input?.removeEventListener('input', this._boundOnInput);
+        this.passwordToggle?.removeEventListener('pointerdown', this._boundOnPasswordTogglePointerDown);
+        this.passwordToggle?.removeEventListener('click', this._boundOnPasswordToggle);
         this.unlockBtn?.removeEventListener('click', this._boundOnUnlockClick);
         this.overlay?.removeEventListener('keydown', this._boundOnKey);
         this.overlay?.removeEventListener('click', this._boundOnTap);
@@ -763,6 +884,7 @@ export class QuestionLockScreen {
         this.questionText = null;
         this.inputWrapper = null;
         this.input = null;
+        this.passwordToggle = null;
         this.underline = null;
         this.feedback = null;
         this.unlockBtn = null;
@@ -771,5 +893,6 @@ export class QuestionLockScreen {
         this.starsEl = null;
         this.particlesEl = null;
         this.gateEl = null;
+        this.resumeBackdrop = null;
     }
 }

@@ -20,6 +20,7 @@ import { BirthdayReveal } from './birthday-reveal.js';
 import { ParticleCountdown } from './particle-countdown.js';
 import { BackButton } from './back-button.js';
 import { SecretGame } from './secret-game.js';
+import { deactivateRelationshipGapResume, hasActiveRelationshipGapResume } from './relationship-gap.js';
 import { InfiniteGarden } from './infinite-garden.js';
 import { FinalLoveLetter } from './final-love-letter.js';
 import { sleep } from './utils.js';
@@ -56,6 +57,12 @@ const app = {
     revealStarted: false, // true once the birthday reveal has been triggered
     effectsStarted: false,// true once background effects run
     audioInitialized: false, // true once AudioManager is created
+    musicToggle: null,      // global control, shown only after authentication
+    musicExperienceActive: false, // authenticated experience has entered
+    musicResumeNeeded: false, // paused by backgrounding or blocked authenticated play
+    musicResumeHandler: null, // one early capture listener for pending resume
+    musicResumeAttempt: false, // prevents a touch/click pair from retrying twice
+    audioLifecycleAttached: false,
     cleaned: false,       // true once cleanup() has run
     passwordVerifiedThisSession: false, // runtime mirror of the temporary per-tab security session
     inactivityWatchdog: null,
@@ -66,6 +73,8 @@ const app = {
     pendingProtectedRestore: null,
     securityLocking: false,
     requiresSecureResume: false,
+    lockMode: 'primary',
+    resumeLockReason: 'security',
     navigationRun: 0,
     navigationTimers: new Set(),
 };
@@ -76,7 +85,7 @@ const INACTIVITY_TIMEOUT_MS = 2 * 60 * 1000;
 const INACTIVITY_WATCHDOG_MS = 1000;
 const INACTIVITY_ACTIVITY_EVENTS = ['pointerdown', 'keydown'];
 const SECURITY_LOCK_KEY = 'hbm.securityLock';
-const SECURITY_LOCK_VERSION = 1;
+const SECURITY_LOCK_VERSION = 2;
 const SECURITY_SESSION_KEY = 'hbm.securitySession.v1';
 const SECURITY_SESSION_VERSION = 1;
 const SECURITY_SESSION_FUTURE_TOLERANCE_MS = 5000;
@@ -86,19 +95,25 @@ function loadSecurityLockState() {
         const raw = window.localStorage.getItem(SECURITY_LOCK_KEY);
         if (!raw) return null;
         const data = JSON.parse(raw);
-        if (!data || data.version !== SECURITY_LOCK_VERSION || data.requiresUnlock !== true) return null;
-        return { hiddenAt: Number.isFinite(data.hiddenAt) ? data.hiddenAt : 0 };
+        if (!data || ![1, SECURITY_LOCK_VERSION].includes(data.version) || data.requiresUnlock !== true) return null;
+        // Older records did not identify a resume intent, so keep them on
+        // the conservative primary boundary instead of inferring one.
+        const mode = data.version === SECURITY_LOCK_VERSION && data.mode === 'resume' ? 'resume' : 'primary';
+        const reason = data.reason === 'inactivity' ? 'inactivity' : 'security';
+        return { hiddenAt: Number.isFinite(data.hiddenAt) ? data.hiddenAt : 0, mode, reason };
     } catch {
         return null;
     }
 }
 
-function markSecurityLockRequired(lockedAt = Date.now()) {
+function markSecurityLockRequired(lockedAt = Date.now(), { mode = 'primary', reason = 'security' } = {}) {
     try {
         window.localStorage.setItem(SECURITY_LOCK_KEY, JSON.stringify({
             version: SECURITY_LOCK_VERSION,
             requiresUnlock: true,
             hiddenAt: lockedAt,
+            mode: mode === 'resume' ? 'resume' : 'primary',
+            reason: reason === 'inactivity' ? 'inactivity' : 'security',
         }));
     } catch {
         /* Storage unavailable: the in-memory lock still protects this visit. */
@@ -211,7 +226,7 @@ function setPendingProtectedRestore(kind, value, reason) {
 function requireQuestionLockForPendingRestore(reason) {
     const pending = app.pendingProtectedRestore;
     if (!pending) return false;
-    showQuestionLock();
+    showQuestionLock({ mode: app.lockMode, reason: app.resumeLockReason });
     return true;
 }
 
@@ -273,10 +288,13 @@ function syncEarlySkipButton() {
     const onHelloMessage =
         app.opening?.state === 'message' &&
         app.opening.messageIndex === 0;
-    btn.hidden = !(
-        app.passwordVerifiedThisSession &&
-        onHelloMessage
-    );
+    // This shortcut is a replay affordance, never an authentication
+    // affordance. The persisted marker is set only after the actual letter
+    // has fully opened, so an unfinished first journey cannot expose it.
+    const canSkip = hasCompletedDateGate() && onHelloMessage;
+    btn.hidden = !canSkip;
+    btn.disabled = !canSkip;
+    btn.tabIndex = canSkip ? 0 : -1;
 }
 
 function skipCompletedEarlyFlow(event) {
@@ -285,17 +303,20 @@ function skipCompletedEarlyFlow(event) {
     const onHelloMessage =
         app.opening?.state === 'message' &&
         app.opening.messageIndex === 0;
-    if (!app.passwordVerifiedThisSession || !onHelloMessage) return;
+    if (!hasCompletedDateGate() || !onHelloMessage) return;
 
-    app.opening?.resumeAtDateGate();
+    app.opening?.replayLetterOpening();
 }
 
-function showQuestionLock() {
+function showQuestionLock({ mode = 'primary', reason = 'security' } = {}) {
     invalidateNavigation();
+    deactivateAuthenticatedMusicExperience();
     stopInactivityTracking();
     // This flag is deliberately memory-only. Returning to the password
     // page always requires a fresh successful password verification.
     app.passwordVerifiedThisSession = false;
+    app.lockMode = mode === 'resume' ? 'resume' : 'primary';
+    app.resumeLockReason = reason === 'inactivity' ? 'inactivity' : 'security';
     syncEarlySkipButton();
 
     const question = app.questionLock;
@@ -307,7 +328,49 @@ function showQuestionLock() {
     question.busy = false;
     question.overlay?.classList.remove('is-visible', 'is-leaving');
     if (question.overlay) question.overlay.hidden = true;
-    question.start();
+    question.start({ mode: app.lockMode, reason: app.resumeLockReason });
+}
+
+/**
+ * Leave protected content intentionally. Unlike an inactivity lock, this
+ * discards the transient route checkpoint so a later refresh cannot resume
+ * it; durable journey progress remains untouched.
+ */
+function exitProtectedExperienceToLock(reason = 'explicit-exit') {
+    if (app.cleaned) return false;
+
+    app.securityLocking = true;
+    app.inactivityLoggingOut = true;
+    invalidateNavigation();
+    deactivateAuthenticatedMusicExperience();
+    stopInactivityTracking();
+
+    app.passwordVerifiedThisSession = false;
+    app.resumeAfterInactivity = false;
+    app.pendingProtectedRestore = null;
+    app.requiresSecureResume = true;
+    app.lockMode = 'primary';
+    app.resumeLockReason = 'security';
+    clearTemporarySecuritySession(reason);
+
+    // This is route state, not durable journey progress. Removing it keeps a
+    // deliberate return to Lock authoritative on reload and re-entry.
+    try {
+        window.localStorage.removeItem(STATE_KEY);
+    } catch {
+        /* Storage unavailable: the in-memory lock remains fail-closed. */
+    }
+    markSecurityLockRequired(Date.now(), { mode: 'primary', reason: 'security' });
+
+    // The reset and the existing lock start run in this same task, so no
+    // protected scene can paint between them.
+    try { app.opening?.reset?.(); } catch { /* Lock still takes priority. */ }
+    app.backState = 'none';
+    app.backBtn?.setVisible(false);
+    showQuestionLock({ mode: 'primary' });
+
+    app.inactivityLoggingOut = false;
+    return true;
 }
 
 function recordInactivityActivity(event) {
@@ -452,6 +515,9 @@ function triggerSecurityLock(reason, stateAlreadySaved = false) {
     if (!app.passwordVerifiedThisSession) return false;
     app.securityLocking = true;
     app.inactivityLoggingOut = true;
+    // Audio leaves the protected experience immediately; this does not alter
+    // the saved preference or the existing two-minute security policy.
+    deactivateAuthenticatedMusicExperience();
     invalidateNavigation();
 
     // Freeze the stable route before controller teardown. The lock is
@@ -462,9 +528,11 @@ function triggerSecurityLock(reason, stateAlreadySaved = false) {
     app.resumeAfterInactivity = !!resumeState;
     if (resumeState) setPendingProtectedRestore('experience', resumeState, 'inactivity-lock');
     app.requiresSecureResume = true;
+    app.lockMode = 'resume';
+    app.resumeLockReason = reason.includes('inactivity') || reason.includes('resume') ? 'inactivity' : 'security';
     // One lock path preserves the current journey and preferences, then asks
     // the existing Question Lock for a fresh verification.
-    markSecurityLockRequired(Date.now());
+    markSecurityLockRequired(Date.now(), { mode: 'resume', reason: app.resumeLockReason });
     clearTemporarySecuritySession('inactivity-lock');
     app.passwordVerifiedThisSession = false;
     stopInactivityTracking();
@@ -511,7 +579,7 @@ function triggerSecurityLock(reason, stateAlreadySaved = false) {
     app.revealStage = 'none';
     app.backState = 'none';
     app.backBtn?.setVisible(false);
-    showQuestionLock();
+    showQuestionLock({ mode: 'resume', reason: app.resumeLockReason });
     app.inactivityLoggingOut = false;
     return true;
 }
@@ -537,32 +605,38 @@ function initAppRuntime() {
     } else {
         restoredSecuritySession = restoreTemporarySecuritySession(loadTemporarySecuritySession());
     }
-    app.resumeAfterInactivity = !!persistedSecurityLock;
+    app.resumeAfterInactivity = persistedSecurityLock?.mode === 'resume';
     app.requiresSecureResume = !!persistedSecurityLock;
+    app.lockMode = persistedSecurityLock?.mode || 'primary';
+    app.resumeLockReason = persistedSecurityLock?.reason || 'security';
 
     // 1. Loading manager (essential - drives the intro)
     app.loading = new LoadingManager();
     app.loading.init();
     app.loading.start();
 
-    // 2. Background effects (optional - needs canvases from index.html)
-    try {
-        app.effects = initBackgroundEffects();
-    } catch (error) {
-        console.warn('Background effects unavailable, continuing without them.', error);
-    }
-
-    // 3. Audio manager (optional - needs #bg-music; never autoplays)
+    // 2. Audio manager (optional - needs #bg-music). It restores preference
+    // only; lock, loader, and unauthenticated states always remain silent.
     try {
         app.audio = new AudioManager('#bg-music');
         app.audio.init();
         app.audioInitialized = true;
         wireMusicToggle();
-        // Refresh survival: if the saved preference is ON, resume
-        // the music on the earliest user interaction (browser-safe).
-        wireMusicResumeOnGesture();
+        // Install this once, before route restoration. It remains inert while
+        // unauthenticated and only invokes media when an authenticated resume
+        // has been explicitly armed.
+        installMusicResumeGestureListener();
+        installAudioLifecycleListeners();
+        syncMusicControl();
     } catch (error) {
         console.warn('Audio unavailable, continuing silently.', error);
+    }
+
+    // 3. Background effects (optional - needs canvases from index.html)
+    try {
+        app.effects = initBackgroundEffects();
+    } catch (error) {
+        console.warn('Background effects unavailable, continuing without them.', error);
     }
 
     // 4. Listen for the user's "Tap to Begin" (single listener, added once)
@@ -672,7 +746,9 @@ function initAppRuntime() {
         // machine and the refresh snapshot follow it.
         app.opening.onStage = (stage) => {
             if (app.cleaned) return;
-            if (stage === 'love-letter') {
+            if (stage === 'opening-story') {
+                setBackState('opening-story');
+            } else if (stage === 'love-letter') {
                 setBackState('love-letter');
             } else if (stage === 'opening-letter-message') {
                 setBackState('opening-letter-message');
@@ -724,15 +800,15 @@ function initAppRuntime() {
         app.questionLock = new QuestionLockScreen();
         app.questionLock.init();
 
-        // The question lock reports when it's finished so we can
-        // start the Opening cinematic.
+        // This runs inside the successful click/Enter event, before Question
+        // Lock begins its visual handover. It is the legal media-unlock point.
+        app.questionLock.onAuthenticatedGesture = () => {
+            authenticateMusicFromUnlockGesture();
+        };
+
+        // The question lock reports when its visual handover has finished.
         app.questionLock.onHandover = () => {
-            app.passwordVerifiedThisSession = true;
-            app.resumeAfterInactivity = false;
-            // Authentication has succeeded. Clear only security metadata and
-            // stale timing flags, never the protected route snapshot.
-            clearSecurityLockState();
-            startInactivityTracking();
+            completeAuthenticatedMusicExperience();
             if (!runPendingProtectedRestore() && app.opening) {
                 app.opening.start();
             }
@@ -804,10 +880,12 @@ function initAppRuntime() {
 
         const savedPostMemoryState = loadPostMemoryState();
         const savedExperienceState = loadExperienceState();
-        // hbm.experienceState is the current route authority. The older
-        // post-memory checkpoint is migration fallback data only and must
-        // never override a valid current route such as Reward.
-        if (savedExperienceState) {
+        const activeGame5Resume = hasActiveRelationshipGapResume();
+        // An explicitly active Game 5 draft is more specific than the broad
+        // scene snapshot. The older post-memory checkpoint remains fallback.
+        if (activeGame5Resume) {
+            setPendingProtectedRestore('experience', { scene: 'secret-game', timestamp: Date.now() }, 'game5-resume');
+        } else if (savedExperienceState) {
             setPendingProtectedRestore('experience', savedExperienceState, 'startup-restore');
         } else if (savedPostMemoryState) {
             setPendingProtectedRestore('post-memory', savedPostMemoryState, 'startup-restore');
@@ -818,10 +896,13 @@ function initAppRuntime() {
             if (!runPendingProtectedRestore() && app.opening) {
                 app.opening.start();
             }
+            // A restored authenticated route is allowed to show the control,
+            // but never to autoplay on page load.
+            completeAuthenticatedMusicExperience({ resumeNeeded: true });
         } else if (app.pendingProtectedRestore) {
             requireQuestionLockForPendingRestore(app.resumeAfterInactivity ? 'locked-refresh' : 'startup-protected-restore');
         } else if (app.resumeAfterInactivity) {
-            showQuestionLock();
+            showQuestionLock({ mode: app.lockMode, reason: app.resumeLockReason });
         } else {
             // Start the Entry Lock Intro first, which will then
             // hand over to the Opening cinematic when complete.
@@ -854,24 +935,14 @@ function initApp() {
 /* ============================================================
    "Tap to Begin" flow (fires on BEGIN_EVENT from LoadingManager)
    ------------------------------------------------------------
-   Starts background effects (once) and attempts music playback
-   (only now, inside the user gesture - never before).
+   Starts background effects only. Music belongs to the authenticated
+   experience and is unlocked by Question Lock's successful answer.
    ============================================================ */
 
 function beginExperience() {
     if (app.cleaned) return;
 
     startBackgroundEffects();
-
-    // Best-effort music start. play() never throws and returns
-    // false when blocked or when the file is missing.
-    if (app.audio) {
-        app.audio.play().then((started) => {
-            if (!started) {
-                console.info('Audio could not start (blocked or missing) - continuing silently.');
-            }
-        });
-    }
 
     // Fallback path: without the opening layer there is no
     // letter -> reveal handoff, so the reveal starts straight
@@ -1246,29 +1317,9 @@ async function handleBack() {
     }
 
     if (app.backState === 'love-letter') {
-        // Date gate -> the true first main page (#entry-lock). This only
-        // resets the transient opening/entry scenes; later experience
-        // progress remains untouched.
-        app.opening?.reset();
-        const host = document.querySelector('#loading-screen');
-        if (host) {
-            host.hidden = false;
-            host.classList.add('is-lettering');
-            host.classList.remove('is-leaving');
-        }
-        const entry = app.entryLock;
-        if (entry) {
-            entry.cleanup();
-            entry.started = false;
-            entry.finished = false;
-            entry.busy = false;
-            entry.currentScene = 0;
-            entry.overlay?.classList.remove('is-visible', 'is-leaving');
-            if (entry.overlay) entry.overlay.hidden = true;
-        }
-        setBackState('none');
-        try { window.localStorage.removeItem(STATE_KEY); } catch {}
-        entry?.start();
+        // Back from the date gate is an intentional protected-experience
+        // exit, not normal scene navigation.
+        exitProtectedExperienceToLock('back-from-date-gate');
         return;
     }
 
@@ -1461,6 +1512,7 @@ async function handleBack() {
 const STATE_KEY = 'hbm.experienceState';
 const STATE_VERSION = 1;
 const RESTORABLE_SCENES = new Set([
+    'opening-story',
     'love-letter',
     'opening-letter-message',
     'love-message',
@@ -1488,6 +1540,9 @@ function saveExperienceState() {
             scene: app.backState,
             timestamp: Date.now(),
         };
+        if (app.backState === 'opening-story') {
+            snapshot.openingMessageIndex = app.opening?.messageIndex;
+        }
         // Reward has two stable route phases. The game owns the UI; this
         // snapshot contains only the data needed to reconstruct it.
         if (app.backState === 'reward') {
@@ -1527,6 +1582,9 @@ function loadExperienceState() {
         }
         return {
             scene,
+            openingMessageIndex: Number.isInteger(data.openingMessageIndex) && data.openingMessageIndex >= 0 && data.openingMessageIndex <= 6
+                ? data.openingMessageIndex
+                : 0,
             rewardPhase: data.rewardPhase === 'opened' ? 'opened' : 'closed',
             birthdaySubstage: data.birthdaySubstage === 'heart-ready'
                 ? 'age-ready'
@@ -1543,8 +1601,8 @@ function loadExperienceState() {
 const POST_MEMORY_STATE_KEY = 'hbm.postMemoryProgress';
 const POST_MEMORY_STATE_VERSION = 1;
 
-/** Scenes that can be restored after a refresh. 'none' (loading /
-     opening story) intentionally restarts fresh, and 'post-memory'
+/** Scenes that can be restored after a refresh. 'none' (loading)
+     intentionally restarts fresh, and 'post-memory'
      (end-of-lane celebration / future sections) restores into the
      lane intro instead - the snapshot keeps the last restorable
      state, exactly like a mid-chapter refresh.
@@ -1657,6 +1715,15 @@ function restoreExperience(snapshot) {
         requireQuestionLockForPendingRestore('restore-guard');
         return false;
     }
+    if (scene === 'opening-story') {
+        if (app.opening) {
+            app.loading?.complete();
+            app.opening.restoreStoryMessage(snapshot?.openingMessageIndex ?? 0);
+        } else {
+            startReveal();
+        }
+        return;
+    }
     if (scene === 'love-letter') {
         if (app.opening) {
             app.loading?.complete();
@@ -1730,61 +1797,195 @@ function startBackgroundEffects() {
 
 
 /* ============================================================
-   Music resume after refresh (saved preference = ON)
+   Authenticated music lifecycle
    ------------------------------------------------------------
-   The AudioManager already restores volume/mute preferences, but
-   browsers block playback until a user gesture - so after a
-   refresh the music stayed silent even though the preference was
-   ON. This wires ONE self-removing capture-phase listener set:
-   the earliest existing user interaction retries play() exactly
-   once per gesture until the saved track is audible. No new
-   button, no second audio element, no autoplay hack - when the
-   preference is OFF or music already plays, it stands down.
+   Preference says whether music is wanted. Playback additionally requires
+   an authenticated, visible experience. No page-load, focus, pageshow, or
+   visibility event starts media.
    ============================================================ */
 
-function wireMusicResumeOnGesture() {
-    if (!app.audio) return;
+function isAuthenticatedMusicExperience() {
+    return app.passwordVerifiedThisSession &&
+        app.musicExperienceActive &&
+        !app.securityLocking &&
+        !app.inactivityLoggingOut;
+}
 
-    // If saved preference is OFF, never auto-start - stay silent
-    if (app.audio.muted) return;
+function canPlayAuthenticatedMusic({ allowTransition = false } = {}) {
+    return !!app.audio &&
+        !app.audio.muted &&
+        !app.audio.sourceBroken &&
+        app.passwordVerifiedThisSession &&
+        !app.securityLocking &&
+        !app.inactivityLoggingOut &&
+        !document.hidden &&
+        (app.musicExperienceActive || allowTransition);
+}
 
-    const EVENTS = ['pointerdown', 'touchend', 'click', 'keydown'];
-    let detached = false;
+function syncMusicControl() {
+    const toggle = app.musicToggle || document.querySelector('#music-toggle');
+    if (!toggle) return;
+    app.musicToggle = toggle;
 
-    const detach = () => {
-        if (detached) return;
-        detached = true;
-        for (const type of EVENTS) {
-            document.removeEventListener(type, onGesture, true);
-            window.removeEventListener(type, onGesture, true);
+    const audio = app.audio;
+    const available = !!audio && isAuthenticatedMusicExperience();
+    toggle.hidden = !available;
+    toggle.disabled = !available;
+    toggle.setAttribute('aria-hidden', String(!available));
+
+    if (!audio) return;
+    toggle.classList.toggle('is-muted', audio.muted);
+    toggle.setAttribute('aria-pressed', String(audio.muted));
+    toggle.setAttribute(
+        'aria-label',
+        audio.muted ? 'Turn background music on' : 'Turn background music off'
+    );
+}
+
+function installAudioLifecycleListeners() {
+    if (app.audioLifecycleAttached) return;
+    document.addEventListener('visibilitychange', handleAudioVisibilityChange);
+    window.addEventListener('pagehide', handleAudioPageHide);
+    app.audioLifecycleAttached = true;
+}
+
+function removeAudioLifecycleListeners() {
+    if (!app.audioLifecycleAttached) return;
+    document.removeEventListener('visibilitychange', handleAudioVisibilityChange);
+    window.removeEventListener('pagehide', handleAudioPageHide);
+    app.audioLifecycleAttached = false;
+}
+
+function pauseMusicForBackground() {
+    const audio = app.audio;
+    if (!audio || !isAuthenticatedMusicExperience()) return;
+    // Keep preference and position. A later trusted interaction is required
+    // to resume after returning to a visible tab/app.
+    app.musicResumeNeeded = !audio.muted;
+    audio.pause({ cancelPending: true });
+    clearMusicResumeOnGesture();
+}
+
+function handleAudioVisibilityChange() {
+    if (document.hidden) {
+        pauseMusicForBackground();
+        return;
+    }
+    // Becoming visible is deliberately inert. It only re-arms the next real
+    // in-app interaction when backgrounding left music paused.
+    if (app.musicResumeNeeded) armMusicResumeOnGesture();
+}
+
+function handleAudioPageHide() {
+    // Safari can dispatch pagehide before/without a useful visibility update.
+    // This is non-destructive: preference, auth session, and currentTime stay.
+    pauseMusicForBackground();
+}
+
+function authenticateMusicFromUnlockGesture() {
+    if (app.cleaned || document.hidden) return;
+
+    // This is called directly by QuestionLockScreen while the correct
+    // click/Enter is still trusted. Do not await before requesting playback.
+    app.passwordVerifiedThisSession = true;
+    app.resumeAfterInactivity = false;
+    clearSecurityLockState();
+    void requestMusicPlayback({ fromGesture: true, allowTransition: true });
+    startInactivityTracking();
+}
+
+function completeAuthenticatedMusicExperience({ resumeNeeded = false } = {}) {
+    if (!app.passwordVerifiedThisSession) return;
+    app.musicExperienceActive = true;
+    syncMusicControl();
+
+    const audio = app.audio;
+    if (!audio || audio.muted) return;
+    if (resumeNeeded || !audio.isPlaying()) {
+        app.musicResumeNeeded = true;
+        armMusicResumeOnGesture();
+    }
+}
+
+function deactivateAuthenticatedMusicExperience() {
+    app.musicExperienceActive = false;
+    app.musicResumeNeeded = false;
+    clearMusicResumeOnGesture();
+    app.audio?.pause({ cancelPending: true });
+    syncMusicControl();
+}
+
+function requestMusicPlayback({ fromGesture = false, allowTransition = false } = {}) {
+    const audio = app.audio;
+    if (!canPlayAuthenticatedMusic({ allowTransition })) return Promise.resolve(false);
+
+    // AudioManager invokes the native media play() before returning this
+    // promise. Passing fromGesture preserves transient user activation.
+    return Promise.resolve(audio.play({ fromGesture })).then((started) => {
+        if (started) {
+            app.musicResumeNeeded = false;
+            clearMusicResumeOnGesture();
+        } else if (audio.isPlaybackPending() || audio.isPlaybackAttempting()) {
+            app.musicResumeNeeded = true;
+            armMusicResumeOnGesture();
+        } else {
+            app.musicResumeNeeded = false;
+            clearMusicResumeOnGesture();
         }
+        return started;
+    });
+}
+
+function installMusicResumeGestureListener() {
+    if (app.musicResumeHandler) return;
+
+    const onGesture = (event) => {
+        if (!event.isTrusted) return;
+        if (event.type === 'keydown' && event.repeat) return;
+        // The control owns an explicit ON/OFF choice through its own handler.
+        if (event.target instanceof Element && event.target.closest('#music-toggle')) return;
+        if (!app.musicResumeNeeded || !canPlayAuthenticatedMusic()) return;
+        if (app.musicResumeAttempt || app.audio?.isPlaying()) return;
+
+        // This is the same expiration check already performed by the normal
+        // activity listener. It must run first because this listener is
+        // installed earlier, before the restored route is interactive.
+        if (checkInactivityNow('audio-resume-gesture')) return;
+
+        app.musicResumeAttempt = true;
+        // Invoke native media play() synchronously in this trusted handler.
+        // requestMusicPlayback only handles its returned promise afterwards.
+        void requestMusicPlayback({ fromGesture: true }).finally(() => {
+            app.musicResumeAttempt = false;
+        });
     };
 
-    const onGesture = async () => {
-        const audio = app.audio;
-        if (!audio) { detach(); return; }
-
-        // Re-evaluate preference on each gesture (user may have toggled)
-        if (audio.muted) { detach(); return; }
-        if (audio.isPlaying()) { detach(); return; }
-        // Extra guard: element may be paused but AudioManager thinks not
-        if (audio.audio && !audio.audio.paused && !audio.audio.ended) { detach(); return; }
-
-        try {
-            const started = await audio.play();
-            if (started) {
-                detach();
-            }
-            // If blocked, keep listeners so the next gesture retries
-        } catch {
-            // Keep attached for next gesture
-        }
-    };
-
-    for (const type of EVENTS) {
-        document.addEventListener(type, onGesture, { capture: true });
+    app.musicResumeHandler = onGesture;
+    for (const type of ['pointerdown', 'touchstart', 'keydown']) {
         window.addEventListener(type, onGesture, { capture: true });
     }
+}
+
+function removeMusicResumeGestureListener() {
+    if (!app.musicResumeHandler) return;
+    for (const type of ['pointerdown', 'touchstart', 'keydown']) {
+        window.removeEventListener(type, app.musicResumeHandler, true);
+    }
+    app.musicResumeHandler = null;
+    app.musicResumeAttempt = false;
+}
+
+function clearMusicResumeOnGesture() {
+    // The listener is deliberately retained for the document lifetime. It is
+    // gated by musicResumeNeeded, so clearing an outcome only resets an
+    // in-flight gesture attempt; cleanup() is the sole removal point.
+    app.musicResumeAttempt = false;
+}
+
+function armMusicResumeOnGesture() {
+    const audio = app.audio;
+    if (!app.musicResumeNeeded || !canPlayAuthenticatedMusic() || audio.isPlaying()) return;
+    installMusicResumeGestureListener();
 }
 
 
@@ -1799,26 +2000,12 @@ function wireMusicResumeOnGesture() {
 function wireMusicToggle() {
     const toggle = document.querySelector('#music-toggle');
     if (!toggle) return;
-
-    const syncMusicButton = () => {
-        const audio = app.audio;
-        if (!audio) return;
-
-        toggle.classList.toggle('is-muted', audio.muted);
-        toggle.setAttribute('aria-pressed', String(audio.muted));
-
-        toggle.setAttribute(
-            'aria-label',
-            audio.muted ? 'Turn background music on' : 'Turn background music off'
-        );
-    };
-
-    // Restore the correct saved state immediately after AudioManager.init()
-    syncMusicButton();
+    app.musicToggle = toggle;
+    syncMusicControl();
 
     toggle.addEventListener('click', async () => {
         const audio = app.audio;
-        if (!audio) return;
+        if (!audio || !isAuthenticatedMusicExperience() || document.hidden) return;
 
         /*
          * IMPORTANT:
@@ -1829,8 +2016,8 @@ function wireMusicToggle() {
         if (audio.muted) {
             // User explicitly turned music ON
             audio.unmute();
-
-            const started = await audio.play();
+            app.musicResumeNeeded = true;
+            const started = await requestMusicPlayback({ fromGesture: true });
 
             if (!started) {
                 console.info('Music could not start.');
@@ -1838,11 +2025,13 @@ function wireMusicToggle() {
         } else {
             // User explicitly turned music OFF
             audio.mute();
-            audio.pause();
+            audio.pause({ cancelPending: true });
+            app.musicResumeNeeded = false;
+            clearMusicResumeOnGesture();
         }
 
         // Update icon + accessibility state
-        syncMusicButton();
+        syncMusicControl();
     });
 }
 
@@ -1861,8 +2050,10 @@ function cleanup() {
 
     stopInactivityTracking();
     removeInactivityListeners();
+    removeAudioLifecycleListeners();
 
     window.removeEventListener(BEGIN_EVENT, beginExperience);
+    removeMusicResumeGestureListener();
 
     try { app.memoryLane?.destroy(); } catch { /* ignore */ }
     app.memoryLane = null;
@@ -1910,10 +2101,15 @@ async function restartExperience() {
     if (app.cleaned) return;
 
     invalidateNavigation();
+    deactivateAuthenticatedMusicExperience();
     stopInactivityTracking();
     app.passwordVerifiedThisSession = false;
     app.resumeAfterInactivity = false;
     app.pendingProtectedRestore = null;
+    // A full restart is a genuine route exit, but unfinished Game 5 drafts
+    // remain available if the user later returns to that game.
+    app.secretGame?.relationshipGap?.deactivateResume?.();
+    deactivateRelationshipGapResume();
     clearTemporarySecuritySession('restart-experience');
     clearSecurityLockState();
 

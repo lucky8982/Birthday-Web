@@ -321,6 +321,7 @@ export class BirthdayReveal {
     async _startCelebration(run, stage = 'heart-intro', { restored = false, immediate = false } = {}) {
         this._stopEffects();
         this.layer?.classList.remove('is-effects-stopped');
+        this._setBirthdayTitle(stage === 'age' || stage === 'age-ready' ? 'My Life' : 'Janeman');
         for (const el of [this.final, this.age, this.continueBtn, this.heartAdvanceBtn]) this._hide(el);
         this.layer?.classList.add('is-celebrating');
         this.rain?.start();
@@ -514,16 +515,18 @@ export class BirthdayReveal {
             const finish = ready => {
                 if (settled) return;
                 settled = true;
+                clearTimeout(timeout);
                 video.removeEventListener('canplay', onReady);
                 video.removeEventListener('error', onError);
                 resolve(ready);
             };
             const onReady = () => finish(true);
             const onError = () => finish(Boolean(this.heroFallback?.complete));
+            const timeout = setTimeout(onError, 8000);
             video.addEventListener('canplay', onReady, { once: true });
             video.addEventListener('error', onError, { once: true });
             video.preload = 'auto';
-            video.load();
+            try { video.load(); } catch { onError(); }
         });
         return this._v7Preload;
     }
@@ -811,15 +814,25 @@ export class BirthdayReveal {
         this.layer?.classList.add('is-reference-hero-playing');
         return new Promise(resolve => {
             let settled = false;
+            let fallbackStarted = false;
             const finish = result => {
                 if (settled) return;
                 settled = true;
+                clearTimeout(timeout);
+                clearTimeout(this._heroFallbackTimer);
+                this._heroFallbackTimer = null;
                 video.removeEventListener('ended', onEnded);
                 video.removeEventListener('error', onError);
                 resolve(result && this._isHeroRun(run, heroRun));
             };
             const onEnded = () => finish(true);
             const onError = () => {
+                if (settled || fallbackStarted) return;
+                fallbackStarted = true;
+                clearTimeout(timeout);
+                video.removeEventListener('ended', onEnded);
+                video.removeEventListener('error', onError);
+                video.pause();
                 video.hidden = true;
                 // Animated WebP is the exact V7 alpha fallback. Normal V7
                 // handoff is always the video's actual ended event.
@@ -827,9 +840,10 @@ export class BirthdayReveal {
                 this.heroFallback.hidden = false;
                 this._heroFallbackTimer = setTimeout(() => finish(true), this.reduced ? 0 : 7709);
             };
+            const timeout = setTimeout(onError, 12000);
             video.addEventListener('ended', onEnded, { once: true });
             video.addEventListener('error', onError, { once: true });
-            video.play().catch(() => finish(false));
+            try { Promise.resolve(video.play()).catch(onError); } catch { onError(); }
         });
     }
 
@@ -879,6 +893,7 @@ export class BirthdayReveal {
     }
 
     async _presentHeart(run, { titleVisible = false, restored = false } = {}) {
+        this._setBirthdayTitle('Janeman');
         this.layer?.setAttribute('data-birthday-stage', 'heart');
         this.final?.classList.remove('is-born-from-burst', 'is-assembling');
         if (restored) this.final?.classList.add('is-title-settled');
@@ -930,6 +945,7 @@ export class BirthdayReveal {
     }
 
     async _showAgeStage(run, { titleVisible = false, completed = false, immediate = false } = {}) {
+        this._setBirthdayTitle('My Life');
         const stage = completed || this._wishMade ? 'age-ready' : 'age';
         this.layer?.setAttribute('data-birthday-stage', stage);
         this._fireStage(stage);
@@ -1422,6 +1438,28 @@ export class BirthdayReveal {
         if (!el) return;
         el.classList.remove('is-in', 'is-out');
         el.hidden = true;
+    }
+
+    /** Keep the reusable celebration title specific to its current screen. */
+    _setBirthdayTitle(name) {
+        const glyphs = this.final?.querySelectorAll(
+            '.birthday-reveal-title-name [data-title-character]'
+        );
+        if (!glyphs || glyphs.length !== 8) return;
+
+        const isLiveAgeTitle = name === 'My Life';
+        const characters = isLiveAgeTitle
+            ? ['M', 'y', ' ', 'L', 'i', 'f', 'e', '❤️']
+            : ['J', 'a', 'n', 'e', 'm', 'a', 'n', '❤️'];
+
+        glyphs.forEach((glyph, index) => {
+            glyph.textContent = characters[index];
+            glyph.classList.toggle('birthday-title-space', isLiveAgeTitle && index === 2);
+        });
+        this.final?.setAttribute(
+            'aria-label',
+            `Happy Birthday, ${isLiveAgeTitle ? 'My Life' : 'Janeman'} ❤️`
+        );
     }
 
     destroy() {

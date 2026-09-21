@@ -2,10 +2,9 @@
    Happy Birthday My Love 💙 - Audio Manager
    ------------------------------------------------------------
    File:    js/audio-manager.js
-   Purpose: Control the background music element. Audio never
-            autoplays - it starts only after a user interaction.
-            Missing files and browser autoplay blocks are
-            handled gracefully, never crashing the page.
+   Purpose: Control the background music element. It preserves the
+            user's enabled/disabled preference independently from a
+            browser's temporary autoplay restriction.
    ============================================================ */
 
 
@@ -55,6 +54,10 @@ export class AudioManager {
         this.volume = DEFAULT_VOLUME;   // current volume 0..1
         this.muted = false;             // mute flag (separate from volume)
         this.sourceBroken = false;      // true when the audio file failed to load
+        this.playbackPending = false;   // enabled, but a user gesture is required
+        this.playAttempt = null;        // prevents concurrent play() requests
+        this.playRequestId = 0;         // ignores stale results from an earlier attempt
+        this.pauseVersion = 0;          // invalidates playback after a lifecycle pause
         this.handlers = [];             // listeners to remove on destroy
 
         this.storage = getStorage();
@@ -63,13 +66,14 @@ export class AudioManager {
     /* ---- Lifecycle ---- */
 
     /**
-     * Prepare the audio element: restore saved preferences,
-     * wire error handling and ensure no autoplay happens.
+     * Prepare the audio element and restore saved preferences. The caller
+     * may then make one normal playback attempt when music is enabled.
      */
     init() {
         if (!this.audio) return;
 
-        // Never autoplay - stay silent until a user interaction
+        // A reload creates a fresh media element, so reset only this new
+        // element before preferences are restored.
         this.audio.pause();
         this.audio.currentTime = 0;
 
@@ -79,6 +83,8 @@ export class AudioManager {
         // If the file is missing, mark the manager and stay calm
         this.handlers.push(this.onError = () => {
             this.sourceBroken = true;
+            this.playbackPending = false;
+            this.playRequestId += 1;
         });
         this.audio.addEventListener('error', this.onError);
 
@@ -91,26 +97,85 @@ export class AudioManager {
     /* ---- Playback control ---- */
 
     /**
-     * Start the music. Returns false instead of throwing when
-     * playback is blocked (autoplay rules) or the file is missing.
+     * Start the music. A NotAllowedError is recorded as a pending playback
+     * request without changing the user's enabled preference. Other failures
+     * remain non-fatal and do not schedule automatic retries.
      *
+     * @param {{ fromGesture?: boolean }} options
      * @returns {Promise<boolean>} True when playback started
      */
-    async play() {
-        if (!this.audio || this.sourceBroken) return false;
-
-        try {
-            await this.audio.play();
+    play({ fromGesture = false } = {}) {
+        if (!this.audio || this.sourceBroken || this.muted) return false;
+        if (this.isPlaying()) {
+            this.playbackPending = false;
             return true;
-        } catch {
-            // Browser blocked us (no user gesture yet) or another issue.
-            // Swallow it - the user can tap again.
-            return false;
         }
+        // A normal load attempt can still be pending when the first tap
+        // arrives. Do not reuse it: Safari/mobile Chrome require a fresh,
+        // native play() call directly in that trusted event's call stack.
+        if (this.playAttempt && !fromGesture) return this.playAttempt;
+
+        const requestId = ++this.playRequestId;
+        const pauseVersion = this.pauseVersion;
+        let nativePlay;
+        try {
+            nativePlay = this.audio.play();
+        } catch (error) {
+            if (requestId === this.playRequestId) {
+                this.playbackPending = !this.muted && this.isAutoplayBlocked(error);
+            }
+            return Promise.resolve(false);
+        }
+
+        const attempt = Promise.resolve(nativePlay)
+            .then(() => {
+                // A user can turn music OFF while a prior play() promise is
+                // settling. Do not let that stale request revive playback.
+                if (this.muted || this.sourceBroken || !this.audio || pauseVersion !== this.pauseVersion) {
+                    this.audio?.pause();
+                    return false;
+                }
+                if (requestId === this.playRequestId) this.playbackPending = false;
+                return true;
+            })
+            .catch((error) => {
+                // Autoplay policy is temporary. Keep preference ON and let
+                // main.js retry from the first real user interaction.
+                if (requestId === this.playRequestId) {
+                    this.playbackPending = !this.muted && this.isAutoplayBlocked(error);
+                }
+                return false;
+            })
+            .finally(() => {
+                if (this.playAttempt === attempt) this.playAttempt = null;
+            });
+
+        this.playAttempt = attempt;
+        return attempt;
     }
 
-    /** Pause the music */
-    pause() {
+    /** Whether the latest rejected play() needs a user gesture to retry. */
+    isPlaybackPending() {
+        return this.playbackPending;
+    }
+
+    /** Whether a native play() promise is still settling. */
+    isPlaybackAttempting() {
+        return !!this.playAttempt;
+    }
+
+    /** Autoplay denials have a stable name across current target browsers. */
+    isAutoplayBlocked(error) {
+        if (error?.name === 'NotAllowedError') return true;
+        return /autoplay|user\s*(activation|gesture|interact)|not\s*(allowed|permitted)|requires?.*interaction/i.test(error?.message || '');
+    }
+
+    /** Pause without changing preference or playback position. */
+    pause({ cancelPending = false } = {}) {
+        if (cancelPending) {
+            this.pauseVersion += 1;
+            this.playbackPending = false;
+        }
         if (this.audio) this.audio.pause();
     }
 
@@ -149,6 +214,9 @@ export class AudioManager {
     /** Mute the music (volume value is preserved) */
     mute() {
         this.muted = true;
+        this.playbackPending = false;
+        this.playRequestId += 1;
+        this.pauseVersion += 1;
         if (this.audio) this.audio.muted = true;
 
         if (this.storage) {
@@ -195,6 +263,8 @@ export class AudioManager {
         return {
             playing: this.isPlaying(),
             muted: this.muted,
+            preferenceEnabled: !this.muted,
+            playbackPending: this.playbackPending,
             volume: this.volume,
             sourceBroken: this.sourceBroken,
         };
@@ -204,17 +274,15 @@ export class AudioManager {
 
     /** Load saved volume/mute values, applying them to the element */
     restorePreferences() {
-        if (!this.storage) return;
-
         try {
-            const savedVolume = parseFloat(this.storage.getItem(STORAGE_VOLUME));
+            const savedVolume = parseFloat(this.storage?.getItem(STORAGE_VOLUME));
             if (!Number.isNaN(savedVolume)) {
                 this.setVolume(savedVolume);
             } else {
                 this.setVolume(DEFAULT_VOLUME);
             }
 
-            const savedMuted = this.storage.getItem(STORAGE_MUTED);
+            const savedMuted = this.storage?.getItem(STORAGE_MUTED);
             if (savedMuted === '1') {
                 this.mute();
             } else {
@@ -231,13 +299,16 @@ export class AudioManager {
 
     /** Stop playback and remove every listener */
     destroy() {
-        this.pause();
+        this.pause({ cancelPending: true });
 
         for (const handler of this.handlers) {
             this.audio?.removeEventListener('error', handler);
         }
         this.handlers = [];
 
+        this.playAttempt = null;
+        this.playbackPending = false;
+        this.playRequestId += 1;
         this.audio = null;
     }
 }

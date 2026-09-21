@@ -117,7 +117,7 @@ const PHOTO_MEMORIES = [
     {
         id: 7,
         title: 'Saatvi Mulakat',
-        image: 'assets/images/memories/dummy-photo-07.JPG',
+        image: 'assets/images/memories/dummy-photo-07.jpg',
         message: 'Iss mulakat ne to hamari puri life ko hi change kar diya, hamare ek dusre ke liye pyar aur vishwas ko hi jaga diya aur tumhe meri biwi bana diya.',
         titleAnimation: 'title-memory-07',
         photoAnimation: 'photo-memory-07',
@@ -182,7 +182,7 @@ const PHOTO_MEMORIES = [
     {
         id: 12,
         title: 'Chhoti Magar Mazedaar',
-        image: 'assets/images/memories/dummy-photo-12.JPG',
+        image: 'assets/images/memories/dummy-photo-12.jpg',
         message: 'Ye mulakat to bahut hi pyari thi, baby. Bhale hi chhoti si thi, lekin hamne jo memories create ki thi, vo to hum kabhi nahi bhulenge, hamari masti.',
         titleAnimation: 'title-memory-12',
         photoAnimation: 'photo-memory-12',
@@ -195,7 +195,7 @@ const PHOTO_MEMORIES = [
     {
         id: 13,
         title: 'Big Boss Cafe',
-        image: 'assets/images/memories/dummy-photo-13.jpg',
+        image: 'assets/images/memories/dummy-photo-13.JPG',
         message: 'Iss mulakat ke liye hum kya kya soch kr gaye the, lekin kya nikla, ye mulakat bhi badi hi mazedar thi. Short cabin me alag hi experience tha.',
         titleAnimation: 'title-memory-13',
         photoAnimation: 'photo-memory-13',
@@ -377,7 +377,7 @@ const PHOTO_MEMORIES = [
     {
         id: 27,
         title: 'Meri Malkin',
-        image: 'assets/images/memories/dummy-photo-27.jpg',
+        image: 'assets/images/memories/dummy-photo-27.JPG',
         message: 'Baby, agar tum meri malkin naa hoti, to fir me tumhe batata ki me kitna sigma boy hu. Abhi to me sab sah leta hu.',
         titleAnimation: 'title-memory-27',
         photoAnimation: 'photo-memory-27',
@@ -732,7 +732,6 @@ const ACT_TRANSITION_EXIT_MS = 170;
 const PARA_STAGGER_TOTAL_MS = 2800;
 const PARA_STAGGER_MIN_MS = 260;
 const PARA_STAGGER_MAX_MS = 420;
-const PARA_FINAL_HOLD_MS = 280;
 const LETTER_AUTO_SCROLL_PX_PER_SECOND = 300;
 const LETTER_AUTO_RETURN_MS = 560;
 
@@ -2192,9 +2191,10 @@ export class MemoryLane {
             });
         });
 
-        const revealEnd =
-            this.scale(stagger) * (steps.length - 1) +
-            this.scale(PARA_FINAL_HOLD_MS);
+        // Once the final paragraph has been committed, settle immediately.
+        // startLetterAutoScroll() performs the first measurement in its
+        // requestAnimationFrame, after this readable layout has painted.
+        const revealEnd = this.scale(stagger) * (steps.length - 1);
 
         this.later(revealEnd, () => {
             if (this.state === 'playing') this.settleChapter();
