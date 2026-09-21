@@ -113,7 +113,7 @@ export class OpeningCinematic {
             { text: 'Kaisi ho tum?', cls: 'opening-line' },
             { text: 'Mujhe pata hai tum bahut pyari ho❤️ 🦎🦎', cls: 'opening-line' },
             { text: 'Vese Tumhe yaad hai baby...', cls: 'opening-line' },
-            { text: '01 • 12 • 2023', cls: 'opening-title' },
+            { text: '09 • 10 • 2024', cls: 'opening-title' },
             { text: 'Novratri ke 7 ve yani (Saptami) ke Din', cls: 'opening-sub' },
             { passage: true },
         ];
