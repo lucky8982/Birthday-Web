@@ -114,7 +114,7 @@ export const GAME2_MEMORY_DATA = [
     {
         slot: 1,
         original: {
-            id: 'g2-m2-original', slot: 1, stage: 'original', image: '/assets/images/game-2/enhanced/game2-memory2-main-enhanced.png', imageFit: 'contain',
+            id: 'g2-m2-original', slot: 1, stage: 'original', image: '/assets/images/game-2/enhanced/game2-memory2-main-enhanced.jpg', imageFit: 'contain',
             title: '25/02/2025', question: '25/02/2025 ko tum kis mood mein thi aur aisa kyun kar rahi thi?',
             options: ['Kyunki tum sharma rahi thi', 'Kyunki tum mujhe tang kar rahi thi', 'Kyunki main kiss nahi kar raha tha.', 'Kyunki tum romantic mood mein thi', 'Kyunki tum bas mera reaction dekhna chahti thi'], correctIndex: 2,
             revealText: 'Bas ek kiss ki kami thi... aur phir mood ko reason mil gaya. ❤',

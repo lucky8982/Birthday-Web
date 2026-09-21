@@ -60,6 +60,8 @@ export class EntryLockIntro {
         this.busy = false;
         this.currentScene = 0; // 0 = idle, 1 = scene1, 2 = scene2, 3 = done
         this.timers = [];
+        this._boundOnKey = this._onKey.bind(this);
+        this._boundOnTap = this._onTap.bind(this);
 
         // Wired by main.js: called when the intro is complete so
         // the loading screen can hand over to the opening cinematic.
@@ -88,10 +90,10 @@ export class EntryLockIntro {
         this.particlesEl = $('#entry-particles');
 
         // Keyboard users can advance with Enter/Space
-        this.overlay.addEventListener('keydown', this._onKey.bind(this));
+        this.overlay.addEventListener('keydown', this._boundOnKey);
 
         // The whole scene is a tap target
-        this.overlay.addEventListener('click', this._onTap.bind(this));
+        this.overlay.addEventListener('click', this._boundOnTap);
     }
 
     /**
@@ -141,11 +143,11 @@ export class EntryLockIntro {
             el.style.filter = 'blur(8px)';
             el.style.transition = `opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out), filter 0.8s var(--ease-out)`;
 
-            setTimeout(() => {
+            this.later(this.reduced ? 0 : delays[i], () => {
                 el.style.opacity = '1';
                 el.style.transform = 'translateY(0) scale(1)';
                 el.style.filter = 'blur(0)';
-            }, this.reduced ? 0 : delays[i]);
+            });
         });
 
         // After Scene 1 holds, dissolve and play Scene 2
@@ -156,9 +158,9 @@ export class EntryLockIntro {
         // `busy` once the title entrance has settled so the tap is
         // accepted. Scene 2 keeps its existing behavior.
         const entranceMs = this.reduced ? 0 : (Math.max(...delays) + DURATIONS.scene1In);
-        setTimeout(() => {
+        this.later(this.reduced ? 0 : entranceMs, () => {
             this.busy = false;
-        }, this.reduced ? 0 : entranceMs);
+        });
     }
 
     dissolveScene1() {
@@ -170,7 +172,7 @@ export class EntryLockIntro {
         this.scene1.style.transform = 'translateY(-30px) scale(0.95)';
         this.scene1.style.filter = 'blur(10px)';
 
-        setTimeout(() => {
+        this.later(this.reduced ? 0 : DURATIONS.scene1Out, () => {
             this.scene1.setAttribute('aria-hidden', 'true');
             this.scene1.classList.remove('is-visible');
             this.scene1.style.opacity = '';
@@ -180,7 +182,7 @@ export class EntryLockIntro {
 
             // Start Scene 2
             this.playScene2();
-        }, this.reduced ? 0 : DURATIONS.scene1Out);
+        });
     }
 
     /* ---- Scene 2: Second Message ---- */
@@ -205,18 +207,18 @@ export class EntryLockIntro {
             el.style.filter = 'blur(6px)';
             el.style.transition = 'opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out), filter 0.7s var(--ease-out)';
 
-            setTimeout(() => {
+            this.later(this.reduced ? 0 : delays[i], () => {
                 el.style.opacity = '1';
                 el.style.transform = 'translateY(0)';
                 el.style.filter = 'blur(0)';
-            }, this.reduced ? 0 : delays[i]);
+            });
         });
 
         // After Scene 2 holds, dissolve and finish
         const totalDelay = this.reduced ? 0 : (Math.max(...delays) + DURATIONS.scene2Hold);
-        setTimeout(() => {
+        this.later(this.reduced ? 0 : totalDelay, () => {
             this.dissolveScene2();
-        }, this.reduced ? 0 : totalDelay);
+        });
     }
 
     dissolveScene2() {
@@ -228,7 +230,7 @@ export class EntryLockIntro {
         this.scene2.style.transform = 'translateY(-30px) scale(0.95)';
         this.scene2.style.filter = 'blur(10px)';
 
-        setTimeout(() => {
+        this.later(this.reduced ? 0 : DURATIONS.scene2Out, () => {
             this.scene2.setAttribute('aria-hidden', 'true');
             this.scene2.classList.remove('is-visible');
             this.scene2.style.opacity = '';
@@ -237,7 +239,7 @@ export class EntryLockIntro {
             this.scene2.style.transition = '';
 
             this.finish();
-        }, this.reduced ? 0 : DURATIONS.scene2Out);
+        });
     }
 
     /* ---- Handover ---- */
@@ -365,8 +367,8 @@ export class EntryLockIntro {
 
     destroy() {
         this.cleanup();
-        this.overlay?.removeEventListener('click', this._onTap.bind(this));
-        this.overlay?.removeEventListener('keydown', this._onKey.bind(this));
+        this.overlay?.removeEventListener('click', this._boundOnTap);
+        this.overlay?.removeEventListener('keydown', this._boundOnKey);
         this.overlay = null;
         this.stage = null;
         this.scene1 = null;
